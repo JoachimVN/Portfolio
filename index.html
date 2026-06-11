@@ -6,7 +6,7 @@
   <title>Joachim Valdersnes Nilsen</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,28 +15,28 @@
     <span class="nav-logo">JVN</span>
     <ul class="nav-links">
       <li><a href="#about">About</a></li>
-      <li><a href="#projects">Projects</a></li>
+      <li><a href="#projects">Work</a></li>
       <li><a href="mailto:joachim.v.nilsen@gmail.com">Contact</a></li>
     </ul>
   </nav>
 
-  <section id="about" class="about">
-    <div class="about-content">
-      <p class="about-greeting">Hi, I'm</p>
-      <h1 class="about-name">Joachim Valdersnes Nilsen</h1>
-      <p class="about-tagline">Developer &amp; Student</p>
-      <p class="about-bio">
-        I build things that interest me — games, tools, and hardware projects.
-        I'm always looking for new challenges to learn from.
-      </p>
-      <a href="#projects" class="btn">View my work</a>
+  <section id="about" class="hero">
+    <div class="hero-photo-wrap">
+      <img class="hero-photo" src="resources/images/Me.jpg" alt="Joachim Valdersnes Nilsen">
+      <div class="hero-photo-fade"></div>
+    </div>
+    <div class="hero-text">
+      <p class="hero-label">Developer &amp; Student</p>
+      <h1 class="hero-name">JOACHIM<br>VALDERSNES<br>NILSEN</h1>
+      <p class="hero-bio">I build things that interest me — games, tools, and hardware projects. Always looking for the next challenge.</p>
+      <a href="#projects" class="btn">View work ↓</a>
     </div>
   </section>
 
   <section id="projects" class="projects">
     <div class="section-header">
-      <p class="section-label">What I've built</p>
-      <h2>Projects</h2>
+      <p class="section-label">Selected work</p>
+      <h2 class="section-title">Projects</h2>
     </div>
     <div id="projects-grid" class="projects-grid">
       <div class="card skeleton"></div>
@@ -46,10 +46,11 @@
   </section>
 
   <footer class="footer">
-    <p>
-      Built with vanilla HTML, CSS &amp; JS ·
-      <a href="https://github.com/JoachimVN" target="_blank" rel="noopener">GitHub</a>
-    </p>
+    <p class="footer-statement">LET'S BUILD<br>SOMETHING.</p>
+    <div class="footer-links">
+      <a href="mailto:joachim.v.nilsen@gmail.com">joachim.v.nilsen@gmail.com</a>
+      <a href="https://github.com/JoachimVN" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
   </footer>
 
   <script src="script.js"></script>

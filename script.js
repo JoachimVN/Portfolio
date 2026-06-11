@@ -1,13 +1,24 @@
 // Projects config — github repos are fetched live, manual entries are used as-is
 const PROJECTS = [
-  { github: 'JoachimVN/After-Hours' },
-  { github: 'JoachimVN/CHORIDOR' },
   {
-    name: 'LEGO MINDSTORMS EV3',
-    description: 'A robotics project built with the LEGO MINDSTORMS EV3 platform.',
-    language: 'Python',
-    stars: null,
-    url: null,
+    github:     'JoachimVN/After-Hours',
+    screenshot: 'resources/images/screenshots/After_Hours_Screenshot1.png',
+    logo:       'resources/images/logos/After_Hours_Logo.png',
+  },
+  {
+    github:     'JoachimVN/CHORIDOR',
+    screenshot: 'resources/images/screenshots/CHORIDOR_Screenshot1.png',
+    logo:       'resources/images/logos/CHORIDOR_Logo_Square.png',
+  },
+  {
+    name:        'LEGO MINDSTORMS EV3',
+    description: 'A robotics project built with the LEGO MINDSTORMS EV3 platform at NTNU\'s course IDATT1004.',
+    language:    'Python',
+    stars:       null,
+    url:         null,
+    screenshot:  'resources/images/LEGO_Robot1.png',
+    logo:        null,
+    isProduct:   true,
   },
 ];
 
@@ -40,23 +51,22 @@ function starSVG() {
   </svg>`;
 }
 
-function renderCard({ name, description, language, stars, url }, index = 0) {
+function renderCard({ name, description, language, stars, url, screenshot, logo, isProduct }, index = 0) {
   const color = LANG_COLORS[language] || '#888';
 
   return `
-    <div class="card" style="animation-delay:${index * 0.12 + 0.1}s">
-      <div class="card-header">
-        <span class="card-name">${name}</span>
-        ${stars !== null ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
-      </div>
-      <p class="card-description">${description || 'No description available.'}</p>
-      <div class="card-footer">
-        ${language
-          ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${language}</span>`
-          : '<span></span>'}
-        ${url
-          ? `<a class="card-link" href="${url}" target="_blank" rel="noopener">View on GitHub →</a>`
-          : ''}
+    <div class="card${isProduct ? ' card--product' : ''}" style="animation-delay:${index * 0.12 + 0.08}s">
+      <div class="card-bg" style="background-image:url('${screenshot}')"></div>
+      <div class="card-overlay"></div>
+      ${logo ? `<img class="card-logo" src="${logo}" alt="${name}">` : ''}
+      <div class="card-content">
+        <h3 class="card-title">${name}</h3>
+        <p class="card-desc">${description || 'No description available.'}</p>
+        <div class="card-meta">
+          ${language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${language}</span>` : ''}
+          ${stars !== null ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
+          ${url ? `<a class="card-link" href="${url}" target="_blank" rel="noopener">GitHub ↗</a>` : ''}
+        </div>
       </div>
     </div>
   `;
@@ -72,6 +82,7 @@ async function loadProjects() {
       try {
         const data = await fetchRepo(project.github);
         return {
+          ...project,
           name:        data.name,
           description: data.description,
           language:    data.language,
