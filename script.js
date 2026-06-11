@@ -40,11 +40,11 @@ function starSVG() {
   </svg>`;
 }
 
-function renderCard({ name, description, language, stars, url }) {
+function renderCard({ name, description, language, stars, url }, index = 0) {
   const color = LANG_COLORS[language] || '#888';
 
   return `
-    <div class="card">
+    <div class="card" style="animation-delay:${index * 0.12 + 0.1}s">
       <div class="card-header">
         <span class="card-name">${name}</span>
         ${stars !== null ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
@@ -91,7 +91,7 @@ async function loadProjects() {
     })
   );
 
-  grid.innerHTML = cards.map(renderCard).join('');
+  grid.innerHTML = cards.map((card, i) => renderCard(card, i)).join('');
 }
 
 document.addEventListener('DOMContentLoaded', loadProjects);
