@@ -98,7 +98,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, playUrl,
   } else if (pageUrl) {
     ctaLabel = `<span class="card-link">View project ↗</span>`;
   }
-  const playLabel = playUrl ? `<span class="card-link card-play-link" data-play-url="${playUrl}" onclick="event.preventDefault();event.stopPropagation();window.location='${playUrl}'">Play ↗</span>` : '';
+  const playLabel = playUrl ? `<span class="card-play-btn" onclick="event.preventDefault();event.stopPropagation();window.location='${playUrl}'">▶ Play</span>` : '';
 
   const inner = `
     <div class="card-bg" style="background-image:url('${mainShot}');background-position:${mainPos}"></div>

@@ -485,6 +485,23 @@ a { text-decoration: none; }
 
 .card-link:hover { color: #E0B045; }
 
+.card-play-btn {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: var(--brand-color, #3e67a7);
+  color: #fff;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, transform 0.15s;
+  user-select: none;
+}
+
+.card-play-btn:hover { opacity: 0.85; transform: scale(1.04); }
+
 .card--product .card-bg {
   background-color: #131320;
   background-size: 62%;
