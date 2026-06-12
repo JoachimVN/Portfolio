@@ -50,6 +50,10 @@ let gameState = {
     gameOver:      false
 };
 
+// ─── Hover state ──────────────────────────────────────────────────────────
+
+let hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
+
 // ─── Online state ─────────────────────────────────────────────────────────
 
 let socket     = null;
@@ -135,15 +139,29 @@ function drawWalls() {
 
 function drawLegalMoves() {
     if (!isMyTurn()) return;
-    ctx.fillStyle  = gameState.currentPlayer === 'p1' ? P1_COLOR : P2_COLOR;
-    ctx.globalAlpha = 0.5;
+    const color = gameState.currentPlayer === 'p1' ? P1_COLOR : P2_COLOR;
+
     gameState.legalMoves.forEach(move => {
-        const x = move.col * STEP + CELL_SIZE / 2;
-        const y = move.row * STEP + CELL_SIZE / 2;
-        ctx.beginPath();
-        ctx.arc(x, y, CELL_SIZE * 0.13, 0, Math.PI * 2);
-        ctx.fill();
+        const bx = move.col * STEP, by = move.row * STEP;
+        const cx = bx + CELL_SIZE / 2, cy = by + CELL_SIZE / 2;
+        const isHovered = hoverState.moveRow === move.row && hoverState.moveCol === move.col;
+
+        ctx.fillStyle = color;
+        if (isHovered) {
+            ctx.globalAlpha = 0.12;
+            ctx.fillRect(bx, by, CELL_SIZE, CELL_SIZE);
+            ctx.globalAlpha = 0.85;
+            ctx.beginPath();
+            ctx.arc(cx, cy, CELL_SIZE * 0.18, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, CELL_SIZE * 0.13, 0, Math.PI * 2);
+            ctx.fill();
+        }
     });
+
     ctx.globalAlpha = 1;
 }
 
@@ -157,6 +175,29 @@ function drawPawns() {
     });
 }
 
+function drawWallPreview() {
+    if (hoverState.wallRow === null || !isMyTurn() || gameState.gameOver) return;
+    const cp = gameState.currentPlayer;
+    if (cp === 'p1' && gameState.wallCounts.p1 === 0) return;
+    if (cp === 'p2' && gameState.wallCounts.p2 === 0) return;
+    const { wallRow: row, wallCol: col, wallOrientation: orientation } = hoverState;
+    const wallKey = JSON.stringify({ row, col, orientation });
+    if (gameState.walls.has(wallKey)) return;
+    if (hasWallOverlap(row, col, orientation)) return;
+    const tempWalls = gameState.walls;
+    gameState.walls = new Set(tempWalls);
+    gameState.walls.add(wallKey);
+    const valid = bothPlayersHavePath();
+    gameState.walls = tempWalls;
+
+    const x = col * STEP, y = row * STEP;
+    ctx.fillStyle = cp === 'p1' ? P1_COLOR : P2_COLOR;
+    ctx.globalAlpha = valid ? 0.45 : 0.15;
+    if (orientation === 'H') ctx.fillRect(x, y + CELL_SIZE, CELL_SIZE * 2 + GAP, GAP);
+    else                     ctx.fillRect(x + CELL_SIZE, y, GAP, CELL_SIZE * 2 + GAP);
+    ctx.globalAlpha = 1;
+}
+
 function render() {
     if (gameState.flipped) {
         ctx.save();
@@ -165,6 +206,7 @@ function render() {
     }
     drawBoard();
     drawWalls();
+    drawWallPreview();
     drawLegalMoves();
     drawPawns();
     if (gameState.flipped) ctx.restore();
@@ -237,6 +279,56 @@ canvas.addEventListener('click', e => {
 
     if (!inHGap && !inVGap) movePawn(cellY, cellX);
     else placeWall(cellY, cellX, inHGap ? 'H' : 'V');
+});
+
+canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    let x = (e.clientX - rect.left) / boardScale;
+    let y = (e.clientY - rect.top)  / boardScale;
+    if (gameState.flipped) { x = BOARD_TOTAL - x; y = BOARD_TOTAL - y; }
+
+    const cellX = Math.floor(x / STEP), cellY = Math.floor(y / STEP);
+    const offX  = x - cellX * STEP,     offY  = y - cellY * STEP;
+    const inHGap = offY >= CELL_SIZE && cellY < BOARD_SIZE - 1;
+    const inVGap = offX >= CELL_SIZE && cellX < BOARD_SIZE - 1;
+
+    const prev = JSON.stringify(hoverState);
+
+    if (!isMyTurn() || gameState.gameOver) {
+        hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
+    } else if (!inHGap && !inVGap) {
+        const move = gameState.legalMoves.find(m => m.row === cellY && m.col === cellX);
+        hoverState = { wallRow: null, wallCol: null, wallOrientation: null,
+                       moveRow: move?.row ?? null, moveCol: move?.col ?? null };
+    } else {
+        hoverState = { wallRow: cellY, wallCol: cellX, wallOrientation: inHGap ? 'H' : 'V',
+                       moveRow: null, moveCol: null };
+    }
+
+    let pointer = false;
+    if (hoverState.moveRow !== null) {
+        pointer = true;
+    } else if (hoverState.wallRow !== null) {
+        const cp = gameState.currentPlayer;
+        const hasWalls = cp === 'p1' ? gameState.wallCounts.p1 > 0 : gameState.wallCounts.p2 > 0;
+        const { wallRow: wr, wallCol: wc, wallOrientation: wo } = hoverState;
+        const wk = JSON.stringify({ row: wr, col: wc, orientation: wo });
+        if (hasWalls && !gameState.walls.has(wk) && !hasWallOverlap(wr, wc, wo)) {
+            const saved = gameState.walls;
+            gameState.walls = new Set(saved);
+            gameState.walls.add(wk);
+            pointer = bothPlayersHavePath();
+            gameState.walls = saved;
+        }
+    }
+    canvas.style.cursor = pointer ? 'pointer' : 'default';
+    if (JSON.stringify(hoverState) !== prev) render();
+});
+
+canvas.addEventListener('mouseleave', () => {
+    hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
+    canvas.style.cursor = 'default';
+    render();
 });
 
 // ─── Moves ────────────────────────────────────────────────────────────────
