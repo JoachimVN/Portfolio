@@ -6,6 +6,7 @@ const PROJECTS = [
       'resources/images/screenshots/After_Hours_Screenshot2.png',
       'resources/images/screenshots/After_Hours_Screenshot3.png',
     ],
+    positions: ['left center', 'center', 'left center'],
     logo: 'resources/images/logos/After_Hours_Logo.png',
   },
   {
@@ -16,6 +17,7 @@ const PROJECTS = [
       'resources/images/screenshots/CHORIDOR_Screenshot3.png',
     ],
     logo:      'resources/images/logos/CHORIDOR_Logo_Square.png',
+    positions: ['center', 'center', 'right center'],
     logoLarge: true,
   },
   {
@@ -26,9 +28,10 @@ const PROJECTS = [
     url:         null,
     pageUrl:     'lego.html',
     screenshots: [
-      'resources/images/LEGO_Robot1.png',
       'resources/images/LEGO_Robot2.png',
+      'resources/images/LEGO_Robot1.png',
     ],
+    positions: ['center', 'center'],
     logo:      null,
     isProduct: true,
   },
@@ -62,30 +65,35 @@ function starSVG() {
   </svg>`;
 }
 
-function renderCard({ name, description, language, stars, url, pageUrl, screenshots, logo, logoLarge, isProduct }, index = 0) {
-  const color = LANG_COLORS[language] || '#888';
+function renderCard({ name, description, language, stars, url, pageUrl, screenshots, positions, logo, logoLarge, isProduct }, index = 0) {
+  const color    = LANG_COLORS[language] || '#888';
   const mainShot = screenshots[0];
+  const mainPos  = (positions && positions[0]) || 'center';
   const multiShot = screenshots.length > 1;
 
   const dots = multiShot
-    ? `<div class="card-dots">
-        ${screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')}
-      </div>`
+    ? `<div class="card-dots">${screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')}</div>`
+    : '';
+
+  const arrows = multiShot
+    ? `<button class="card-arrow card-arrow--prev" aria-label="Previous">&#8249;</button>
+       <button class="card-arrow card-arrow--next" aria-label="Next">&#8250;</button>`
     : '';
 
   const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
 
-  // "View project" label — use span (not <a>) when the whole card is already a link
-  const ctaLabel = url
-    ? `<a class="card-link" href="${url}" target="_blank" rel="noopener">GitHub ↗</a>`
-    : pageUrl
-      ? `<span class="card-link">View project ↗</span>`
-      : '';
+  let ctaLabel = '';
+  if (url) {
+    ctaLabel = `<a class="card-link" href="${url}" target="_blank" rel="noopener">GitHub ↗</a>`;
+  } else if (pageUrl) {
+    ctaLabel = `<span class="card-link">View project ↗</span>`;
+  }
 
   const inner = `
-    <div class="card-bg" style="background-image:url('${mainShot}')"></div>
+    <div class="card-bg" style="background-image:url('${mainShot}');background-position:${mainPos}"></div>
     <div class="card-overlay"></div>
     ${dots}
+    ${arrows}
     ${logo ? `<img class="${logoClass}" src="${logo}" alt="${name}">` : ''}
     <div class="card-content">
       <h3 class="card-title">${name}</h3>
@@ -100,27 +108,46 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
 
   const classes = `card${isProduct ? ' card--product' : ''}`;
   const delay   = `animation-delay:${index * 0.12 + 0.08}s`;
-  const data    = `data-screenshots='${JSON.stringify(screenshots)}'`;
+  const data    = `data-screenshots='${JSON.stringify(screenshots)}' data-positions='${JSON.stringify(positions || [])}'`;
 
-  return pageUrl && !url
-    ? `<a class="${classes}" href="${pageUrl}" style="${delay}" ${data}>${inner}</a>`
-    : `<div class="${classes}" style="${delay}" ${data}>${inner}</div>`;
+  if (url) {
+    return `<div class="${classes}" style="${delay}" ${data}>${inner}</div>`;
+  }
+  if (pageUrl) {
+    return `<a class="${classes}" href="${pageUrl}" style="${delay}" ${data}>${inner}</a>`;
+  }
+  return `<div class="${classes}" style="${delay}" ${data}>${inner}</div>`;
 }
 
-function initDots() {
+function initNavigation() {
   document.addEventListener('click', (e) => {
-    const dot = e.target.closest('.dot');
-    if (!dot) return;
+    const dot   = e.target.closest('.dot');
+    const arrow = e.target.closest('.card-arrow');
+    if (!dot && !arrow) return;
     e.preventDefault();
     e.stopPropagation();
 
-    const card        = dot.closest('.card');
+    const card        = (dot || arrow).closest('.card');
     const screenshots = JSON.parse(card.dataset.screenshots);
-    const index       = parseInt(dot.dataset.index);
+    const positions   = JSON.parse(card.dataset.positions || '[]');
+    const dots        = [...card.querySelectorAll('.dot')];
+    const currentIdx  = dots.findIndex(d => d.classList.contains('active'));
 
-    card.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
-    dot.classList.add('active');
-    card.querySelector('.card-bg').style.backgroundImage = `url('${screenshots[index]}')`;
+    let nextIdx;
+    if (dot) {
+      nextIdx = Number.parseInt(dot.dataset.index);
+    } else if (arrow.classList.contains('card-arrow--prev')) {
+      nextIdx = (currentIdx - 1 + screenshots.length) % screenshots.length;
+    } else {
+      nextIdx = (currentIdx + 1) % screenshots.length;
+    }
+
+    dots.forEach(d => d.classList.remove('active'));
+    if (dots[nextIdx]) dots[nextIdx].classList.add('active');
+
+    const bg = card.querySelector('.card-bg');
+    bg.style.backgroundImage    = `url('${screenshots[nextIdx]}')`;
+    bg.style.backgroundPosition = positions[nextIdx] || 'center';
   });
 }
 
@@ -152,7 +179,7 @@ async function loadProjects() {
   );
 
   grid.innerHTML = cards.map((card, i) => renderCard(card, i)).join('');
-  initDots();
+  initNavigation();
 }
 
 document.addEventListener('DOMContentLoaded', loadProjects);

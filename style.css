@@ -413,7 +413,38 @@ a { text-decoration: none; }
 .dot:hover:not(.active) { background: rgba(255, 255, 255, 0.6); }
 
 /* ── LOGO LARGE ──────────────────────────────────────── */
-.card-logo--lg { height: 44px; }
+.card-logo--lg {
+  height: 44px;
+  top: 0;
+  left: 0;
+}
+
+/* ── PREV / NEXT ARROWS ──────────────────────────────── */
+.card-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 3;
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.card:hover .card-arrow { opacity: 1; }
+.card-arrow:hover { background: rgba(0, 0, 0, 0.85); }
+.card-arrow--prev { left: 0.65rem; }
+.card-arrow--next { right: 0.65rem; }
 
 /* ── CARD AS ANCHOR ──────────────────────────────────── */
 a.card {
