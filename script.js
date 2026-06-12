@@ -220,11 +220,26 @@ function initParallax() {
 
   let scrollY = window.scrollY;
   let mx = 0, my = 0, cx = 0, cy = 0;
-  let returning = false;
+  let rafId = null;
 
   const update = () => {
     photoWrap.style.transform = `translateY(${scrollY * 0.25}px) translate(${cx}px, ${cy}px)`;
   };
+
+  const tick = () => {
+    cx += (mx - cx) * 0.09;
+    cy += (my - cy) * 0.09;
+    update();
+    if (Math.abs(mx - cx) > 0.05 || Math.abs(my - cy) > 0.05) {
+      rafId = requestAnimationFrame(tick);
+    } else {
+      cx = mx; cy = my;
+      update();
+      rafId = null;
+    }
+  };
+
+  const startTick = () => { if (!rafId) rafId = requestAnimationFrame(tick); };
 
   window.addEventListener('scroll', () => { scrollY = window.scrollY; update(); }, { passive: true });
 
@@ -232,21 +247,11 @@ function initParallax() {
     hero.addEventListener('mousemove', e => {
       mx = (e.clientX / window.innerWidth  - 0.5) * 20;
       my = (e.clientY / window.innerHeight - 0.5) * 12;
-      cx = mx; cy = my;
-      returning = false;
-      update();
+      startTick();
     });
     hero.addEventListener('mouseleave', () => {
-      mx = my = 0;
-      if (returning) return;
-      returning = true;
-      (function ease() {
-        cx += (mx - cx) * 0.08;
-        cy += (my - cy) * 0.08;
-        update();
-        if (Math.abs(cx) > 0.1 || Math.abs(cy) > 0.1) requestAnimationFrame(ease);
-        else { cx = cy = 0; returning = false; update(); }
-      })();
+      mx = 0; my = 0;
+      startTick();
     });
   }
 }
