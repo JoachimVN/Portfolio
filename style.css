@@ -154,6 +154,82 @@ a { text-decoration: none; }
   border-color: rgba(255, 255, 255, 0.38);
 }
 
+/* ── ABOUT SECTION ───────────────────────────────────── */
+.about-section {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 5rem;
+  padding: 7rem 3rem;
+  border-top: 1px solid var(--rule);
+  align-items: center;
+}
+
+.about-photo-wrap {
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+}
+
+.about-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+  display: block;
+  filter: contrast(1.04) saturate(0.82) brightness(0.9);
+}
+
+.about-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.about-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.about-bio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.about-bio p {
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.85;
+}
+
+.about-skills-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.skill {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  padding: 0.28rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 100px;
+  color: var(--muted);
+}
+
 /* ── PROJECTS ────────────────────────────────────────── */
 .projects {
   padding: 6rem 3rem;
@@ -605,6 +681,15 @@ a.card {
   }
 
   .footer-links { align-items: flex-start; }
+
+  .about-section {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    padding: 4rem 1.5rem;
+  }
+
+  .about-photo-wrap { aspect-ratio: 4 / 3; }
+  .about-photo { object-position: center 25%; }
 
   .lego-header { padding: 3.5rem 1.5rem 2.5rem; }
   .lego-projects { padding: 0 1.5rem 4rem; }

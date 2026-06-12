@@ -182,4 +182,16 @@ async function loadProjects() {
   initNavigation();
 }
 
-document.addEventListener('DOMContentLoaded', loadProjects);
+function calcAge(year, month, day) {
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  const m = today.getMonth() - (month - 1);
+  if (m < 0 || (m === 0 && today.getDate() < day)) age--;
+  return age;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadProjects();
+  const ageEl = document.getElementById('age');
+  if (ageEl) ageEl.textContent = calcAge(2006, 6, 26);
+});
