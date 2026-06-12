@@ -790,6 +790,70 @@ a.card {
   text-transform: uppercase;
 }
 
+/* ── CODE BLOCKS ─────────────────────────────────────── */
+.lego-code {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 0 3rem 5rem;
+}
+
+.lego-code-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--s2);
+  border-bottom: 1px solid var(--rule);
+}
+
+.lego-code-dots {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.lego-code-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--rule);
+}
+
+.lego-code-dots span:nth-child(1) { background: #ff5f57; }
+.lego-code-dots span:nth-child(2) { background: #febc2e; }
+.lego-code-dots span:nth-child(3) { background: #28c840; }
+
+.lego-code-filename {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+  flex: 1;
+}
+
+.lego-code-lang {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.lego-code pre {
+  margin: 0;
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: 420px;
+  background: var(--s1);
+}
+
+.lego-code code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: rgba(242, 239, 230, 0.72);
+  white-space: pre;
+}
+
 /* ── RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 1024px) {
   .projects-grid {
