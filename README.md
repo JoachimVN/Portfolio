@@ -28,9 +28,7 @@
 
 - GitHub API integration — cards pull live description, language and stars at runtime
 - Screenshot carousel with per-project brand colors on the progress indicators
-- Python syntax highlighter (VS Code Dark+ palette) with line numbers, source loaded via `fetch()`
-- Shared footer and dynamic copyright year rendered from JS
-- Self-hosted Syne and Inter variable fonts
+- Python syntax palette for LEGO MINDSTORMS EV3 source code
 
 ## Running locally
 
