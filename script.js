@@ -34,7 +34,7 @@ const PROJECTS = [
       'resources/images/LEGO_Robot1.png',
     ],
     positions:   ['center top', 'center 35%'],
-    logo:        null,
+    logo:        'resources/images/logos/EV3_Logo.png',
     isProduct:   true,
     brandColor:  '#E3000B',
   },
