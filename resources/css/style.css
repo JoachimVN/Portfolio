@@ -898,6 +898,11 @@ a.card {
 /* ── PAGE TRANSITION ─────────────────────────────────── */
 @view-transition { navigation: auto; }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+
 ::view-transition-old(root) {
   animation: vt-out 0.18s ease-in forwards;
 }
