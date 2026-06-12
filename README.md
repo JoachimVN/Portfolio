@@ -4,7 +4,7 @@
 
 <br/>
 
-[![Live](https://img.shields.io/badge/live-joachimvn.github.io-brightgreen?style=flat-square&logo=github)](https://joachimvn.github.io)
+[![Live](https://img.shields.io/badge/live-joachimvn.github.io-brightgreen?style=flat-square&logo=github)](https://joavn.dev)
 &nbsp;
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-563d7c?style=flat-square&logo=css3&logoColor=white)
@@ -12,7 +12,7 @@
 
 *Personal portfolio. No frameworks, no build tools.*
 
-**https://joachimvn.github.io**
+**https://joavn.dev**
 
 </div>
 
