@@ -100,7 +100,6 @@ a { text-decoration: none; }
   width: calc(80% + 30px);
   z-index: 0;
   background: var(--bg);
-  will-change: transform;
 }
 
 .hero-photo {
@@ -904,18 +903,13 @@ a.card {
 ::view-transition-old(root),
 ::view-transition-new(root) {
   mix-blend-mode: normal;
-  animation-duration: 0.35s;
+  animation-duration: 0.55s;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   animation-fill-mode: forwards;
 }
 
-::view-transition-old(root) {
-  animation-name: vt-slide-out;
-}
-
-::view-transition-new(root) {
-  animation-name: vt-slide-in;
-}
+::view-transition-old(root) { animation-name: vt-slide-out; }
+::view-transition-new(root) { animation-name: vt-slide-in; }
 
 @keyframes vt-slide-out {
   to { transform: translateX(-100%); }
