@@ -902,6 +902,10 @@ a.card {
 /* ── PAGE TRANSITION ─────────────────────────────────── */
 @view-transition { navigation: auto; }
 
+html { background: var(--bg); }
+
+::view-transition { background: var(--bg); }
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   mix-blend-mode: normal;
