@@ -202,8 +202,31 @@ function calcAge(year, month, day) {
   return age;
 }
 
+function initParallax() {
+  const photoWrap = document.querySelector('.hero-photo-wrap');
+  if (!photoWrap) return;
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    photoWrap.style.transform = `translateY(${scrollY * 0.5}px)`;
+  });
+}
+
+function initScrollFadeIn() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.about-section, .projects, .footer').forEach(el => {
+    el.classList.add('fade-in-scroll');
+    observer.observe(el);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadProjects();
+  initParallax();
+  initScrollFadeIn();
   const ageEl = document.getElementById('age');
   if (ageEl) ageEl.textContent = calcAge(2006, 6, 26);
 });
