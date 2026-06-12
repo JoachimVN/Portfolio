@@ -135,7 +135,7 @@ a { text-decoration: none; }
 
 .hero-bio {
   font-size: 0.92rem;
-  color: var(--muted);
+  color: rgba(242, 239, 230, 0.65);
   line-height: 1.8;
   max-width: 360px;
 }
