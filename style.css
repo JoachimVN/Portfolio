@@ -527,43 +527,37 @@ a { text-decoration: none; }
 
 /* ── FOOTER ──────────────────────────────────────────── */
 .footer {
-  padding: 5rem 3rem;
+  padding: 6rem 3rem 4rem;
   border-top: 1px solid var(--rule);
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 2rem;
-}
-
-.footer-statement {
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: clamp(2.5rem, 5.5vw, 5rem);
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
-  line-height: 0.92;
-}
-
-.footer-links {
-  display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 0.6rem;
-  flex-shrink: 0;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
 }
 
-.footer-links a {
-  font-size: 0.83rem;
-  color: var(--muted);
+.footer-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--accent);
   font-weight: 500;
-  transition: color 0.2s;
 }
 
-.footer-links a:hover { color: var(--accent); }
+.footer-email {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 2.2vw, 1.75rem);
+  color: var(--text);
+  letter-spacing: -0.02em;
+  transition: color 0.25s ease;
+}
+
+.footer-email:hover { color: var(--accent); }
 
 .footer-icons {
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
   margin-top: 0.25rem;
 }
 
@@ -580,6 +574,14 @@ a { text-decoration: none; }
 .footer-icons svg {
   width: 20px;
   height: 20px;
+}
+
+.footer-copy {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  opacity: 0.6;
 }
 
 /* ── SCREENSHOT DOTS ─────────────────────────────────── */
@@ -821,12 +823,8 @@ a.card {
   .projects-grid { grid-template-columns: 1fr; }
 
   .footer {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 3.5rem 1.5rem;
+    padding: 4rem 1.5rem 3rem;
   }
-
-  .footer-links { align-items: flex-start; }
 
   .about-section {
     grid-template-columns: 1fr;
