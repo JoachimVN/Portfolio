@@ -28,9 +28,10 @@
 
 ## Features
 
-- GitHub API integration — cards pull live description, language and stars at runtime
+- GitHub API integration; cards fetch live description, language, and star counts at runtime
 - Screenshot carousel with per-project brand colors on the progress indicators
 - Python syntax palette for LEGO MINDSTORMS EV3 source code
+- Scroll-triggered animations, parallax effects, view transitions, and more
 
 ## Running locally
 
