@@ -252,7 +252,15 @@ function classifyName(token, isCall) {
 }
 
 function highlightPython(code) {
-  const re = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#[^\n]*)|((?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)|(@[A-Za-z_]\w*)|([()[{}\]])|(\.[A-Za-z_]\w*)|([A-Za-z_]\w*)(?=\s*\()|([A-Za-z_]\w*)|([\s\S])/g;
+  const STR  = String.raw`"[^"\n]*"|'[^'\n]*'`;
+  const CMT  = String.raw`#[^\n]*`;
+  const NUM  = String.raw`\d+\.?\d*`;
+  const DEC  = String.raw`@[A-Za-z_]\w*`;
+  const BRK  = String.raw`[()[{}\]]`;
+  const ATR  = String.raw`\.[A-Za-z_]\w*`;
+  const FN   = String.raw`[A-Za-z_]\w*(?=\s*\()`;
+  const NAME = String.raw`[A-Za-z_]\w*`;
+  const re = new RegExp(`(${STR})|(${CMT})|(${NUM})|(${DEC})|(${BRK})|(${ATR})|(${FN})|(${NAME})|([\\s\\S])`, 'g');
   let out = '';
   let m;
   while ((m = re.exec(code)) !== null) {

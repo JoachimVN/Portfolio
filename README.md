@@ -19,7 +19,7 @@
 ## Projects
 
 | Project | Stack | Source |
-|---|---|---|
+| --- | --- | --- |
 | **After Hours** | Java · JavaFX | [repo](https://github.com/JoachimVN/After-Hours) |
 | **CHORIDOR** | Java · JavaFX | [repo](https://github.com/JoachimVN/CHORIDOR) |
 | **LEGO MINDSTORMS EV3** | Python | [page](https://joachimvn.github.io/lego.html) |
@@ -45,7 +45,7 @@ Opening `index.html` directly works for most features, but the LEGO page loads P
 <details>
 <summary>File structure</summary>
 
-```
+```text
 index.html
 lego.html
 script.js
