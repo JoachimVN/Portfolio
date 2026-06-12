@@ -153,12 +153,13 @@ a { text-decoration: none; }
   font-size: 0.76rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  transition: background 0.25s, border-color 0.25s;
+  transition: all 0.3s ease;
 }
 
 .btn:hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.38);
+  transform: translateY(-2px);
 }
 
 /* ── ABOUT SECTION ───────────────────────────────────── */
@@ -261,15 +262,14 @@ a { text-decoration: none; }
 .skill:nth-child(4) { animation-delay: 0.4s; }
 .skill:nth-child(5) { animation-delay: 0.5s; }
 .skill:nth-child(6) { animation-delay: 0.6s; }
+.skill:nth-child(7) { animation-delay: 0.7s; }
 
 .skill {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.2s ease;
 }
 
 .skill:hover {
-  transform: scale(1.15) translateY(-3px);
   border-color: var(--accent);
-  box-shadow: 0 8px 20px rgba(201, 149, 42, 0.25);
   color: var(--text);
 }
 
