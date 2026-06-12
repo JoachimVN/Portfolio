@@ -873,40 +873,60 @@ a.card {
 .py-p  { color: #dcdcaa; }
 
 /* ── RESPONSIVE ──────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .about-section { padding: 6rem 4rem; }
+  .lego-code     { margin: 0 1.5rem 4rem; }
+}
+
 @media (max-width: 1024px) {
   .projects-grid {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
+
+  .about-section {
+    grid-template-columns: 7fr 5fr;
+    padding: 5rem 3rem;
+    gap: 2.5rem;
+  }
+
+  .lego-project { gap: 2.5rem; }
+  .lego-code    { margin: 0 1rem 3rem; }
 }
 
 @media (max-width: 768px) {
   .nav { padding: 0 1.5rem; }
   .nav-links { gap: 1.25rem; }
 
+  /* hero: stack photo on top, text below */
   .hero {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     min-height: auto;
   }
 
-  .hero-photo-wrap { height: 65vw; }
+  .hero-photo-wrap {
+    position: relative;
+    width: 100%;
+    height: 62vw;
+    top: auto; bottom: auto; left: auto;
+    flex-shrink: 0;
+  }
 
   .hero-photo-fade {
     background:
-      linear-gradient(to bottom, var(--bg) 0%, transparent 20%),
-      linear-gradient(to top, var(--bg) 0%, transparent 35%);
+      linear-gradient(to bottom, rgba(9,9,14,0.25) 0%, transparent 20%),
+      linear-gradient(to top, var(--bg) 0%, transparent 40%),
+      linear-gradient(to right, transparent 60%, var(--bg) 100%);
   }
 
   .hero-text {
+    grid-column: unset;
     padding: 2.5rem 1.5rem 4rem;
+    justify-content: flex-start;
   }
 
   .projects { padding: 4rem 1.5rem; }
-
   .projects-grid { grid-template-columns: 1fr; }
-
-  .footer {
-    padding: 4rem 1.5rem 3rem;
-  }
 
   .about-section {
     grid-template-columns: 1fr;
@@ -917,8 +937,11 @@ a.card {
   .about-photo-wrap { aspect-ratio: 4 / 3; }
   .about-photo { height: 167%; }
 
-  .lego-header { padding: 3.5rem 1.5rem 2.5rem; }
+  .footer { padding: 4rem 1.5rem 3rem; }
+
+  .lego-header  { padding: 3.5rem 1.5rem 2.5rem; }
   .lego-projects { padding: 0 1.5rem 4rem; }
+  .lego-code    { margin: 0 0 2.5rem; border-radius: 0; border-left-width: 3px; }
 
   .lego-project,
   .lego-project--reverse {
@@ -927,4 +950,20 @@ a.card {
     gap: 2rem;
     padding: 3rem 0;
   }
+}
+
+@media (max-width: 480px) {
+  .nav-logo { font-size: 0.8rem; }
+  .nav-links { gap: 1rem; }
+  .nav-links a { font-size: 0.7rem; }
+
+  .hero-photo-wrap { height: 72vw; }
+
+  .hero-name { font-size: clamp(2rem, 11vw, 3.5rem); }
+
+  .projects-grid { gap: 0.75rem; }
+
+  .about-section { padding: 3.5rem 1.25rem; }
+
+  .lego-title { font-size: clamp(2.5rem, 14vw, 5rem); }
 }

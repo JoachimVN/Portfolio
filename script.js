@@ -328,7 +328,15 @@ function initFooter() {
   }
 }
 
+function preloadScreenshots() {
+  PROJECTS.forEach(p => p.screenshots.forEach(url => {
+    const img = new Image();
+    img.src = url;
+  }));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  preloadScreenshots();
   loadProjects();
   initParallax();
   initScrollFadeIn();
