@@ -182,7 +182,7 @@ async function loadProjects() {
         const data = await fetchRepo(project.github);
         return {
           ...project,
-          name:        data.name,
+          name:        project.name ?? data.name.replace(/-/g, ' '),
           description: data.description,
           language:    data.language,
           stars:       data.stargazers_count,
