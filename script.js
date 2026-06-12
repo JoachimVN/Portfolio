@@ -92,9 +92,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
   const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
 
   let ctaLabel = '';
-  if (url) {
-    ctaLabel = `<a class="card-link" href="${url}" target="_blank" rel="noopener">GitHub ↗</a>`;
-  } else if (pageUrl) {
+  if (pageUrl) {
     ctaLabel = `<span class="card-link">View project ↗</span>`;
   }
 
@@ -122,7 +120,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
   const data      = `data-screenshots='${JSON.stringify(screenshots)}' data-positions='${JSON.stringify(positions || [])}'`;
 
   if (url) {
-    return `<div class="${classes}" style="${delay}" ${data}>${inner}</div>`;
+    return `<a class="${classes}" href="${url}" target="_blank" rel="noopener" style="${delay}" ${data}>${inner}</a>`;
   }
   if (pageUrl) {
     return `<a class="${classes}" href="${pageUrl}" style="${delay}" ${data}>${inner}</a>`;
