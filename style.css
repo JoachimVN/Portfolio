@@ -37,7 +37,7 @@ a { text-decoration: none; }
   align-items: center;
   justify-content: space-between;
   padding: 0 3rem;
-  background: rgba(9, 9, 14, 0.82);
+  background: rgba(9, 9, 14, 0.4);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--rule);
@@ -101,7 +101,7 @@ a { text-decoration: none; }
   background:
     linear-gradient(to right, rgba(9,9,14,0) 40%, rgba(9,9,14,0.15) 44%, rgba(9,9,14,0.35) 49%, rgba(9,9,14,0.55) 55%, rgba(9,9,14,0.70) 64%, rgba(9,9,14,0.82) 74%, rgba(9,9,14,0.91) 84%, rgba(9,9,14,0.97) 93%, rgba(9,9,14,1) 100%),
     linear-gradient(to top, var(--bg) 0%, transparent 30%),
-    linear-gradient(to bottom, var(--bg) 0%, transparent 15%);
+    linear-gradient(to bottom, rgba(9,9,14,0.3) 0%, transparent 10%);
   pointer-events: none;
 }
 
