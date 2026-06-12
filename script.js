@@ -1,28 +1,39 @@
-// Projects config — github repos are fetched live, manual entries are used as-is
 const PROJECTS = [
   {
-    github:     'JoachimVN/After-Hours',
-    screenshot: 'resources/images/screenshots/After_Hours_Screenshot1.png',
-    logo:       'resources/images/logos/After_Hours_Logo.png',
+    github:      'JoachimVN/After-Hours',
+    screenshots: [
+      'resources/images/screenshots/After_Hours_Screenshot1.png',
+      'resources/images/screenshots/After_Hours_Screenshot2.png',
+      'resources/images/screenshots/After_Hours_Screenshot3.png',
+    ],
+    logo: 'resources/images/logos/After_Hours_Logo.png',
   },
   {
-    github:     'JoachimVN/CHORIDOR',
-    screenshot: 'resources/images/screenshots/CHORIDOR_Screenshot1.png',
-    logo:       'resources/images/logos/CHORIDOR_Logo_Square.png',
+    github:      'JoachimVN/CHORIDOR',
+    screenshots: [
+      'resources/images/screenshots/CHORIDOR_Screenshot1.png',
+      'resources/images/screenshots/CHORIDOR_Screenshot2.png',
+      'resources/images/screenshots/CHORIDOR_Screenshot3.png',
+    ],
+    logo:      'resources/images/logos/CHORIDOR_Logo_Square.png',
+    logoLarge: true,
   },
   {
     name:        'LEGO MINDSTORMS EV3',
-    description: 'A robotics project built with the LEGO MINDSTORMS EV3 platform at NTNU\'s course IDATT1004.',
+    description: 'Two autonomous robots built at NTNU. A competitive line follower and a waste sorting system — both programmed in Python.',
     language:    'Python',
     stars:       null,
     url:         null,
-    screenshot:  'resources/images/LEGO_Robot1.png',
-    logo:        null,
-    isProduct:   true,
+    pageUrl:     'lego.html',
+    screenshots: [
+      'resources/images/LEGO_Robot1.png',
+      'resources/images/LEGO_Robot2.png',
+    ],
+    logo:      null,
+    isProduct: true,
   },
 ];
 
-// GitHub language colors
 const LANG_COLORS = {
   JavaScript:  '#f1e05a',
   TypeScript:  '#2b7489',
@@ -51,31 +62,71 @@ function starSVG() {
   </svg>`;
 }
 
-function renderCard({ name, description, language, stars, url, screenshot, logo, isProduct }, index = 0) {
+function renderCard({ name, description, language, stars, url, pageUrl, screenshots, logo, logoLarge, isProduct }, index = 0) {
   const color = LANG_COLORS[language] || '#888';
+  const mainShot = screenshots[0];
+  const multiShot = screenshots.length > 1;
 
-  return `
-    <div class="card${isProduct ? ' card--product' : ''}" style="animation-delay:${index * 0.12 + 0.08}s">
-      <div class="card-bg" style="background-image:url('${screenshot}')"></div>
-      <div class="card-overlay"></div>
-      ${logo ? `<img class="card-logo" src="${logo}" alt="${name}">` : ''}
-      <div class="card-content">
-        <h3 class="card-title">${name}</h3>
-        <p class="card-desc">${description || 'No description available.'}</p>
-        <div class="card-meta">
-          ${language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${language}</span>` : ''}
-          ${stars !== null ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
-          ${url ? `<a class="card-link" href="${url}" target="_blank" rel="noopener">GitHub ↗</a>` : ''}
-        </div>
+  const dots = multiShot
+    ? `<div class="card-dots">
+        ${screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')}
+      </div>`
+    : '';
+
+  const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
+
+  // "View project" label — use span (not <a>) when the whole card is already a link
+  const ctaLabel = url
+    ? `<a class="card-link" href="${url}" target="_blank" rel="noopener">GitHub ↗</a>`
+    : pageUrl
+      ? `<span class="card-link">View project ↗</span>`
+      : '';
+
+  const inner = `
+    <div class="card-bg" style="background-image:url('${mainShot}')"></div>
+    <div class="card-overlay"></div>
+    ${dots}
+    ${logo ? `<img class="${logoClass}" src="${logo}" alt="${name}">` : ''}
+    <div class="card-content">
+      <h3 class="card-title">${name}</h3>
+      <p class="card-desc">${description || 'No description available.'}</p>
+      <div class="card-meta">
+        ${language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${language}</span>` : ''}
+        ${stars !== null ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
+        ${ctaLabel}
       </div>
     </div>
   `;
+
+  const classes = `card${isProduct ? ' card--product' : ''}`;
+  const delay   = `animation-delay:${index * 0.12 + 0.08}s`;
+  const data    = `data-screenshots='${JSON.stringify(screenshots)}'`;
+
+  return pageUrl && !url
+    ? `<a class="${classes}" href="${pageUrl}" style="${delay}" ${data}>${inner}</a>`
+    : `<div class="${classes}" style="${delay}" ${data}>${inner}</div>`;
+}
+
+function initDots() {
+  document.addEventListener('click', (e) => {
+    const dot = e.target.closest('.dot');
+    if (!dot) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const card        = dot.closest('.card');
+    const screenshots = JSON.parse(card.dataset.screenshots);
+    const index       = parseInt(dot.dataset.index);
+
+    card.querySelectorAll('.dot').forEach(d => d.classList.remove('active'));
+    dot.classList.add('active');
+    card.querySelector('.card-bg').style.backgroundImage = `url('${screenshots[index]}')`;
+  });
 }
 
 async function loadProjects() {
   const grid = document.getElementById('projects-grid');
 
-  // Fetch all GitHub repos in parallel; keep manual entries as-is
   const cards = await Promise.all(
     PROJECTS.map(async (project) => {
       if (!project.github) return project;
@@ -90,12 +141,10 @@ async function loadProjects() {
           url:         data.html_url,
         };
       } catch {
-        // Fall back to a minimal card if the API call fails
         return {
+          ...project,
           name:        project.github.split('/')[1],
           description: 'Could not load project data.',
-          language:    null,
-          stars:       null,
           url:         `https://github.com/${project.github}`,
         };
       }
@@ -103,6 +152,7 @@ async function loadProjects() {
   );
 
   grid.innerHTML = cards.map((card, i) => renderCard(card, i)).join('');
+  initDots();
 }
 
 document.addEventListener('DOMContentLoaded', loadProjects);
