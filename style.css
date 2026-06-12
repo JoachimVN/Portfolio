@@ -489,6 +489,25 @@ a { text-decoration: none; }
 
 .footer-links a:hover { color: var(--accent); }
 
+.footer-icons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+.footer-icons a {
+  color: var(--muted);
+  transition: color 0.2s;
+  display: flex;
+}
+
+.footer-icons a:hover { color: var(--accent); }
+
+.footer-icons svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* ── SCREENSHOT DOTS ─────────────────────────────────── */
 .card-dots {
   position: absolute;
