@@ -1,3 +1,18 @@
+@font-face {
+  font-family: 'Syne';
+  src: url('resources/fonts/Syne-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('resources/fonts/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --bg:      #09090E;
   --s1:      #0F0F16;
