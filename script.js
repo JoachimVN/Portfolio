@@ -96,6 +96,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
   const inner = `
     <div class="card-bg" style="background-image:url('${mainShot}');background-position:${mainPos}"></div>
     <div class="card-overlay"></div>
+    <div class="card-shine"></div>
     ${dots}
     ${logo ? `<img class="${logoClass}" src="${logo}" alt="${name}">` : ''}
     <div class="card-content">
@@ -201,6 +202,7 @@ async function loadProjects() {
 
   grid.innerHTML = cards.map((card, i) => renderCard(card, i)).join('');
   initNavigation();
+  initCardTilt();
 }
 
 function calcAge(year, month, day) {
@@ -344,11 +346,50 @@ function preloadScreenshots() {
   }));
 }
 
+function initScrollProgress() {
+  const bar = document.createElement('div');
+  bar.className = 'scroll-progress';
+  document.body.prepend(bar);
+  window.addEventListener('scroll', () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = `${(window.scrollY / max) * 100}%`;
+  }, { passive: true });
+}
+
+function initCardTilt() {
+  document.querySelectorAll('.card').forEach(card => {
+    const shine = card.querySelector('.card-shine');
+
+    card.addEventListener('mouseenter', () => {
+      card.style.transition = 'transform 0.1s ease-out';
+    });
+
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      card.style.transform = `perspective(900px) rotateY(${x * 12}deg) rotateX(${-y * 8}deg) scale(1.02)`;
+      if (shine) {
+        const px = (e.clientX - r.left) / r.width * 100;
+        const py = (e.clientY - r.top) / r.height * 100;
+        shine.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.07) 0%, transparent 65%)`;
+      }
+    });
+
+    card.addEventListener('mouseleave', () => {
+      card.style.transition = 'transform 0.6s ease-out';
+      card.style.transform  = '';
+      if (shine) shine.style.background = '';
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   preloadScreenshots();
   loadProjects();
   initParallax();
   initScrollFadeIn();
+  initScrollProgress();
   initCodeHighlight();
   initFooter();
   const ageEl = document.getElementById('age');

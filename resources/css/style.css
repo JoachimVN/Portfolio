@@ -872,6 +872,29 @@ a.card {
 .py-d  { color: #dcdcaa; }
 .py-p  { color: #dcdcaa; }
 
+/* ── SCROLL PROGRESS ─────────────────────────────────── */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), #f5d78e, var(--accent));
+  background-size: 200% 100%;
+  z-index: 200;
+  pointer-events: none;
+  transition: width 0.05s linear;
+}
+
+/* ── CARD SHINE ──────────────────────────────────────── */
+.card-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: var(--radius);
+  transition: background 0.15s ease;
+}
+
 /* ── RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 1200px) {
   .about-section { padding: 6rem 4rem; }
