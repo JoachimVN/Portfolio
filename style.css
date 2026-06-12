@@ -397,10 +397,13 @@ a { text-decoration: none; }
   filter: brightness(0) invert(1);
   opacity: 0.8;
   z-index: 2;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, filter 0.4s ease;
 }
 
-.card:hover .card-logo { opacity: 1; }
+.card:hover .card-logo {
+  opacity: 1;
+  filter: brightness(1) invert(0);
+}
 
 /* text content pinned to bottom */
 .card-content {
