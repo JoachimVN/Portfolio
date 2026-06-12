@@ -99,6 +99,8 @@ a { text-decoration: none; }
   left: -30px;
   width: calc(80% + 30px);
   z-index: 0;
+  background: var(--bg);
+  will-change: transform;
 }
 
 .hero-photo {
@@ -304,11 +306,13 @@ a { text-decoration: none; }
 /* ── SCROLL FADE-IN ──────────────────────────────────── */
 .fade-in-scroll {
   opacity: 0;
-  animation: fadeInUp 0.8s ease forwards;
+  transform: translateY(22px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
 }
 
 .fade-in-scroll.visible {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .skill-dot {
@@ -341,15 +345,12 @@ a { text-decoration: none; }
   text-transform: uppercase;
   letter-spacing: -0.02em;
   transition: color 0.3s ease;
-  animation: revealText 1s cubic-bezier(0.77, 0, 0.175, 1) both;
-  animation-timeline: view();
-  animation-range: entry 0% entry 45%;
 }
 
-.about-heading {
-  animation: revealText 1s cubic-bezier(0.77, 0, 0.175, 1) both;
-  animation-timeline: view();
-  animation-range: entry 0% entry 45%;
+.section-title.reveal-run,
+.about-heading.reveal-run,
+.lego-title.reveal-run {
+  animation: revealText 1s cubic-bezier(0.77, 0, 0.175, 1) forwards;
 }
 
 .section-title:hover {
@@ -898,18 +899,18 @@ a.card {
 @view-transition { navigation: auto; }
 
 ::view-transition-old(root) {
-  animation: page-out 0.3s ease forwards;
+  animation: vt-out 0.18s ease-in forwards;
 }
 
 ::view-transition-new(root) {
-  animation: page-in 0.3s ease forwards;
+  animation: vt-in 0.28s ease-out forwards;
 }
 
-@keyframes page-out {
+@keyframes vt-out {
   to { opacity: 0; }
 }
 
-@keyframes page-in {
+@keyframes vt-in {
   from { opacity: 0; }
 }
 

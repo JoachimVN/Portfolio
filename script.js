@@ -251,6 +251,26 @@ function initParallax() {
   }
 }
 
+function initSectionReveal() {
+  const pairs = [
+    { trigger: '.about-section', title: '.about-heading' },
+    { trigger: '.projects',      title: '.section-title' },
+    { trigger: '.lego-header',   title: '.lego-title'    },
+  ];
+  pairs.forEach(({ trigger, title }) => {
+    const triggerEl = document.querySelector(trigger);
+    const titleEl   = document.querySelector(title);
+    if (!triggerEl || !titleEl) return;
+    titleEl.style.clipPath = 'inset(0 100% 0 0)';
+    const obs = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      titleEl.classList.add('reveal-run');
+      obs.disconnect();
+    }, { threshold: 0.1 });
+    obs.observe(triggerEl);
+  });
+}
+
 function initScrollFadeIn() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -468,6 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadProjects();
   initParallax();
   initScrollFadeIn();
+  initSectionReveal();
   initTypewriter();
   initScrollProgress();
   initCodeHighlight();
