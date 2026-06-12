@@ -215,11 +215,40 @@ function calcAge(year, month, day) {
 
 function initParallax() {
   const photoWrap = document.querySelector('.hero-photo-wrap');
+  const hero = document.querySelector('.hero');
   if (!photoWrap) return;
-  window.addEventListener('scroll', () => {
-    const scrollY = window.scrollY;
-    photoWrap.style.transform = `translateY(${scrollY * 0.25}px)`;
-  });
+
+  let scrollY = window.scrollY;
+  let mx = 0, my = 0, cx = 0, cy = 0;
+  let returning = false;
+
+  const update = () => {
+    photoWrap.style.transform = `translateY(${scrollY * 0.25}px) translate(${cx}px, ${cy}px)`;
+  };
+
+  window.addEventListener('scroll', () => { scrollY = window.scrollY; update(); }, { passive: true });
+
+  if (hero) {
+    hero.addEventListener('mousemove', e => {
+      mx = (e.clientX / window.innerWidth  - 0.5) * 20;
+      my = (e.clientY / window.innerHeight - 0.5) * 12;
+      cx = mx; cy = my;
+      returning = false;
+      update();
+    });
+    hero.addEventListener('mouseleave', () => {
+      mx = my = 0;
+      if (returning) return;
+      returning = true;
+      (function ease() {
+        cx += (mx - cx) * 0.08;
+        cy += (my - cy) * 0.08;
+        update();
+        if (Math.abs(cx) > 0.1 || Math.abs(cy) > 0.1) requestAnimationFrame(ease);
+        else { cx = cy = 0; returning = false; update(); }
+      })();
+    });
+  }
 }
 
 function initScrollFadeIn() {
@@ -401,29 +430,38 @@ function initCardTilt() {
   document.querySelectorAll('.card').forEach(card => {
     const shine = card.querySelector('.card-shine');
 
+    const rgb = getComputedStyle(card).getPropertyValue('--brand-color-rgb').trim() || '201,149,42';
+
     card.addEventListener('mouseenter', () => {
-      card.style.transition = 'transform 0.1s ease-out';
+      card.style.transition = 'transform 0.1s ease-out, box-shadow 0.3s ease';
     });
 
     card.addEventListener('mousemove', e => {
       const r = card.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - 0.5;
       const y = (e.clientY - r.top) / r.height - 0.5;
-      card.style.transform = `perspective(900px) rotateY(${x * 12}deg) rotateX(${-y * 8}deg) scale(1.02)`;
+      card.style.transform  = `perspective(900px) rotateY(${x * 12}deg) rotateX(${-y * 8}deg) scale(1.02)`;
+      card.style.boxShadow  = `0 0 0 1px rgba(${rgb},0.25), 0 8px 24px rgba(${rgb},0.08)`;
       if (shine) {
         const px = (e.clientX - r.left) / r.width * 100;
         const py = (e.clientY - r.top) / r.height * 100;
-        shine.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.01) 0%, transparent 40%)`;
+        shine.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.02) 0%, transparent 55%)`;
       }
     });
 
     card.addEventListener('mouseleave', () => {
-      card.style.transition = 'transform 0.6s ease-out';
+      card.style.transition = 'transform 0.6s ease-out, box-shadow 0.5s ease';
       card.style.transform  = '';
+      card.style.boxShadow  = '';
       if (shine) shine.style.background = '';
     });
   });
 }
+
+
+
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
   preloadScreenshots();
