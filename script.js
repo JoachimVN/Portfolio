@@ -365,7 +365,7 @@ function initTypewriter() {
     { c: '\b', d: 60 },
     { c: null, d: 120 },             // tiny pause before retyping
     ...'ent'.split('').map(c => ({ c, d: rand(55, 90) })),
-    { c: null, d: 600 },             // pause before period
+    { c: null, d: 1000 },             // pause before period
     { c: '.', d: rand(55, 90) },     // period
     { c: null, d: 300 },             // done
   ];
@@ -413,7 +413,7 @@ function initCardTilt() {
       if (shine) {
         const px = (e.clientX - r.left) / r.width * 100;
         const py = (e.clientY - r.top) / r.height * 100;
-        shine.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.02) 0%, transparent 55%)`;
+        shine.style.background = `radial-gradient(circle at ${px}% ${py}%, rgba(255,255,255,0.01) 0%, transparent 40%)`;
       }
     });
 
