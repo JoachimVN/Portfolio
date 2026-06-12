@@ -180,7 +180,7 @@ a { text-decoration: none; }
 /* ── ABOUT SECTION ───────────────────────────────────── */
 .about-section {
   display: grid;
-  grid-template-columns: 7fr 5fr;
+  grid-template-columns: 8fr 4fr;
   gap: 5rem;
   padding: 7rem 3rem;
   border-top: 1px solid var(--rule);
