@@ -182,7 +182,7 @@ async function loadProjects() {
         const data = await fetchRepo(project.github);
         return {
           ...project,
-          name:        project.name ?? data.name.replace(/-/g, ' '),
+          name:        project.name ?? data.name.replaceAll('-', ' '),
           description: data.description,
           language:    data.language,
           stars:       data.stargazers_count,
@@ -233,19 +233,26 @@ function initScrollFadeIn() {
 }
 
 function escHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+const PY_KW = new Set([
+  'and','as','assert','async','await','break','class','continue',
+  'def','del','elif','else','except','finally','for','from','global',
+  'if','import','in','is','lambda','nonlocal','not','or','pass',
+  'raise','return','try','while','with','yield',
+]);
+const PY_KW_LIT = new Set(['True', 'False', 'None', 'self']);
+
+function classifyName(token, isCall) {
+  if (PY_KW.has(token))     return `<span class="py-k">${token}</span>`;
+  if (PY_KW_LIT.has(token)) return `<span class="py-kl">${token}</span>`;
+  if (isCall || /^[A-Z]/.test(token)) return `<span class="py-f">${token}</span>`;
+  return token;
 }
 
 function highlightPython(code) {
-  const KW = new Set([
-    'and','as','assert','async','await','break','class','continue',
-    'def','del','elif','else','except','finally','for','from','global',
-    'if','import','in','is','lambda','nonlocal','not','or','pass',
-    'raise','return','try','while','with','yield',
-  ]);
-  const KW_LIT = new Set(['True', 'False', 'None', 'self']);
-
-  const re = /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#[^\n]*)|((?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)|([@][A-Za-z_]\w*)|([()\[\]{}])|(\.[A-Za-z_]\w*)|([A-Za-z_]\w*)(?=\s*\()|([A-Za-z_]\w*)|([\s\S])/g;
+  const re = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#[^\n]*)|((?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)|(@[A-Za-z_]\w*)|([()[{}\]])|(\.[A-Za-z_]\w*)|([A-Za-z_]\w*)(?=\s*\()|([A-Za-z_]\w*)|([\s\S])/g;
   let out = '';
   let m;
   while ((m = re.exec(code)) !== null) {
@@ -256,19 +263,9 @@ function highlightPython(code) {
     else if (dec)     out += `<span class="py-d">${escHtml(dec)}</span>`;
     else if (bracket) out += `<span class="py-p">${escHtml(bracket)}</span>`;
     else if (attr)    out += escHtml(attr);
-    else if (fn) {
-      if (KW.has(fn))         out += `<span class="py-k">${fn}</span>`;
-      else if (KW_LIT.has(fn)) out += `<span class="py-kl">${fn}</span>`;
-      else                    out += `<span class="py-f">${fn}</span>`;
-    }
-    else if (name) {
-      if (KW.has(name))           out += `<span class="py-k">${name}</span>`;
-      else if (KW_LIT.has(name))  out += `<span class="py-kl">${name}</span>`;
-      else if (/^[A-Z]/.test(name)) out += `<span class="py-f">${name}</span>`;
-      else                        out += name;
-    } else {
-      out += escHtml(other);
-    }
+    else if (fn)      out += classifyName(fn, true);
+    else if (name)    out += classifyName(name, false);
+    else              out += escHtml(other);
   }
   return out;
 }
