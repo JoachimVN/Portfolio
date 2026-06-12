@@ -1,7 +1,5 @@
 <div align="center">
 
-# Joachim Valdersnes Nilsen
-
 <img src="resources/images/screenshots/Portfolio_Landing.png" alt="Portfolio preview" width="100%">
 
 <br/>
