@@ -346,6 +346,45 @@ function preloadScreenshots() {
   }));
 }
 
+function initTypewriter() {
+  const el = document.querySelector('.hero-label');
+  if (!el) return;
+  el.textContent = '';
+  el.classList.add('typewriter-active');
+
+  // Type "Developer & Studnet" (n/e swap typo), catch it, fix it
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const script = [
+    ...'Developer & Stud'.split('').map(c => ({ c, d: rand(55, 120) })),
+    { c: 'n', d: rand(55, 100) },   // typo: 'n' before 'e'
+    { c: 'e', d: rand(55, 100) },
+    { c: 't', d: rand(55, 100) },
+    { c: null, d: 480 },             // pause — noticing it's wrong
+    { c: '\b', d: 70 },              // backspace 'net'
+    { c: '\b', d: 65 },
+    { c: '\b', d: 60 },
+    { c: null, d: 120 },             // tiny pause before retyping
+    ...'ent'.split('').map(c => ({ c, d: rand(55, 90) })),
+    { c: null, d: 300 },             // done
+  ];
+
+  let current = '';
+  let i = 0;
+
+  function step() {
+    if (i >= script.length) { el.classList.remove('typewriter-active'); return; }
+    const { c, d } = script[i++];
+    setTimeout(() => {
+      if (c === '\b')      current = current.slice(0, -1);
+      else if (c !== null) current += c;
+      el.textContent = current;
+      step();
+    }, d);
+  }
+
+  setTimeout(step, 900);
+}
+
 function initScrollProgress() {
   const bar = document.createElement('div');
   bar.className = 'scroll-progress';
@@ -389,6 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadProjects();
   initParallax();
   initScrollFadeIn();
+  initTypewriter();
   initScrollProgress();
   initCodeHighlight();
   initFooter();

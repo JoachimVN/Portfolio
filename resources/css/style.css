@@ -139,6 +139,17 @@ a { text-decoration: none; }
   font-weight: 500;
 }
 
+.typewriter-active::after {
+  content: '|';
+  opacity: 1;
+  animation: blink 0.55s step-end infinite;
+  margin-left: 1px;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
 .hero-name {
   font-family: 'Syne', sans-serif;
   font-weight: 800;
