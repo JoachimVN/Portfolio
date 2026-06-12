@@ -793,6 +793,7 @@ a.card {
 /* ── CODE BLOCKS ─────────────────────────────────────── */
 .lego-code {
   border: 1px solid #3c3c3c;
+  border-left: 3px solid #3572A5;
   border-radius: var(--radius);
   overflow: hidden;
   margin: 0 3rem 5rem;
@@ -801,41 +802,23 @@ a.card {
 .lego-code-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 1rem;
+  gap: 0.6rem;
+  padding: 0.65rem 1.25rem;
   background: #252526;
   border-bottom: 1px solid #3c3c3c;
 }
 
-.lego-code-dots {
-  display: flex;
-  gap: 0.4rem;
+.lego-code-prompt {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  line-height: 1;
 }
-
-.lego-code-dots span {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--rule);
-}
-
-.lego-code-dots span:nth-child(1) { background: #ff5f57; }
-.lego-code-dots span:nth-child(2) { background: #febc2e; }
-.lego-code-dots span:nth-child(3) { background: #28c840; }
 
 .lego-code-filename {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--muted);
-  flex: 1;
-}
-
-.lego-code-lang {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-  font-weight: 500;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #d4d4d4;
 }
 
 .lego-code pre {
