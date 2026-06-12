@@ -223,10 +223,7 @@ function initParallax() {
   let rafId = null;
 
   const update = () => {
-    const tx = Math.round(cx);
-    const ty = Math.round(cy);
-    const sy = Math.round(scrollY * 0.25);
-    photoWrap.style.transform = `translateY(${sy}px) translate(${tx}px, ${ty}px)`;
+    photoWrap.style.transform = `translateY(${scrollY * 0.25}px) translate(${cx}px, ${cy}px)`;
   };
 
   const tick = () => {

@@ -100,8 +100,6 @@ a { text-decoration: none; }
   width: calc(80% + 30px);
   z-index: 0;
   background: var(--bg);
-  outline: 1px solid transparent;
-  overflow: hidden;
 }
 
 .hero-photo {
