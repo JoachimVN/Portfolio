@@ -353,7 +353,7 @@ function initTypewriter() {
   el.classList.add('typewriter-active');
 
   // Type "Developer & Studnet" (n/e swap typo), catch it, fix it
-  const rand = (a, b) => a + Math.random() * (b - a);
+  const rand = (a, b) => a + (crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF) * (b - a);
   const script = [
     ...'Developer & Stud'.split('').map(c => ({ c, d: rand(55, 120) })),
     { c: 'n', d: rand(55, 100) },   // typo: 'n' before 'e'
