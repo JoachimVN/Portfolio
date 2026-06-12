@@ -57,9 +57,14 @@ const LANG_COLORS = {
 };
 
 async function fetchRepo(slug) {
+  const key = `gh_${slug}`;
+  const cached = sessionStorage.getItem(key);
+  if (cached) return JSON.parse(cached);
   const res = await fetch(`https://api.github.com/repos/${slug}`);
   if (!res.ok) throw new Error(res.status);
-  return res.json();
+  const data = await res.json();
+  sessionStorage.setItem(key, JSON.stringify(data));
+  return data;
 }
 
 function hexToRgb(hex) {
