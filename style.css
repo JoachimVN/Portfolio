@@ -613,11 +613,11 @@ a { text-decoration: none; }
 .dot:hover { opacity: 0.75; }
 
 .card:hover .dot {
-  background: rgba(201, 149, 42, 0.35);
+  background: rgba(var(--brand-color-rgb, 201, 149, 42), 0.35);
 }
 
 .card:hover .dot::after {
-  background: var(--accent);
+  background: var(--brand-color, var(--accent));
 }
 
 /* ── LOGO LARGE ──────────────────────────────────────── */

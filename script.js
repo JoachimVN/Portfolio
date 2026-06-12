@@ -6,8 +6,9 @@ const PROJECTS = [
       'resources/images/screenshots/After_Hours_Screenshot2.png',
       'resources/images/screenshots/After_Hours_Screenshot3.png',
     ],
-    positions: ['right top', 'center', 'left center'],
-    logo: 'resources/images/logos/After_Hours_Logo.png',
+    positions:   ['right top', 'center', 'left center'],
+    logo:        'resources/images/logos/After_Hours_Logo.png',
+    brandColor:  '#E7AB14',
   },
   {
     github:      'JoachimVN/CHORIDOR',
@@ -16,9 +17,10 @@ const PROJECTS = [
       'resources/images/screenshots/CHORIDOR_Screenshot2.png',
       'resources/images/screenshots/CHORIDOR_Screenshot3.png',
     ],
-    logo:      'resources/images/logos/CHORIDOR_Logo_Square.png',
-    positions: ['center', 'center', 'right center'],
-    logoLarge: true,
+    logo:        'resources/images/logos/CHORIDOR_Logo_Square.png',
+    positions:   ['center', 'center', 'right center'],
+    logoLarge:   true,
+    brandColor:  '#3e67a7',
   },
   {
     name:        'LEGO MINDSTORMS EV3',
@@ -31,9 +33,10 @@ const PROJECTS = [
       'resources/images/LEGO_Robot2.png',
       'resources/images/LEGO_Robot1.png',
     ],
-    positions: ['center top', 'center 35%'],
-    logo:      null,
-    isProduct: true,
+    positions:   ['center top', 'center 35%'],
+    logo:        null,
+    isProduct:   true,
+    brandColor:  '#E3000B',
   },
 ];
 
@@ -59,13 +62,17 @@ async function fetchRepo(slug) {
   return res.json();
 }
 
+function hexToRgb(hex) {
+  return `${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)}`;
+}
+
 function starSVG() {
   return `<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
     <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
   </svg>`;
 }
 
-function renderCard({ name, description, language, stars, url, pageUrl, screenshots, positions, logo, logoLarge, isProduct }, index = 0) {
+function renderCard({ name, description, language, stars, url, pageUrl, screenshots, positions, logo, logoLarge, isProduct, brandColor }, index = 0) {
   const color    = LANG_COLORS[language] || '#888';
   const mainShot = screenshots[0];
   const mainPos  = positions?.[0] || 'center';
@@ -102,9 +109,11 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
     </div>
   `;
 
-  const classes = `card${isProduct ? ' card--product' : ''}`;
-  const delay   = `animation-delay:${index * 0.12 + 0.08}s`;
-  const data    = `data-screenshots='${JSON.stringify(screenshots)}' data-positions='${JSON.stringify(positions || [])}'`;
+  const classes   = `card${isProduct ? ' card--product' : ''}`;
+  const brand     = brandColor || 'var(--accent)';
+  const brandRgb  = brandColor ? hexToRgb(brandColor) : '201,149,42';
+  const delay     = `animation-delay:${index * 0.12 + 0.08}s;--brand-color:${brand};--brand-color-rgb:${brandRgb}`;
+  const data      = `data-screenshots='${JSON.stringify(screenshots)}' data-positions='${JSON.stringify(positions || [])}'`;
 
   if (url) {
     return `<div class="${classes}" style="${delay}" ${data}>${inner}</div>`;
