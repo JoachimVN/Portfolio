@@ -92,7 +92,9 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
   const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
 
   let ctaLabel = '';
-  if (pageUrl) {
+  if (url) {
+    ctaLabel = `<span class="card-link">GitHub ↗</span>`;
+  } else if (pageUrl) {
     ctaLabel = `<span class="card-link">View project ↗</span>`;
   }
 
