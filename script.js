@@ -260,7 +260,8 @@ function highlightPython(code) {
   const ATR  = String.raw`\.[A-Za-z_]\w*`;
   const FN   = String.raw`[A-Za-z_]\w*(?=\s*\()`;
   const NAME = String.raw`[A-Za-z_]\w*`;
-  const re = new RegExp(`(${STR})|(${CMT})|(${NUM})|(${DEC})|(${BRK})|(${ATR})|(${FN})|(${NAME})|([\\s\\S])`, 'g');
+  const REST = String.raw`[\s\S]`;
+  const re = new RegExp(`(${STR})|(${CMT})|(${NUM})|(${DEC})|(${BRK})|(${ATR})|(${FN})|(${NAME})|(${REST})`, 'g');
   let out = '';
   let m;
   while ((m = re.exec(code)) !== null) {
