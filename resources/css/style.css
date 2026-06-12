@@ -31,7 +31,7 @@
   padding: 0;
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: var(--bg); }
 
 body {
   background: var(--bg);
@@ -900,8 +900,6 @@ a.card {
 
 /* ── PAGE TRANSITION ─────────────────────────────────── */
 @view-transition { navigation: auto; }
-
-html { background: var(--bg); }
 
 ::view-transition { background: var(--bg); }
 
