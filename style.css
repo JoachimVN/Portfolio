@@ -501,7 +501,9 @@ a { text-decoration: none; }
   display: flex;
 }
 
-.footer-icons a:hover { color: var(--accent); }
+.footer-icons a.icon-linkedin:hover           { color: #0A66C2; }
+.footer-icons a.icon-github:hover             { color: #f0f0f0; }
+.footer-icons a.icon-instagram:hover svg path { fill: url(#ig-grad); }
 
 .footer-icons svg {
   width: 20px;
