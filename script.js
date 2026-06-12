@@ -75,10 +75,6 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
     ? `<div class="card-dots">${screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')}</div>`
     : '';
 
-  const arrows = multiShot
-    ? `<button class="card-arrow card-arrow--prev" aria-label="Previous">&#8249;</button>
-       <button class="card-arrow card-arrow--next" aria-label="Next">&#8250;</button>`
-    : '';
 
   const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
 
@@ -93,7 +89,6 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
     <div class="card-bg" style="background-image:url('${mainShot}');background-position:${mainPos}"></div>
     <div class="card-overlay"></div>
     ${dots}
-    ${arrows}
     ${logo ? `<img class="${logoClass}" src="${logo}" alt="${name}">` : ''}
     <div class="card-content">
       <h3 class="card-title">${name}</h3>
@@ -119,35 +114,52 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
   return `<div class="${classes}" style="${delay}" ${data}>${inner}</div>`;
 }
 
+const SLIDE_DURATION = 3500;
+
+function goToSlide(card, idx) {
+  const screenshots = JSON.parse(card.dataset.screenshots);
+  const positions   = JSON.parse(card.dataset.positions || '[]');
+  const dots        = [...card.querySelectorAll('.dot')];
+  const bg          = card.querySelector('.card-bg');
+
+  // crossfade
+  bg.style.opacity = '0';
+  setTimeout(() => {
+    bg.style.backgroundImage    = `url('${screenshots[idx]}')`;
+    bg.style.backgroundPosition = positions[idx] || 'center';
+    bg.style.opacity = '1';
+  }, 320);
+
+  // restart dot progress animation
+  dots.forEach(d => d.classList.remove('active'));
+  void dots[idx]?.offsetWidth; // trigger reflow so animation restarts
+  dots[idx]?.classList.add('active');
+}
+
 function initNavigation() {
-  document.addEventListener('click', (e) => {
-    const dot   = e.target.closest('.dot');
-    const arrow = e.target.closest('.card-arrow');
-    if (!dot && !arrow) return;
-    e.preventDefault();
-    e.stopPropagation();
+  document.querySelectorAll('.card').forEach(card => {
+    const screenshots = JSON.parse(card.dataset.screenshots || '[]');
+    if (screenshots.length <= 1) return;
 
-    const card        = (dot || arrow).closest('.card');
-    const screenshots = JSON.parse(card.dataset.screenshots);
-    const positions   = JSON.parse(card.dataset.positions || '[]');
-    const dots        = [...card.querySelectorAll('.dot')];
-    const currentIdx  = dots.findIndex(d => d.classList.contains('active'));
+    let idx = 0;
 
-    let nextIdx;
-    if (dot) {
-      nextIdx = Number.parseInt(dot.dataset.index);
-    } else if (arrow.classList.contains('card-arrow--prev')) {
-      nextIdx = (currentIdx - 1 + screenshots.length) % screenshots.length;
-    } else {
-      nextIdx = (currentIdx + 1) % screenshots.length;
-    }
+    const advance = () => {
+      idx = (idx + 1) % screenshots.length;
+      goToSlide(card, idx);
+    };
 
-    dots.forEach(d => d.classList.remove('active'));
-    if (dots[nextIdx]) dots[nextIdx].classList.add('active');
+    let timer = setInterval(advance, SLIDE_DURATION);
 
-    const bg = card.querySelector('.card-bg');
-    bg.style.backgroundImage    = `url('${screenshots[nextIdx]}')`;
-    bg.style.backgroundPosition = positions[nextIdx] || 'center';
+    card.querySelectorAll('.dot').forEach((dot, i) => {
+      dot.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearInterval(timer);
+        idx = i;
+        goToSlide(card, idx);
+        timer = setInterval(advance, SLIDE_DURATION);
+      });
+    });
   });
 }
 

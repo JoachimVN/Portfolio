@@ -157,7 +157,7 @@ a { text-decoration: none; }
 /* ── ABOUT SECTION ───────────────────────────────────── */
 .about-section {
   display: grid;
-  grid-template-columns: 5fr 7fr;
+  grid-template-columns: 7fr 5fr;
   gap: 5rem;
   padding: 7rem 3rem;
   border-top: 1px solid var(--rule);
@@ -174,7 +174,7 @@ a { text-decoration: none; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 28%;
+  object-position: center 72%;
   display: block;
   filter: contrast(1.04) saturate(0.82) brightness(0.9);
 }
@@ -280,7 +280,7 @@ a { text-decoration: none; }
   inset: 0;
   background-size: cover;
   background-position: center;
-  transition: transform 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.35s ease;
 }
 
 .card:hover .card-bg { transform: scale(1.05); }
@@ -463,30 +463,46 @@ a { text-decoration: none; }
 /* ── SCREENSHOT DOTS ─────────────────────────────────── */
 .card-dots {
   position: absolute;
-  top: 1.1rem;
-  right: 1.1rem;
+  top: 1rem;
+  right: 1rem;
   display: flex;
-  gap: 0.38rem;
+  gap: 0.3rem;
   z-index: 3;
 }
 
 .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  height: 3px;
+  width: 18px;
+  border-radius: 2px;
   border: none;
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.22);
   cursor: pointer;
   padding: 0;
-  transition: background 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.2s;
 }
 
-.dot.active {
-  background: #fff;
-  transform: scale(1.3);
+.dot::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  height: 100%;
+  width: 0%;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: inherit;
 }
 
-.dot:hover:not(.active) { background: rgba(255, 255, 255, 0.6); }
+.dot.active::after {
+  animation: dot-fill var(--slide-duration, 3.5s) linear forwards;
+}
+
+@keyframes dot-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.dot:hover { opacity: 0.75; }
 
 /* ── LOGO LARGE ──────────────────────────────────────── */
 .card-logo--lg {
