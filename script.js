@@ -273,13 +273,20 @@ function highlightPython(code) {
   return out;
 }
 
+function renderHighlighted(el, code) {
+  const lines = code.split('\n');
+  if (lines.at(-1) === '') lines.pop();
+  el.innerHTML = lines.map(line =>
+    `<span class="line">${highlightPython(line) || '​'}</span>`
+  ).join('');
+}
+
 function initCodeHighlight() {
-  document.querySelectorAll('.lego-code code').forEach(el => {
-    const lines = el.textContent.split('\n');
-    if (lines.at(-1) === '') lines.pop();
-    el.innerHTML = lines.map(line =>
-      `<span class="line">${highlightPython(line) || '​'}</span>`
-    ).join('');
+  document.querySelectorAll('.lego-code code[data-src]').forEach(el => {
+    fetch(el.dataset.src)
+      .then(r => r.text())
+      .then(code => renderHighlighted(el, code))
+      .catch(() => { el.textContent = 'Could not load source file.'; });
   });
 }
 
