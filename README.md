@@ -1,10 +1,10 @@
 <div align="center">
 
+# Joachim Valdersnes Nilsen
+
 <img src="resources/images/screenshots/Portfolio_Landing.png" alt="Portfolio preview" width="100%">
 
 <br/>
-
-# JoachimVN.github.io
 
 [![Live](https://img.shields.io/badge/live-joachimvn.github.io-brightgreen?style=flat-square&logo=github)](https://joachimvn.github.io)
 &nbsp;
