@@ -24,7 +24,7 @@ const PROJECTS = [
   },
   {
     name:        'LEGO MINDSTORMS EV3',
-    description: 'Two autonomous robots built at NTNU. A competitive line follower and a waste sorting system programmed in Python.',
+    description: 'Two autonomous robots built at NTNU\'s IDATT1004 course. A competitive line follower and a waste sorting system programmed in Python.',
     language:    'Python',
     stars:       null,
     url:         null,
