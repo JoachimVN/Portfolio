@@ -276,6 +276,17 @@ function initSectionReveal() {
   });
 }
 
+function initSkillsReveal() {
+  const skills = document.querySelector('.about-skills');
+  if (!skills) return;
+  const obs = new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) return;
+    skills.classList.add('skills-visible');
+    obs.disconnect();
+  }, { threshold: 0.3 });
+  obs.observe(skills);
+}
+
 function initScrollFadeIn() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -494,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initParallax();
   initScrollFadeIn();
   initSectionReveal();
+  initSkillsReveal();
   initTypewriter();
   initScrollProgress();
   initCodeHighlight();

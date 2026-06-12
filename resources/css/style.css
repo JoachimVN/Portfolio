@@ -282,18 +282,21 @@ a { text-decoration: none; }
   border-radius: 100px;
   color: var(--muted);
   cursor: default;
+  opacity: 0;
   transition: color 0.2s ease, border-color 0.2s ease;
-  animation: fadeInUp 0.4s ease both;
-  animation-timeline: view();
-  animation-range: entry 10% entry 70%;
 }
 
-.skill:nth-child(2) { animation-range: entry 15% entry 75%; }
-.skill:nth-child(3) { animation-range: entry 20% entry 80%; }
-.skill:nth-child(4) { animation-range: entry 25% entry 85%; }
-.skill:nth-child(5) { animation-range: entry 30% entry 90%; }
-.skill:nth-child(6) { animation-range: entry 35% entry 95%; }
-.skill:nth-child(7) { animation-range: entry 40% entry 100%; }
+.about-skills.skills-visible .skill {
+  animation: fadeInUp 0.45s ease forwards;
+}
+
+.about-skills.skills-visible .skill:nth-child(1) { animation-delay: 0.05s; }
+.about-skills.skills-visible .skill:nth-child(2) { animation-delay: 0.13s; }
+.about-skills.skills-visible .skill:nth-child(3) { animation-delay: 0.21s; }
+.about-skills.skills-visible .skill:nth-child(4) { animation-delay: 0.29s; }
+.about-skills.skills-visible .skill:nth-child(5) { animation-delay: 0.37s; }
+.about-skills.skills-visible .skill:nth-child(6) { animation-delay: 0.45s; }
+.about-skills.skills-visible .skill:nth-child(7) { animation-delay: 0.53s; }
 
 .skill:hover {
   border-color: rgba(201, 149, 42, 0.5);
