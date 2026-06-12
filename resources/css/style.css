@@ -14,7 +14,6 @@
 
 :root {
   --bg:      #09090E;
-  --s1:      #0F0F16;
   --s2:      #14141C;
   --text:    #F2EFE6;
   --muted:   #55545C;
@@ -182,7 +181,6 @@ a { text-decoration: none; }
   transform: translateY(-2px);
 }
 
-/* ── ABOUT SECTION ───────────────────────────────────── */
 .about-section {
   display: grid;
   grid-template-columns: 8fr 4fr;
@@ -215,7 +213,7 @@ a { text-decoration: none; }
   width: 100%;
   height: 167%; /* taller than container — top 40% hides above overflow:hidden */
   object-fit: cover;
-  object-position: center center;
+  object-position: center;
   display: block;
   filter: contrast(1.04) saturate(0.82) brightness(0.9);
 }
@@ -459,27 +457,21 @@ a { text-decoration: none; }
   margin-top: 0.3rem;
 }
 
-.card-lang {
+.card-lang,
+.card-stars {
   display: flex;
   align-items: center;
-  gap: 0.38rem;
   font-size: 0.7rem;
   color: rgba(242, 239, 230, 0.45);
 }
+.card-lang { gap: 0.38rem; }
+.card-stars { gap: 0.28rem; }
 
 .lang-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.card-stars {
-  display: flex;
-  align-items: center;
-  gap: 0.28rem;
-  font-size: 0.7rem;
-  color: rgba(242, 239, 230, 0.45);
 }
 
 .card-link {
@@ -779,18 +771,13 @@ a.card {
   border-bottom: 1px solid #3c3c3c;
 }
 
-.lego-code-prompt {
-  font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 0.8rem;
-  color: var(--accent);
-  line-height: 1;
-}
-
+.lego-code-prompt,
 .lego-code-filename {
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.8rem;
-  color: #d4d4d4;
 }
+.lego-code-prompt { color: var(--accent); line-height: 1; }
+.lego-code-filename { color: #d4d4d4; }
 
 .lego-code pre {
   margin: 0;
@@ -836,12 +823,10 @@ a.card {
 
 .py-k  { color: #c586c0; }
 .py-kl { color: #569cd6; }
-.py-f  { color: #dcdcaa; }
+.py-f, .py-d, .py-p { color: #dcdcaa; }
 .py-s  { color: #ce9178; }
 .py-c  { color: #6a9955; font-style: italic; }
 .py-n  { color: #b5cea8; }
-.py-d  { color: #dcdcaa; }
-.py-p  { color: #dcdcaa; }
 
 @view-transition { navigation: auto; }
 
