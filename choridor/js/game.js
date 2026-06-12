@@ -15,7 +15,7 @@ const P2_STRIP       = 'rgba(62, 104, 168, 0.7)';
 
 const BACKEND_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
     ? 'http://localhost:3001'
-    : 'https://your-railway-url.up.railway.app'; // update after deploying backend
+    : 'https://choridor-web-production.up.railway.app';
 
 // ─── Audio ────────────────────────────────────────────────────────────────
 
