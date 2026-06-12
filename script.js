@@ -96,7 +96,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
       <p class="card-desc">${description || 'No description available.'}</p>
       <div class="card-meta">
         ${language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${language}</span>` : ''}
-        ${stars != null ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
+        ${stars ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
         ${ctaLabel}
       </div>
     </div>
@@ -133,7 +133,6 @@ function goToSlide(card, idx) {
 
   // restart dot progress animation
   dots.forEach(d => d.classList.remove('active'));
-  dots[idx]?.offsetWidth; // trigger reflow so animation restarts
   dots[idx]?.classList.add('active');
 }
 
