@@ -31,7 +31,7 @@ const PROJECTS = [
       'resources/images/LEGO_Robot2.png',
       'resources/images/LEGO_Robot1.png',
     ],
-    positions: ['center top', 'center 20%'],
+    positions: ['center top', 'center 35%'],
     logo:      null,
     isProduct: true,
   },
