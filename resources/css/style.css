@@ -100,8 +100,6 @@ a { text-decoration: none; }
   width: calc(80% + 30px);
   z-index: 0;
   background: var(--bg);
-  outline: 1px solid transparent;
-  overflow: hidden;
 }
 
 .hero-photo {
@@ -116,7 +114,8 @@ a { text-decoration: none; }
 /* fades the photo into the bg on the right and bottom */
 .hero-photo-fade {
   position: absolute;
-  inset: 0;
+  top: 0; bottom: 0; left: 0;
+  right: -3px;
   background:
     linear-gradient(to right, rgba(9,9,14,0) 40%, rgba(9,9,14,0.15) 44%, rgba(9,9,14,0.35) 49%, rgba(9,9,14,0.55) 55%, rgba(9,9,14,0.70) 64%, rgba(9,9,14,0.82) 74%, rgba(9,9,14,0.91) 84%, rgba(9,9,14,0.97) 93%, rgba(9,9,14,1) 100%),
     linear-gradient(to top, var(--bg) 0%, transparent 30%),
