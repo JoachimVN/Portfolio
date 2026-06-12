@@ -792,7 +792,7 @@ a.card {
 
 /* ── CODE BLOCKS ─────────────────────────────────────── */
 .lego-code {
-  border: 1px solid var(--rule);
+  border: 1px solid #3c3c3c;
   border-radius: var(--radius);
   overflow: hidden;
   margin: 0 3rem 5rem;
@@ -802,9 +802,9 @@ a.card {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
-  background: var(--s2);
-  border-bottom: 1px solid var(--rule);
+  padding: 0.6rem 1rem;
+  background: #252526;
+  border-bottom: 1px solid #3c3c3c;
 }
 
 .lego-code-dots {
@@ -840,19 +840,54 @@ a.card {
 
 .lego-code pre {
   margin: 0;
-  padding: 1.5rem;
+  padding: 1rem 0;
   overflow-y: auto;
-  max-height: 420px;
-  background: var(--s1);
+  max-height: 480px;
+  background: #1e1e1e;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
 }
 
+.lego-code pre::-webkit-scrollbar        { width: 8px; height: 8px; }
+.lego-code pre::-webkit-scrollbar-track  { background: transparent; }
+.lego-code pre::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.18); border-radius: 4px; }
+.lego-code pre::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
 .lego-code code {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.78rem;
-  line-height: 1.7;
-  color: rgba(242, 239, 230, 0.72);
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #d4d4d4;
   white-space: pre;
+  display: block;
+  counter-reset: line;
 }
+
+.line {
+  display: block;
+  counter-increment: line;
+  padding: 0 1.5rem 0 0;
+}
+
+.line::before {
+  content: counter(line);
+  display: inline-block;
+  width: 3rem;
+  text-align: right;
+  padding-right: 1.5rem;
+  color: #495162;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.py-k  { color: #c586c0; }
+.py-kl { color: #569cd6; }
+.py-f  { color: #dcdcaa; }
+.py-s  { color: #ce9178; }
+.py-c  { color: #6a9955; font-style: italic; }
+.py-n  { color: #b5cea8; }
+.py-d  { color: #dcdcaa; }
+.py-p  { color: #dcdcaa; }
 
 /* ── RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 1024px) {

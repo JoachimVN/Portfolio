@@ -155,7 +155,7 @@ class Robot:
                 for j in range(90):
                     distance = obstacle_sensor.distance()
                     ev3.screen.print(distance)
-                    if distance &lt;= 1000 and distance >= target_distance*0.8 and distance &lt;= target_distance*1.2:
+                    if distance <= 1000 and distance >= target_distance*0.8 and distance <= target_distance*1.2:
                         self.robot.turn(1)
                     else:
                         ev3.speaker.beep(1080, 300)

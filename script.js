@@ -232,6 +232,57 @@ function initScrollFadeIn() {
   });
 }
 
+function escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function highlightPython(code) {
+  const KW = new Set([
+    'and','as','assert','async','await','break','class','continue',
+    'def','del','elif','else','except','finally','for','from','global',
+    'if','import','in','is','lambda','nonlocal','not','or','pass',
+    'raise','return','try','while','with','yield',
+  ]);
+  const KW_LIT = new Set(['True', 'False', 'None', 'self']);
+
+  const re = /("""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#[^\n]*)|((?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)|([@][A-Za-z_]\w*)|([()\[\]{}])|(\.[A-Za-z_]\w*)|([A-Za-z_]\w*)(?=\s*\()|([A-Za-z_]\w*)|([\s\S])/g;
+  let out = '';
+  let m;
+  while ((m = re.exec(code)) !== null) {
+    const [, str, comment, num, dec, bracket, attr, fn, name, other] = m;
+    if (str)          out += `<span class="py-s">${escHtml(str)}</span>`;
+    else if (comment) out += `<span class="py-c">${escHtml(comment)}</span>`;
+    else if (num)     out += `<span class="py-n">${escHtml(num)}</span>`;
+    else if (dec)     out += `<span class="py-d">${escHtml(dec)}</span>`;
+    else if (bracket) out += `<span class="py-p">${escHtml(bracket)}</span>`;
+    else if (attr)    out += escHtml(attr);
+    else if (fn) {
+      if (KW.has(fn))         out += `<span class="py-k">${fn}</span>`;
+      else if (KW_LIT.has(fn)) out += `<span class="py-kl">${fn}</span>`;
+      else                    out += `<span class="py-f">${fn}</span>`;
+    }
+    else if (name) {
+      if (KW.has(name))           out += `<span class="py-k">${name}</span>`;
+      else if (KW_LIT.has(name))  out += `<span class="py-kl">${name}</span>`;
+      else if (/^[A-Z]/.test(name)) out += `<span class="py-f">${name}</span>`;
+      else                        out += name;
+    } else {
+      out += escHtml(other);
+    }
+  }
+  return out;
+}
+
+function initCodeHighlight() {
+  document.querySelectorAll('.lego-code code').forEach(el => {
+    const lines = el.textContent.split('\n');
+    if (lines.at(-1) === '') lines.pop();
+    el.innerHTML = lines.map(line =>
+      `<span class="line">${highlightPython(line) || '​'}</span>`
+    ).join('');
+  });
+}
+
 function initFooter() {
   const footer = document.querySelector('.footer');
   if (!footer) return;
@@ -277,6 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadProjects();
   initParallax();
   initScrollFadeIn();
+  initCodeHighlight();
   initFooter();
   const ageEl = document.getElementById('age');
   if (ageEl) ageEl.textContent = calcAge(2006, 6, 26);
