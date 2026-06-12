@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="resources/images/screenshots/Portfolio_Landing.png" alt="Portfolio preview" width="100%">
+[![Portfolio preview](resources/images/screenshots/Portfolio_Landing.png)](https://joachimvn.github.io)
 
 <br/>
 
