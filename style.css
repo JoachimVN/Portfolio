@@ -99,7 +99,7 @@ a { text-decoration: none; }
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right, transparent 55%, var(--bg) 100%),
+    linear-gradient(to right, rgba(9,9,14,0) 40%, rgba(9,9,14,0.15) 44%, rgba(9,9,14,0.35) 49%, rgba(9,9,14,0.55) 55%, rgba(9,9,14,0.70) 64%, rgba(9,9,14,0.82) 74%, rgba(9,9,14,0.91) 84%, rgba(9,9,14,0.97) 93%, rgba(9,9,14,1) 100%),
     linear-gradient(to top, var(--bg) 0%, transparent 30%),
     linear-gradient(to bottom, var(--bg) 0%, transparent 15%);
   pointer-events: none;
@@ -177,6 +177,15 @@ a { text-decoration: none; }
   aspect-ratio: 3 / 4;
 }
 
+.about-photo-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(9,9,14,0.6) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .about-photo {
   position: absolute;
   bottom: 0;
@@ -231,6 +240,9 @@ a { text-decoration: none; }
 }
 
 .skill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -238,6 +250,13 @@ a { text-decoration: none; }
   border: 1px solid var(--rule);
   border-radius: 100px;
   color: var(--muted);
+}
+
+.skill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 /* ── PROJECTS ────────────────────────────────────────── */
