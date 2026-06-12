@@ -1,0 +1,450 @@
+@font-face {
+    font-family: 'AdlamDisplay';
+    src: url('../fonts/ADLAMDISPLAY-REGULAR.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.hidden { display: none !important; }
+
+body {
+    font-family: System, -apple-system, sans-serif;
+    background: #0F1117;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0;
+}
+
+.app {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    background: #0F1117;
+    overflow: hidden;
+}
+
+.top-bar {
+    background: #13151F;
+    border-bottom: 1px solid #1E2130;
+    padding: 1.75vh 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.player-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.p2-section {
+    flex-direction: row-reverse;
+}
+
+.player-dot {
+    width: 1.25vh;
+    height: 1.25vh;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.p1-dot {
+    background: #9E4A40;
+}
+
+.p2-dot {
+    background: #3E68A8;
+}
+
+.player-name {
+    color: #8890A8;
+    font-size: 1.85vh;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.wall-boxes {
+    display: flex;
+    gap: 0.4vh;
+}
+
+.wall-box {
+    width: 0.88vh;
+    height: 2.25vh;
+    border-radius: 0.25vh;
+    flex-shrink: 0;
+}
+
+.wall-box.active {
+    background: inherit;
+}
+
+.wall-box.used {
+    background: #252838;
+}
+
+.logo {
+    height: 6vh;
+    object-fit: contain;
+}
+
+.board-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #0F1117;
+    min-height: 0;
+}
+
+canvas {
+    display: block;
+    cursor: default;
+}
+
+.bottom-bar {
+    background: #13151F;
+    border-top: 1px solid #1E2130;
+    padding: 1.75vh 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.status-label {
+    color: #C8CCDC;
+    font-size: 2vh;
+    font-weight: bold;
+}
+
+.status-label.p1 {
+    color: #9E4A40;
+}
+
+.status-label.p2 {
+    color: #3E68A8;
+}
+
+.controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+button {
+    padding: 1.25vh 22px;
+    font-size: 1.75vh;
+    border: 1px solid #2E3250;
+    border-radius: 4px;
+    cursor: pointer;
+    background: #1E2130;
+    color: #8890A8;
+    transition: all 0.2s;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #252840;
+    color: #C8CCDC;
+    border-color: #3E4470;
+}
+
+button:active {
+    background: #3E68A8;
+    color: #FFFFFF;
+    border-color: #2E508A;
+}
+
+.icon-btn {
+    padding: 0.65vh 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn svg {
+    color: #8890A8;
+    width: 2vh;
+    height: 2vh;
+}
+
+button:hover .icon-btn svg {
+    color: #C8CCDC;
+}
+
+/* Win Screen */
+@keyframes win-card-in {
+    from { opacity: 0; transform: scale(0.88); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.win-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.win-overlay.hidden {
+    display: none;
+}
+
+.win-card {
+    background: #13151F;
+    border: 1px solid #2A2E48;
+    border-radius: 16px;
+    padding: 48px 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    animation: win-card-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.win-card.p1 {
+    border-color: rgba(158, 74, 64, 0.4);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 48px rgba(158, 74, 64, 0.18);
+}
+
+.win-card.p2 {
+    border-color: rgba(62, 104, 168, 0.4);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 48px rgba(62, 104, 168, 0.18);
+}
+
+.win-pawn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+}
+
+.win-pawn.p1 {
+    background: #9E4A40;
+    box-shadow: 0 6px 28px rgba(158, 74, 64, 0.5);
+}
+
+.win-pawn.p2 {
+    background: #3E68A8;
+    box-shadow: 0 6px 28px rgba(62, 104, 168, 0.5);
+}
+
+.win-title {
+    font-size: 1.75rem;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+    margin-bottom: 0;
+}
+
+.win-title.p1 { color: #9E4A40; }
+.win-title.p2 { color: #3E68A8; }
+
+.win-divider {
+    width: 48px;
+    height: 2px;
+    border-radius: 1px;
+    margin: 28px 0;
+}
+
+.win-card.p1 .win-divider { background: rgba(158, 74, 64, 0.5); }
+.win-card.p2 .win-divider { background: rgba(62, 104, 168, 0.5); }
+
+.win-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 28px;
+    background: #1E2130;
+    color: #8890A8;
+    border: 1px solid #2E3250;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.win-btn:hover {
+    background: #252840;
+    color: #C8CCDC;
+    border-color: #3E4470;
+}
+
+.win-btn:active {
+    background: #3E68A8;
+    color: #FFFFFF;
+    border-color: #2E508A;
+}
+
+/* Icon-top action buttons (lobby + future use) */
+.win-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: 116px;
+    min-height: 108px;
+    padding: 22px 16px 18px;
+    background: #191C2A;
+    border: 1px solid #242842;
+    border-radius: 12px;
+    color: #6E7694;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.win-action-btn svg {
+    color: #99A1C2;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.win-action-btn:hover {
+    background: #1C2236;
+    color: #C8CCDC;
+    border-color: #3E68A8;
+    box-shadow: 0 0 14px rgba(62, 104, 168, 0.25);
+}
+
+.win-action-btn:hover svg { color: #8AAADA; }
+
+.win-action-btn:active {
+    background: #3E68A8;
+    color: #FFFFFF;
+    border-color: #5A84C4;
+    box-shadow: none;
+}
+
+.win-action-btn:active svg { color: #FFFFFF; }
+
+/* Lobby */
+.lobby-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.lobby-overlay.hidden { display: none; }
+
+.lobby-card {
+    background: #13151F;
+    border: 1px solid #2A2E48;
+    border-radius: 16px;
+    padding: 40px 56px 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+    min-width: 320px;
+}
+
+.lobby-logo {
+    height: 36px;
+    object-fit: contain;
+    margin-bottom: 32px;
+}
+
+.lobby-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.lobby-buttons {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.lobby-subtitle {
+    color: #454A68;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+}
+
+.lobby-code {
+    font-size: 2.2rem;
+    font-weight: bold;
+    letter-spacing: 0.25em;
+    color: #C8CCDC;
+    font-family: monospace;
+    margin: 4px 0 24px;
+}
+
+.lobby-input {
+    width: 100%;
+    background: #0D0F1A;
+    border: 1px solid #2E3250;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    letter-spacing: 0.25em;
+    color: #C8CCDC;
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    outline: none;
+    font-family: monospace;
+    transition: border-color 0.2s;
+}
+
+.lobby-input:focus { border-color: #3E68A8; }
+
+.lobby-error {
+    color: #9E4A40;
+    font-size: 12px;
+    margin-bottom: 10px;
+    min-height: 16px;
+    text-align: center;
+}
+
+.lobby-back {
+    background: none;
+    border: none;
+    color: #3A3F58;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 8px 4px;
+    margin-top: 6px;
+    transition: color 0.2s;
+    font-weight: bold;
+}
+
+.lobby-back:hover {
+    color: #8890A8;
+    background: none;
+    border: none;
+}
