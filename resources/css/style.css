@@ -451,6 +451,7 @@ a { text-decoration: none; }
 }
 
 .card-meta {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.9rem;
@@ -486,21 +487,41 @@ a { text-decoration: none; }
 .card-link:hover { color: #E0B045; }
 
 .card-play-btn {
-  margin-left: auto;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--brand-color-rgb, 62,104,168), 0.4);
+  color: rgba(var(--brand-color-rgb, 62,104,168), 0.75);
   font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  padding: 0.28rem 0.7rem;
-  border-radius: 999px;
-  background: var(--brand-color, #3e67a7);
-  color: #fff;
+  letter-spacing: 0.08em;
   cursor: pointer;
-  border: none;
-  transition: opacity 0.2s, transform 0.15s;
   user-select: none;
+  transition: color 0.3s, border-color 0.3s;
 }
 
-.card-play-btn:hover { opacity: 0.85; transform: scale(1.04); }
+.card-play-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--brand-color, #3e67a7);
+  transform: translateX(-105%);
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-play-btn:hover {
+  color: #fff;
+  border-color: var(--brand-color, #3e67a7);
+}
+
+.card-play-btn:hover::before { transform: translateX(0); }
+
+.card-play-btn span { position: relative; z-index: 1; }
 
 .card--product .card-bg {
   background-color: #131320;

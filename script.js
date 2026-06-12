@@ -98,7 +98,9 @@ function renderCard({ name, description, language, stars, url, pageUrl, playUrl,
   } else if (pageUrl) {
     ctaLabel = `<span class="card-link">View project ↗</span>`;
   }
-  const playLabel = playUrl ? `<span class="card-play-btn" onclick="event.preventDefault();event.stopPropagation();window.location='${playUrl}'">▶ Play</span>` : '';
+  const playLabel = playUrl
+    ? `<span class="card-play-btn" onclick="event.preventDefault();event.stopPropagation();window.open('${playUrl}','_blank')"><span>▶ Play</span></span>`
+    : '';
 
   const inner = `
     <div class="card-bg" style="background-image:url('${mainShot}');background-position:${mainPos}"></div>
@@ -112,8 +114,8 @@ function renderCard({ name, description, language, stars, url, pageUrl, playUrl,
       <div class="card-meta">
         ${language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${language}</span>` : ''}
         ${stars ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
-        ${ctaLabel}
         ${playLabel}
+        ${ctaLabel}
       </div>
     </div>
   `;
