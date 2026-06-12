@@ -1,48 +1,67 @@
+<div align="center">
+
+<img src="resources/images/screenshots/Portfolio_Landing.png" alt="Portfolio preview" width="100%">
+
+<br/>
+
 # JoachimVN.github.io
 
-Personal portfolio website. Built with vanilla HTML, CSS, and JavaScript. No frameworks, no build tools.
+[![Live](https://img.shields.io/badge/live-joachimvn.github.io-brightgreen?style=flat-square&logo=github)](https://joachimvn.github.io)
+&nbsp;
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-563d7c?style=flat-square&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 
-**Live:** https://joachimvn.github.io
+*Personal portfolio. No frameworks, no build tools.*
+
+</div>
 
 ---
 
+## Projects
+
+| Project | Stack | Source |
+|---|---|---|
+| **After Hours** | Java · JavaFX | [repo](https://github.com/JoachimVN/After-Hours) |
+| **CHORIDOR** | Java · JavaFX | [repo](https://github.com/JoachimVN/CHORIDOR) |
+| **LEGO MINDSTORMS EV3** | Python | [page](https://joachimvn.github.io/lego.html) |
+
 ## Features
 
-- GitHub API integration — project cards fetch live data (description, language, stars) at runtime
-- Animated screenshot carousel with per-project brand colors on the progress indicators
-- Vanilla Python syntax highlighter with VS Code Dark+ colors and line numbers, source files loaded via `fetch()`
-- Auto-updating age calculated from birthdate
-- Shared footer rendered from JavaScript — single definition used across all pages
-- Self-hosted variable fonts (Syne, Inter) — no external font requests
-
-## Stack
-
-- HTML5, CSS3, JavaScript (ES2022)
-- GitHub Pages
-
-## Structure
-
-```
-index.html          Main portfolio page
-lego.html           LEGO MINDSTORMS EV3 project page
-script.js           All JavaScript
-resources/
-  css/style.css     All styles
-  fonts/            Self-hosted Syne and Inter variable fonts
-  images/           Photos, screenshots, logos
-  code/             Python source files (line_follower.py, waste_handler.py)
-```
+- GitHub API integration — cards pull live description, language and stars at runtime
+- Screenshot carousel with per-project brand colors on the progress indicators
+- Python syntax highlighter (VS Code Dark+ palette) with line numbers, source loaded via `fetch()`
+- Shared footer and dynamic copyright year rendered from JS
+- Self-hosted Syne and Inter variable fonts
 
 ## Running locally
 
-No build step required. Serve the root directory with any static file server:
+No build step. Serve the root with any static server:
 
 ```bash
 npx serve .
 ```
 
-Or open `index.html` directly in a browser. Note that the Python source files load via `fetch()`, so a local server is needed for the LEGO page code blocks to render.
+Opening `index.html` directly works for most features, but the LEGO page loads Python source files via `fetch()` so a local server is needed there.
 
-## Author
+<details>
+<summary>File structure</summary>
 
-Joachim Valdersnes Nilsen
+```
+index.html
+lego.html
+script.js
+resources/
+  css/style.css
+  fonts/          Syne + Inter variable fonts
+  images/         Photos, screenshots, logos
+  code/           line_follower.py · waste_handler.py
+```
+
+</details>
+
+---
+
+<div align="center">
+<sub>Built by <a href="https://github.com/JoachimVN">Joachim Valdersnes Nilsen</a></sub>
+</div>
