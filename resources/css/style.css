@@ -4,7 +4,6 @@
   font-weight: 100 900;
   font-display: swap;
 }
-
 @font-face {
   font-family: 'Inter';
   src: url('../fonts/Inter-VariableFont_opsz,wght.woff2') format('woff2');
@@ -24,15 +23,12 @@
   --radius:  14px;
   --nav-h:   60px;
 }
-
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
-
 html { scroll-behavior: smooth; background: var(--bg); }
-
 body {
   background: var(--bg);
   color: var(--text);
@@ -42,7 +38,6 @@ body {
 }
 
 a { text-decoration: none; }
-
 .nav {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -82,7 +77,6 @@ a { text-decoration: none; }
 }
 
 .nav-links a:hover { color: #fff; }
-
 .hero {
   position: relative;
   min-height: 100vh;
@@ -120,7 +114,6 @@ a { text-decoration: none; }
     linear-gradient(to bottom, rgba(9,9,14,0.3) 0%, transparent 10%);
   pointer-events: none;
 }
-
 .hero-text {
   grid-column: 2;
   position: relative;
