@@ -904,22 +904,25 @@ a.card {
 ::view-transition-old(root),
 ::view-transition-new(root) {
   mix-blend-mode: normal;
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: forwards;
 }
 
 ::view-transition-old(root) {
-  animation: vt-out 0.18s ease-in forwards;
+  animation-name: vt-slide-out;
 }
 
 ::view-transition-new(root) {
-  animation: vt-in 0.28s ease-out forwards;
+  animation-name: vt-slide-in;
 }
 
-@keyframes vt-out {
-  to { opacity: 0; }
+@keyframes vt-slide-out {
+  to { transform: translateX(-100%); }
 }
 
-@keyframes vt-in {
-  from { opacity: 0; }
+@keyframes vt-slide-in {
+  from { transform: translateX(100%); }
 }
 
 /* ── SCROLL PROGRESS ─────────────────────────────────── */
