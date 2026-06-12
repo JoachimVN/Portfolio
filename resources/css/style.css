@@ -43,7 +43,6 @@ body {
 
 a { text-decoration: none; }
 
-/* ── NAV ─────────────────────────────────────────────── */
 .nav {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -84,7 +83,6 @@ a { text-decoration: none; }
 
 .nav-links a:hover { color: #fff; }
 
-/* ── HERO ────────────────────────────────────────────── */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -303,10 +301,6 @@ a { text-decoration: none; }
   color: rgba(242, 239, 230, 0.9);
 }
 
-
-
-
-/* ── SCROLL FADE-IN ──────────────────────────────────── */
 .fade-in-scroll {
   opacity: 0;
   transform: translateY(22px);
@@ -325,7 +319,6 @@ a { text-decoration: none; }
   flex-shrink: 0;
 }
 
-/* ── PROJECTS ────────────────────────────────────────── */
 .projects {
   padding: 6rem 3rem;
 }
@@ -366,7 +359,6 @@ a { text-decoration: none; }
   gap: 1.25rem;
 }
 
-/* ── CARD ────────────────────────────────────────────── */
 .card {
   position: relative;
   border-radius: var(--radius);
@@ -513,7 +505,6 @@ a { text-decoration: none; }
 
 .card-link:hover { color: #E0B045; }
 
-/* ── PRODUCT CARD (LEGO — robot on white bg) ─────────── */
 .card--product .card-bg {
   background-color: #131320;
   background-size: 62%;
@@ -539,7 +530,6 @@ a { text-decoration: none; }
 .card--product .card-overlay,
 .card--product .card-content { z-index: 2; }
 
-/* ── SKELETON ─────────────────────────────────────────── */
 .skeleton {
   background: var(--s2);
   animation: pulse 1.6s ease-in-out infinite;
@@ -551,7 +541,6 @@ a { text-decoration: none; }
   50%       { opacity: 0.2; }
 }
 
-/* ── FOOTER ──────────────────────────────────────────── */
 .footer {
   padding: 6rem 3rem 4rem;
   border-top: 1px solid var(--rule);
@@ -610,7 +599,6 @@ a { text-decoration: none; }
   opacity: 0.6;
 }
 
-/* ── SCREENSHOT DOTS ─────────────────────────────────── */
 .card-dots {
   position: absolute;
   top: 1rem;
@@ -663,13 +651,11 @@ a { text-decoration: none; }
   background: var(--brand-color, var(--accent));
 }
 
-/* ── LOGO LARGE ──────────────────────────────────────── */
 .card-logo--lg {
   height: 44px;
   top: 0;
 }
 
-/* ── PREV / NEXT ARROWS ──────────────────────────────── */
 .card-arrow {
   position: absolute;
   top: 50%;
@@ -696,13 +682,11 @@ a { text-decoration: none; }
 .card-arrow--prev { left: 0.65rem; }
 .card-arrow--next { right: 0.65rem; }
 
-/* ── CARD AS ANCHOR ──────────────────────────────────── */
 a.card {
   display: block;
   color: inherit;
 }
 
-/* ── LEGO PAGE ───────────────────────────────────────── */
 .lego-page { padding-top: var(--nav-h); }
 
 .lego-header {
@@ -816,7 +800,6 @@ a.card {
   text-transform: uppercase;
 }
 
-/* ── CODE BLOCKS ─────────────────────────────────────── */
 .lego-code {
   border: 1px solid #3c3c3c;
   border-left: 3px solid #3572A5;
@@ -898,7 +881,6 @@ a.card {
 .py-d  { color: #dcdcaa; }
 .py-p  { color: #dcdcaa; }
 
-/* ── PAGE TRANSITION ─────────────────────────────────── */
 @view-transition { navigation: auto; }
 
 ::view-transition { background: var(--bg); }
@@ -922,7 +904,6 @@ a.card {
   from { transform: translateX(100%); }
 }
 
-/* ── SCROLL PROGRESS ─────────────────────────────────── */
 .scroll-progress {
   position: fixed;
   top: 0; left: 0;
@@ -935,7 +916,6 @@ a.card {
   transition: width 0.05s linear;
 }
 
-/* ── CARD SHINE ──────────────────────────────────────── */
 .card-shine {
   position: absolute;
   inset: 0;
@@ -945,7 +925,6 @@ a.card {
   transition: background 0.15s ease;
 }
 
-/* ── RESPONSIVE ──────────────────────────────────────── */
 @media (max-width: 1200px) {
   .about-section { padding: 6rem 4rem; }
   .lego-code     { margin: 0 1.5rem 4rem; }
