@@ -12,6 +12,7 @@ const PROJECTS = [
   },
   {
     github:      'JoachimVN/CHORIDOR',
+    playUrl:     '/choridor/',
     screenshots: [
       'resources/images/screenshots/CHORIDOR_Screenshot1.png',
       'resources/images/screenshots/CHORIDOR_Screenshot2.png',
@@ -77,7 +78,7 @@ function starSVG() {
   </svg>`;
 }
 
-function renderCard({ name, description, language, stars, url, pageUrl, screenshots, positions, logo, logoLarge, isProduct, brandColor }, index = 0) {
+function renderCard({ name, description, language, stars, url, pageUrl, playUrl, screenshots, positions, logo, logoLarge, isProduct, brandColor }, index = 0) {
   const color    = LANG_COLORS[language] || '#888';
   const mainShot = screenshots[0];
   const mainPos  = positions?.[0] || 'center';
@@ -97,6 +98,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
   } else if (pageUrl) {
     ctaLabel = `<span class="card-link">View project ↗</span>`;
   }
+  const playLabel = playUrl ? `<a class="card-link card-play-link" href="${playUrl}" onclick="event.stopPropagation()">Play ↗</a>` : '';
 
   const inner = `
     <div class="card-bg" style="background-image:url('${mainShot}');background-position:${mainPos}"></div>
@@ -111,6 +113,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
         ${language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${language}</span>` : ''}
         ${stars ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
         ${ctaLabel}
+        ${playLabel}
       </div>
     </div>
   `;
