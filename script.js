@@ -6,7 +6,7 @@ const PROJECTS = [
       'resources/images/screenshots/After_Hours_Screenshot2.png',
       'resources/images/screenshots/After_Hours_Screenshot3.png',
     ],
-    positions: ['left center', 'center', 'left center'],
+    positions: ['right top', 'center', 'left center'],
     logo: 'resources/images/logos/After_Hours_Logo.png',
   },
   {
