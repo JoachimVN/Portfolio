@@ -68,12 +68,13 @@ function starSVG() {
 function renderCard({ name, description, language, stars, url, pageUrl, screenshots, positions, logo, logoLarge, isProduct }, index = 0) {
   const color    = LANG_COLORS[language] || '#888';
   const mainShot = screenshots[0];
-  const mainPos  = (positions && positions[0]) || 'center';
+  const mainPos  = positions?.[0] || 'center';
   const multiShot = screenshots.length > 1;
 
-  const dots = multiShot
-    ? `<div class="card-dots">${screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')}</div>`
+  const dotButtons = multiShot
+    ? screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')
     : '';
+  const dots = dotButtons ? `<div class="card-dots">${dotButtons}</div>` : '';
 
 
   const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
@@ -95,7 +96,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, screensh
       <p class="card-desc">${description || 'No description available.'}</p>
       <div class="card-meta">
         ${language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${language}</span>` : ''}
-        ${stars !== null ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
+        ${stars != null ? `<span class="card-stars">${starSVG()} ${stars}</span>` : ''}
         ${ctaLabel}
       </div>
     </div>
@@ -132,7 +133,7 @@ function goToSlide(card, idx) {
 
   // restart dot progress animation
   dots.forEach(d => d.classList.remove('active'));
-  void dots[idx]?.offsetWidth; // trigger reflow so animation restarts
+  dots[idx]?.offsetWidth; // trigger reflow so animation restarts
   dots[idx]?.classList.add('active');
 }
 

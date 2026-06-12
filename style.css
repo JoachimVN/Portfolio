@@ -255,6 +255,7 @@ a { text-decoration: none; }
   opacity: 0;
   animation: fadeInUp 0.5s ease forwards;
   cursor: default;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .skill:nth-child(1) { animation-delay: 0.1s; }
@@ -265,27 +266,13 @@ a { text-decoration: none; }
 .skill:nth-child(6) { animation-delay: 0.6s; }
 .skill:nth-child(7) { animation-delay: 0.7s; }
 
-.skill {
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
 .skill:hover {
   border-color: rgba(201, 149, 42, 0.5);
   color: rgba(242, 239, 230, 0.9);
 }
 
 
-.section-title {
-  transition: color 0.3s ease;
-}
 
-.section-title:hover {
-  color: var(--accent);
-}
-
-.card-title {
-  transition: color 0.2s ease;
-}
 
 /* ── SCROLL FADE-IN ──────────────────────────────────── */
 .fade-in-scroll {
@@ -326,6 +313,11 @@ a { text-decoration: none; }
   font-size: 2.25rem;
   text-transform: uppercase;
   letter-spacing: -0.02em;
+  transition: color 0.3s ease;
+}
+
+.section-title:hover {
+  color: var(--accent);
 }
 
 .projects-grid {
@@ -425,6 +417,7 @@ a { text-decoration: none; }
   text-transform: uppercase;
   letter-spacing: -0.01em;
   line-height: 1;
+  transition: color 0.2s ease;
 }
 
 .card-desc {
@@ -433,6 +426,7 @@ a { text-decoration: none; }
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
