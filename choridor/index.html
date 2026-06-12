@@ -47,6 +47,7 @@
                         <span>Join Room</span>
                     </button>
                 </div>
+                <p class="lobby-error hidden" id="create-error"></p>
                 <button class="lobby-back" id="btn-online-back">← Back</button>
             </div>
 
@@ -65,7 +66,7 @@
 
             <div id="lview-join" class="lobby-view hidden">
                 <p class="lobby-subtitle">Enter room code</p>
-                <input class="lobby-input" id="room-code-input" placeholder="ABC123" maxlength="6" autocomplete="off" spellcheck="false">
+                <input class="lobby-input" id="room-code-input" placeholder="ABC" maxlength="3" autocomplete="off" spellcheck="false">
                 <p class="lobby-error hidden" id="join-error"></p>
                 <button class="win-btn" id="btn-join-confirm">Join Game</button>
                 <button class="lobby-back" id="btn-join-back">← Back</button>
@@ -119,12 +120,20 @@
                         <path d="M20.49 9A9 9 0 0 0 5.64 5.64M3.51 15A9 9 0 0 0 18.36 18.36"></path>
                     </svg>
                 </button>
+                <button id="mute-btn" class="icon-btn" title="Mute">
+                    <svg id="mute-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 5 6 9H2v6h4l5 4V5z"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    </svg>
+                </button>
+                <button id="change-mode-btn">Change Mode</button>
                 <button id="new-game-btn">New Game</button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
     <script src="js/game.js"></script>
 </body>
 </html>
