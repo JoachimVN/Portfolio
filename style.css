@@ -265,12 +265,32 @@ a { text-decoration: none; }
 .skill:nth-child(7) { animation-delay: 0.7s; }
 
 .skill {
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .skill:hover {
-  border-color: var(--accent);
-  color: var(--text);
+  border-color: rgba(201, 149, 42, 0.5);
+  color: rgba(242, 239, 230, 0.9);
+}
+
+.footer-links a {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.footer-links a:hover {
+  transform: translateX(2px);
+}
+
+.section-title {
+  transition: color 0.3s ease;
+}
+
+.section-title:hover {
+  color: var(--accent);
+}
+
+.card-title {
+  transition: color 0.2s ease;
 }
 
 /* ── SCROLL FADE-IN ──────────────────────────────────── */
