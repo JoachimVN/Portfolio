@@ -593,7 +593,7 @@ a { text-decoration: none; }
   padding: 0;
   position: relative;
   overflow: hidden;
-  transition: opacity 0.2s;
+  transition: background 0.3s ease;
 }
 
 .dot::after {
@@ -604,6 +604,7 @@ a { text-decoration: none; }
   width: 0%;
   background: rgba(255, 255, 255, 0.9);
   border-radius: inherit;
+  transition: background 0.3s ease;
 }
 
 .dot.active::after {
@@ -616,6 +617,14 @@ a { text-decoration: none; }
 }
 
 .dot:hover { opacity: 0.75; }
+
+.card:hover .dot {
+  background: rgba(201, 149, 42, 0.35);
+}
+
+.card:hover .dot::after {
+  background: var(--accent);
+}
 
 /* ── LOGO LARGE ──────────────────────────────────────── */
 .card-logo--lg {
