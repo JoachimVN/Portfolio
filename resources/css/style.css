@@ -146,7 +146,7 @@ a { text-decoration: none; }
 .hero-name {
   font-family: 'Syne', sans-serif;
   font-weight: 800;
-  font-size: clamp(2.4rem, 5vw, 5.5rem);
+  font-size: clamp(2.4rem, 4.5vw, 5.5rem);
   line-height: 0.92;
   letter-spacing: -0.025em;
   text-transform: uppercase;
@@ -762,7 +762,7 @@ a.card {
 .lego-title {
   font-family: 'Syne', sans-serif;
   font-weight: 800;
-  font-size: clamp(3rem, 8vw, 7rem);
+  font-size: clamp(1.5rem, 7vw, 7rem);
   text-transform: uppercase;
   letter-spacing: -0.03em;
   line-height: 0.9;
@@ -1081,11 +1081,9 @@ a.card {
 
   .hero-photo-wrap { height: 72vw; }
 
-  .hero-name { font-size: clamp(2rem, 11vw, 3.5rem); }
+  .hero-name { font-size: clamp(1.5rem, 9vw, 3.5rem); }
 
   .projects-grid { gap: 0.75rem; }
 
   .about-section { padding: 3.5rem 1.25rem; }
-
-  .lego-title { font-size: clamp(2.5rem, 14vw, 5rem); }
 }
