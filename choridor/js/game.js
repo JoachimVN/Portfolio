@@ -19,6 +19,7 @@ function getBackendUrl() {
     return 'https://choridor-web-production.up.railway.app';
 }
 const BACKEND_URL = getBackendUrl();
+const SOCKET_PATH = location.hostname.endsWith('.discordsays.com') ? '/api/socket.io' : '/socket.io';
 
 // ─── Audio ────────────────────────────────────────────────────────────────
 
@@ -524,7 +525,7 @@ function initSocket(errorElId, callback) {
     if (socket?.connected) { callback(); return; }
     if (socket) { socket.disconnect(); socket = null; }
 
-    socket = io(BACKEND_URL, { transports: ['websocket', 'polling'] });
+    socket = io(BACKEND_URL, { path: SOCKET_PATH, transports: ['websocket', 'polling'] });
 
     const timeout = setTimeout(() => {
         if (!socket?.connected) {
@@ -769,6 +770,12 @@ try {
     const { DiscordSDK } = await import('https://esm.sh/@discord/embedded-app-sdk@1');
     const sdk = new DiscordSDK('1515199692793843712');
     await sdk.ready();
+    sdk.patchUrlMappings([{
+        prefix: '/api',
+        target: 'choridor-web-production.up.railway.app',
+        sandboxed: false,
+        targetApplicationId: null
+    }]);
 } catch { /* not in Discord, or SDK unavailable */ }
 
 // ─── Init ─────────────────────────────────────────────────────────────────
