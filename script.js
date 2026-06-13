@@ -17,13 +17,6 @@ const PROJECTS = [
     brandColor: '#3e67a7',
     variants: [
       {
-        label:       'Web',
-        github:      'JoachimVN/CHORIDOR-web',
-        playUrl:     '/choridor/',
-        screenshots: ['https://raw.githubusercontent.com/JoachimVN/CHORIDOR-web/main/docs/screenshots/Board.png'],
-        positions:   ['center'],
-      },
-      {
         label:       'Desktop',
         github:      'JoachimVN/CHORIDOR',
         screenshots: [
@@ -32,6 +25,13 @@ const PROJECTS = [
           'resources/images/screenshots/CHORIDOR_Screenshot3.png',
         ],
         positions:   ['center', 'center', 'right center'],
+      },
+      {
+        label:       'Web',
+        github:      'JoachimVN/CHORIDOR-web',
+        playUrl:     '/choridor/',
+        screenshots: ['resources/images/screenshots/CHORIDOR-Web_Screenshot.png'],
+        positions:   ['center'],
       },
     ],
   },
