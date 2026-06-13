@@ -124,7 +124,7 @@ function renderVariantCard({ variants, logo, logoLarge, brandColor }, index = 0)
       <p class="card-desc">${v.description || 'No description available.'}</p>
       <div class="card-meta">
         ${v.language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${v.language}</span>` : ''}
-        ${v.stars != null ? `<span class="card-stars">${starSVG()} ${v.stars}</span>` : ''}
+        ${v.stars == null ? '' : `<span class="card-stars">${starSVG()} ${v.stars}</span>`}
         ${playLabel}
         ${ctaLabel}
       </div>
@@ -201,16 +201,19 @@ const SLIDE_DURATION = 3500;
 const cardSlideshows = new WeakMap();
 
 function goToSlide(card, idx) {
-  const screenshots = JSON.parse(card.dataset.screenshots);
-  const positions   = JSON.parse(card.dataset.positions || '[]');
-  const dots        = [...card.querySelectorAll('.dot')];
-  const bg          = card.querySelector('.card-bg');
+  const dots = [...card.querySelectorAll('.dot')];
+  const bg   = card.querySelector('.card-bg');
 
-  // crossfade
+  // crossfade — dataset is read inside the timeout so a variant toggle
+  // mid-fade can't stamp a stale screenshot onto the new variant
   bg.style.opacity = '0';
   setTimeout(() => {
-    bg.style.backgroundImage    = `url('${screenshots[idx]}')`;
-    bg.style.backgroundPosition = positions[idx] || 'center';
+    const screenshots = JSON.parse(card.dataset.screenshots);
+    const positions   = JSON.parse(card.dataset.positions || '[]');
+    if (screenshots[idx]) {
+      bg.style.backgroundImage    = `url('${screenshots[idx]}')`;
+      bg.style.backgroundPosition = positions[idx] || 'center';
+    }
     bg.style.opacity = '1';
   }, 320);
 
@@ -501,114 +504,208 @@ function updateToggleIndicator(card) {
   toggle.style.setProperty('--toggle-pill-w', `${active.offsetWidth}px`);
 }
 
+// Swaps dots, title, description and meta to the given variant, then restarts the slideshow
+function swapVariantContent(card, v) {
+  const color = LANG_COLORS[v.language] || '#888';
+
+  // Dots
+  let dotsContainer = card.querySelector('.card-dots');
+  if (v.screenshots.length > 1) {
+    const html = v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('');
+    if (dotsContainer) { dotsContainer.innerHTML = html; }
+    else {
+      dotsContainer = document.createElement('div');
+      dotsContainer.className = 'card-dots';
+      dotsContainer.innerHTML = html;
+      card.querySelector('.card-content').before(dotsContainer);
+    }
+  } else {
+    dotsContainer?.remove();
+  }
+
+  // Text
+  card.querySelector('.card-title').textContent = v.name || 'CHORIDOR';
+  card.querySelector('.card-desc').textContent  = v.description || 'No description available.';
+
+  // Meta
+  const meta    = card.querySelector('.card-meta');
+  const langEl  = meta.querySelector('.card-lang');
+  const starsEl = meta.querySelector('.card-stars');
+  let   playEl  = meta.querySelector('.card-play-btn');
+  let   linkEl  = meta.querySelector('.card-link');
+
+  if (langEl)  langEl.innerHTML  = `<span class="lang-dot" style="background:${color}"></span>${v.language || ''}`;
+  if (starsEl) starsEl.innerHTML = `${starSVG()} ${v.stars ?? 0}`;
+
+  if (v.playUrl) {
+    if (!playEl) {
+      playEl = document.createElement('span');
+      playEl.className = 'card-play-btn';
+      playEl.innerHTML = '<span>▶ Play</span>';
+      linkEl.before(playEl);
+    }
+    playEl.onclick = e => { e.preventDefault(); e.stopPropagation(); window.open(v.playUrl, '_blank'); };
+  } else {
+    playEl?.remove();
+  }
+
+  if (v.url) {
+    if (!linkEl) {
+      linkEl = document.createElement('a');
+      linkEl.className   = 'card-link';
+      linkEl.target      = '_blank';
+      linkEl.rel         = 'noopener';
+      linkEl.textContent = 'GitHub ↗';
+      linkEl.onclick     = e => e.stopPropagation();
+      meta.appendChild(linkEl);
+    }
+    linkEl.href = v.url;
+  } else {
+    linkEl?.remove();
+  }
+
+  startSlideshow(card);
+}
+
+// Instantly finishes any in-flight wipe reveal so a new one can start clean
+function commitVariantReveal(card) {
+  const bg     = card.querySelector('.card-bg:not(.card-bg--reveal)');
+  const reveal = card.querySelector('.card-bg--reveal');
+  if (reveal) {
+    bg.style.backgroundImage    = reveal.style.backgroundImage;
+    bg.style.backgroundPosition = reveal.style.backgroundPosition;
+    bg.style.opacity            = '1';
+  }
+  // release the push on the old screenshot in the same frame the reveal layer
+  // is removed, so the committed image lands with no visible jump
+  bg.getAnimations().forEach(a => a.cancel());
+  card.querySelectorAll('.card-bg--reveal, .card-bg--edge').forEach(el => {
+    el.getAnimations().forEach(a => a.cancel());
+    el.remove();
+  });
+}
+
+const variantSwapTokens = new WeakMap();
+
+function applyVariantSwap(card, v, fromRight) {
+  const token = (variantSwapTokens.get(card) ?? 0) + 1;
+  variantSwapTokens.set(card, token);
+
+  const isStale  = () => variantSwapTokens.get(card) !== token;
+  const bg       = card.querySelector('.card-bg');
+  const content  = card.querySelector('.card-content');
+  const reduced  = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let exitX  = 0;
+  let enterX = 0;
+  if (!reduced) {
+    exitX  = fromRight ? -10 : 10;
+    enterX = fromRight ? 14 : -14;
+  }
+
+  // Content fades out toward the exit side, swaps, then eases in from the entry side
+  content.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+  content.style.opacity    = '0';
+  content.style.transform  = `translateX(${exitX}px)`;
+
+  function applyContentIn() {
+    if (isStale()) return;
+    content.style.transition = 'opacity 0.3s ease, transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
+    content.style.opacity    = '1';
+    content.style.transform  = '';
+  }
+
+  setTimeout(() => {
+    if (isStale()) return;
+    swapVariantContent(card, v);
+    content.style.transition = 'none';
+    content.style.transform  = `translateX(${enterX}px)`;
+    requestAnimationFrame(() => requestAnimationFrame(applyContentIn));
+  }, 220);
+
+  if (reduced) {
+    bg.style.opacity = '0';
+    setTimeout(() => {
+      if (isStale()) return;
+      bg.style.backgroundImage    = `url('${v.screenshots[0]}')`;
+      bg.style.backgroundPosition = v.positions?.[0] || 'center';
+      bg.style.opacity = '1';
+    }, 280);
+    return;
+  }
+
+  // Slash wipe: new screenshot sweeps in from the side of the clicked button
+  // behind a slanted brand-glow edge; old screenshot is pushed the opposite way.
+  // poly(t) describes the revealed region whose slanted edge sits at t% across the card.
+  const slant = 12;
+  const lead  = fromRight ? -6 : 6;
+  const t0    = fromRight ? 116 : -16;
+  const t1    = fromRight ? -16 : 116;
+  const poly  = t => fromRight
+    ? `polygon(${t + slant}% 0%, 100% 0%, 100% 100%, ${t - slant}% 100%)`
+    : `polygon(0% 0%, ${t + slant}% 0%, ${t - slant}% 100%, 0% 100%)`;
+
+  const edge = document.createElement('div');
+  edge.className  = 'card-bg--edge';
+  edge.style.clipPath = poly(fromRight ? 130 : -30);
+
+  const reveal = document.createElement('div');
+  reveal.className = 'card-bg card-bg--reveal';
+  reveal.style.backgroundImage    = `url('${v.screenshots[0]}')`;
+  reveal.style.backgroundPosition = v.positions?.[0] || 'center';
+  reveal.style.clipPath = poly(t0);
+
+  bg.after(edge, reveal);
+
+  const D    = 560;
+  const ease = 'cubic-bezier(0.7, 0, 0.25, 1)';
+
+  edge.animate(
+    { clipPath: [poly(t0 + lead), poly(t1 + lead)] },
+    { duration: D, easing: ease, fill: 'forwards' }
+  );
+  const sweep = reveal.animate(
+    { clipPath: [poly(t0), poly(t1)] },
+    { duration: D, easing: ease, fill: 'forwards' }
+  );
+  // composite: 'add' so the push stacks on top of the hover zoom
+  bg.animate(
+    { transform: ['translateX(0%)', `translateX(${fromRight ? -3.5 : 3.5}%)`] },
+    { duration: D, easing: ease, composite: 'add', fill: 'forwards' }
+  );
+  sweep.onfinish = () => commitVariantReveal(card);
+}
+
+function handleVariantClick(card, e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const btn     = e.currentTarget;
+  const idx     = Number(btn.dataset.variant);
+  const prevIdx = Number(card.dataset.activeVariant);
+  if (idx === prevIdx) return;
+
+  const variants = JSON.parse(card.dataset.variants);
+  const v = variants[idx];
+
+  card.dataset.activeVariant = idx;
+  card.dataset.screenshots   = JSON.stringify(v.screenshots);
+  card.dataset.positions     = JSON.stringify(v.positions || []);
+
+  card.querySelectorAll('.card-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  updateToggleIndicator(card);
+
+  clearInterval(cardSlideshows.get(card));
+  commitVariantReveal(card);
+
+  applyVariantSwap(card, v, idx > prevIdx);
+}
+
 function initVariantToggles() {
   document.querySelectorAll('.card[data-variants]').forEach(card => {
     requestAnimationFrame(() => updateToggleIndicator(card));
     card.querySelectorAll('.card-toggle-btn').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.preventDefault();
-        e.stopPropagation();
-        const idx = Number(btn.dataset.variant);
-        if (idx === Number(card.dataset.activeVariant)) return;
-
-        const variants = JSON.parse(card.dataset.variants);
-        const v = variants[idx];
-        const color = LANG_COLORS[v.language] || '#888';
-
-        card.dataset.activeVariant = idx;
-        card.dataset.screenshots = JSON.stringify(v.screenshots);
-        card.dataset.positions   = JSON.stringify(v.positions || []);
-
-        card.querySelectorAll('.card-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-        updateToggleIndicator(card);
-
-        // Bg blurs out, content slides down-out
-        const bg      = card.querySelector('.card-bg');
-        const content = card.querySelector('.card-content');
-        bg.style.transition      = 'opacity 0.28s ease, filter 0.28s ease';
-        bg.style.opacity         = '0';
-        bg.style.filter          = 'blur(10px)';
-        content.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-        content.style.opacity    = '0';
-        content.style.transform  = 'translateY(10px)';
-
-        setTimeout(() => {
-          // Bg swaps and focuses back in
-          bg.style.backgroundImage    = `url('${v.screenshots[0]}')`;
-          bg.style.backgroundPosition = v.positions?.[0] || 'center';
-          bg.style.opacity = '1';
-          bg.style.filter  = 'blur(0px)';
-          setTimeout(() => { bg.style.transition = ''; bg.style.filter = ''; }, 380);
-
-          // Dots
-          let dotsContainer = card.querySelector('.card-dots');
-          if (v.screenshots.length > 1) {
-            const html = v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('');
-            if (dotsContainer) { dotsContainer.innerHTML = html; }
-            else {
-              dotsContainer = document.createElement('div');
-              dotsContainer.className = 'card-dots';
-              dotsContainer.innerHTML = html;
-              card.querySelector('.card-content').before(dotsContainer);
-            }
-          } else {
-            dotsContainer?.remove();
-          }
-
-          // Text
-          card.querySelector('.card-title').textContent = v.name || 'CHORIDOR';
-          card.querySelector('.card-desc').textContent  = v.description || 'No description available.';
-
-          // Meta
-          const meta    = card.querySelector('.card-meta');
-          const langEl  = meta.querySelector('.card-lang');
-          const starsEl = meta.querySelector('.card-stars');
-          let   playEl  = meta.querySelector('.card-play-btn');
-          let   linkEl  = meta.querySelector('.card-link');
-
-          if (langEl)  langEl.innerHTML  = `<span class="lang-dot" style="background:${color}"></span>${v.language || ''}`;
-          if (starsEl) starsEl.innerHTML = `${starSVG()} ${v.stars ?? 0}`;
-
-          if (v.playUrl) {
-            if (!playEl) {
-              playEl = document.createElement('span');
-              playEl.className = 'card-play-btn';
-              playEl.innerHTML = '<span>▶ Play</span>';
-              meta.insertBefore(playEl, linkEl);
-            }
-            playEl.onclick = e => { e.preventDefault(); e.stopPropagation(); window.open(v.playUrl, '_blank'); };
-          } else {
-            playEl?.remove();
-          }
-
-          if (v.url) {
-            if (!linkEl) {
-              linkEl = document.createElement('a');
-              linkEl.className   = 'card-link';
-              linkEl.target      = '_blank';
-              linkEl.rel         = 'noopener';
-              linkEl.textContent = 'GitHub ↗';
-              linkEl.onclick     = e => e.stopPropagation();
-              meta.appendChild(linkEl);
-            }
-            linkEl.href = v.url;
-          } else {
-            linkEl?.remove();
-          }
-
-          // Content slides in from above
-          content.style.transition = 'none';
-          content.style.transform  = 'translateY(-10px)';
-          content.style.opacity    = '0';
-          requestAnimationFrame(() => requestAnimationFrame(() => {
-            content.style.transition = 'opacity 0.32s ease, transform 0.32s cubic-bezier(0.34, 1.2, 0.64, 1)';
-            content.style.opacity    = '1';
-            content.style.transform  = '';
-          }));
-
-          startSlideshow(card);
-        }, 220);
-      });
+      btn.addEventListener('click', e => handleVariantClick(card, e));
     });
   });
 }
@@ -710,6 +807,37 @@ function initCardTilt() {
 
 
 
+
+// View-transition direction: lego → index should wipe the opposite way.
+// Strategy: set a sessionStorage flag on departure, read it synchronously
+// on arrival (before any paint), and clean up after the transition.
+;(function initViewTransitionDirection() {
+  const isLego = location.pathname.endsWith('lego.html');
+
+  if (isLego) {
+    // Link clicks away from lego (nav bar, etc.)
+    document.addEventListener('click', e => {
+      const a = e.target.closest('a[href]');
+      if (a && !new URL(a.href).pathname.endsWith('lego.html')) {
+        sessionStorage.setItem('vt-dir', 'back');
+      }
+    });
+    // Browser back button — pageswap fires on the outgoing page
+    globalThis.addEventListener('pageswap', e => {
+      if (e.viewTransition) sessionStorage.setItem('vt-dir', 'back');
+    });
+  } else if (sessionStorage.getItem('vt-dir') === 'back') {
+    // Synchronous check — runs before any paint, before pagereveal
+    sessionStorage.removeItem('vt-dir');
+    document.documentElement.classList.add('vt-back');
+    // Clean up after the transition so the next index → lego is still forward
+    globalThis.addEventListener('pagereveal', e => {
+      (e.viewTransition?.finished ?? Promise.resolve()).then(() => {
+        document.documentElement.classList.remove('vt-back');
+      });
+    }, { once: true });
+  }
+}());
 
 document.addEventListener('DOMContentLoaded', () => {
   preloadScreenshots();
