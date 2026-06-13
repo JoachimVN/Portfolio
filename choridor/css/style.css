@@ -652,6 +652,11 @@ button:hover .icon-btn svg {
 
 .legal-modal-x:hover { color: #8890A8; background: none; border: none; }
 
+.legal-modal-card::-webkit-scrollbar { width: 6px; }
+.legal-modal-card::-webkit-scrollbar-track { background: transparent; }
+.legal-modal-card::-webkit-scrollbar-thumb { background: #2A2E48; border-radius: 3px; }
+.legal-modal-card::-webkit-scrollbar-thumb:hover { background: #3E4470; }
+
 .legal-modal-card h1 { color: #C8CCDC; font-size: 1.4rem; margin-bottom: 6px; }
 .legal-modal-card h2 { color: #C8CCDC; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 24px 0 8px; }
 .legal-modal-card p,

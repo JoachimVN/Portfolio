@@ -525,7 +525,13 @@ function initSocket(errorElId, callback) {
     if (socket?.connected) { callback(); return; }
     if (socket) { socket.disconnect(); socket = null; }
 
-    socket = io(BACKEND_URL, { path: SOCKET_PATH, transports: ['websocket', 'polling'] });
+    try {
+        socket = io(BACKEND_URL, { path: SOCKET_PATH, transports: ['websocket', 'polling'] });
+    } catch (err) {
+        clearConnectingBtn();
+        showLobbyError(errorElId, `Failed to init socket: ${err.message}`);
+        return;
+    }
 
     const connInfo = `${BACKEND_URL}${SOCKET_PATH}`;
 
