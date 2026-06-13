@@ -493,8 +493,17 @@ function initFooter() {
   }
 }
 
+function updateToggleIndicator(card) {
+  const toggle = card.querySelector('.card-toggle');
+  const active = toggle?.querySelector('.card-toggle-btn.active');
+  if (!toggle || !active) return;
+  toggle.style.setProperty('--toggle-pill-x', `${active.offsetLeft}px`);
+  toggle.style.setProperty('--toggle-pill-w', `${active.offsetWidth}px`);
+}
+
 function initVariantToggles() {
   document.querySelectorAll('.card[data-variants]').forEach(card => {
+    requestAnimationFrame(() => updateToggleIndicator(card));
     card.querySelectorAll('.card-toggle-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         e.preventDefault();
@@ -511,6 +520,7 @@ function initVariantToggles() {
         card.dataset.positions   = JSON.stringify(v.positions || []);
 
         card.querySelectorAll('.card-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+        updateToggleIndicator(card);
 
         // Background crossfade
         const bg = card.querySelector('.card-bg');
