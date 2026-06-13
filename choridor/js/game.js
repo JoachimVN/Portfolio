@@ -281,22 +281,6 @@ canvas.addEventListener('click', e => {
     else placeWall(cellY, cellX, inHGap ? 'H' : 'V');
 });
 
-function computePointerForHover(hs) {
-    if (hs.moveRow !== null) return true;
-    if (hs.wallRow === null) return false;
-    const cp = gameState.currentPlayer;
-    const hasWalls = cp === 'p1' ? gameState.wallCounts.p1 > 0 : gameState.wallCounts.p2 > 0;
-    if (!hasWalls) return false;
-    const wk = JSON.stringify({ row: hs.wallRow, col: hs.wallCol, orientation: hs.wallOrientation });
-    if (gameState.walls.has(wk) || hasWallOverlap(hs.wallRow, hs.wallCol, hs.wallOrientation)) return false;
-    const saved = gameState.walls;
-    gameState.walls = new Set(saved);
-    gameState.walls.add(wk);
-    const result = bothPlayersHavePath();
-    gameState.walls = saved;
-    return result;
-}
-
 canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     let x = (e.clientX - rect.left) / boardScale;
@@ -321,7 +305,23 @@ canvas.addEventListener('mousemove', e => {
                        moveRow: null, moveCol: null };
     }
 
-    canvas.style.cursor = computePointerForHover(hoverState) ? 'pointer' : 'default';
+    let pointer = false;
+    if (hoverState.moveRow !== null) {
+        pointer = true;
+    } else if (hoverState.wallRow !== null) {
+        const cp = gameState.currentPlayer;
+        const hasWalls = cp === 'p1' ? gameState.wallCounts.p1 > 0 : gameState.wallCounts.p2 > 0;
+        const { wallRow: wr, wallCol: wc, wallOrientation: wo } = hoverState;
+        const wk = JSON.stringify({ row: wr, col: wc, orientation: wo });
+        if (hasWalls && !gameState.walls.has(wk) && !hasWallOverlap(wr, wc, wo)) {
+            const saved = gameState.walls;
+            gameState.walls = new Set(saved);
+            gameState.walls.add(wk);
+            pointer = bothPlayersHavePath();
+            gameState.walls = saved;
+        }
+    }
+    canvas.style.cursor = pointer ? 'pointer' : 'default';
     if (JSON.stringify(hoverState) !== prev) render();
 });
 
@@ -374,34 +374,29 @@ function placeWall(row, col, orientation) {
     updateLegalMoves();
 }
 
-function applyOpponentPawnMove(data) {
-    const pawn   = gameState.currentPlayer === 'p1' ? gameState.p1Pawn : gameState.p2Pawn;
-    const isJump = Math.abs(data.row - pawn.row) + Math.abs(data.col - pawn.col) > 1;
-    if (gameState.currentPlayer === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
-    else                                  gameState.p2Pawn = { row: data.row, col: data.col };
-    playSound(isJump ? 'Jump' : 'Move');
-    if (checkWin()) return;
-    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
-    updateStatus();
-    updateLegalMoves();
-}
-
-function applyOpponentWallMove(data) {
-    const wallKey = JSON.stringify({ row: data.row, col: data.col, orientation: data.orientation });
-    gameState.walls.add(wallKey);
-    gameState.wallOwners.set(wallKey, gameState.currentPlayer);
-    if (gameState.currentPlayer === 'p1') gameState.wallCounts.p1--;
-    else                                  gameState.wallCounts.p2--;
-    playSound('Wall');
-    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
-    updateWallCounts();
-    updateStatus();
-    updateLegalMoves();
-}
-
 function applyOpponentMove(data) {
-    if (data.type === 'pawn')       applyOpponentPawnMove(data);
-    else if (data.type === 'wall')  applyOpponentWallMove(data);
+    if (data.type === 'pawn') {
+        const pawn   = gameState.currentPlayer === 'p1' ? gameState.p1Pawn : gameState.p2Pawn;
+        const isJump = Math.abs(data.row - pawn.row) + Math.abs(data.col - pawn.col) > 1;
+        if (gameState.currentPlayer === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
+        else                                  gameState.p2Pawn = { row: data.row, col: data.col };
+        playSound(isJump ? 'Jump' : 'Move');
+        if (checkWin()) return;
+        gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+        updateStatus();
+        updateLegalMoves();
+    } else if (data.type === 'wall') {
+        const wallKey = JSON.stringify({ row: data.row, col: data.col, orientation: data.orientation });
+        gameState.walls.add(wallKey);
+        gameState.wallOwners.set(wallKey, gameState.currentPlayer);
+        if (gameState.currentPlayer === 'p1') gameState.wallCounts.p1--;
+        else                                  gameState.wallCounts.p2--;
+        playSound('Wall');
+        gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+        updateWallCounts();
+        updateStatus();
+        updateLegalMoves();
+    }
 }
 
 function hasWallOverlap(row, col, orientation) {
@@ -460,14 +455,23 @@ function updateStatus() {
         status.textContent = myTurn ? 'Your turn' : "Opponent's turn";
         status.className   = `status-label ${gameState.currentPlayer}`;
     } else {
-        status.textContent = `Player ${gameState.currentPlayer === 'p1' ? '1' : '2'}'s Turn`;
+        const name = gameState.currentPlayer === 'p1'
+            ? document.getElementById('p1-name').textContent
+            : document.getElementById('p2-name').textContent;
+        status.textContent = `${name}'s Turn`;
         status.className   = `status-label ${gameState.currentPlayer}`;
     }
 }
 
 function checkWin() {
-    if (gameState.p1Pawn.row === 0)            { showWinScreen('Player 1', 'p1'); return true; }
-    if (gameState.p2Pawn.row === BOARD_SIZE - 1) { showWinScreen('Player 2', 'p2'); return true; }
+    if (gameState.p1Pawn.row === 0) {
+        showWinScreen(document.getElementById('p1-name').textContent, 'p1');
+        return true;
+    }
+    if (gameState.p2Pawn.row === BOARD_SIZE - 1) {
+        showWinScreen(document.getElementById('p2-name').textContent, 'p2');
+        return true;
+    }
     return false;
 }
 
@@ -482,7 +486,8 @@ function showWinScreen(winner, playerClass) {
 
     const card = document.getElementById('win-card');
     card.style.animation = 'none';
-    requestAnimationFrame(() => { card.style.animation = ''; });
+    card.offsetHeight;
+    card.style.animation = '';
 
     document.getElementById('win-overlay').classList.remove('hidden');
 }
@@ -544,6 +549,7 @@ function initSocket(errorElId, callback) {
     socket.on('game-start', () => {
         onlineMode = true;
         hideLobby();
+        applyPlayerNames();
         resetGame();
     });
 
@@ -565,8 +571,26 @@ function initSocket(errorElId, callback) {
 // ─── Online: lobby UI ─────────────────────────────────────────────────────
 
 function showLobbyView(id) {
-    document.querySelectorAll('.lobby-view').forEach(v => v.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
+    const current = [...document.querySelectorAll('.lobby-view')].find(v => !v.classList.contains('hidden'));
+    const next = document.getElementById(id);
+    if (current === next) return;
+
+    if (current) {
+        current.style.opacity = '0';
+        current.style.transform = 'translateY(-6px)';
+        current.style.transition = 'opacity 0.13s ease, transform 0.13s ease';
+        setTimeout(() => {
+            current.classList.add('hidden');
+            current.style.cssText = '';
+            next.classList.remove('hidden');
+            next.classList.add('lobby-view-entering');
+            setTimeout(() => next.classList.remove('lobby-view-entering'), 240);
+        }, 130);
+    } else {
+        next.classList.remove('hidden');
+        next.classList.add('lobby-view-entering');
+        setTimeout(() => next.classList.remove('lobby-view-entering'), 240);
+    }
 }
 
 function hideLobby() {
@@ -580,7 +604,53 @@ function showLobbyError(elId, msg) {
     el.classList.remove('hidden');
 }
 
-document.getElementById('btn-local').addEventListener('click', () => { playSound('Select'); hideLobby(); });
+// ─── Player name ─────────��────────────────────────────────────────────────
+
+const nameInput = document.getElementById('player-name-input');
+const savedName = localStorage.getItem('choridor_player_name') || '';
+if (nameInput) nameInput.value = savedName;
+
+function getMyName() {
+    return localStorage.getItem('choridor_player_name')?.trim() || '';
+}
+
+function applyPlayerNames() {
+    const name = getMyName();
+    if (onlineMode) {
+        if (onlineRole === 'p1') {
+            document.getElementById('p1-name').textContent = name || 'Player 1';
+            document.getElementById('p2-name').textContent = 'Opponent';
+        } else {
+            document.getElementById('p1-name').textContent = 'Opponent';
+            document.getElementById('p2-name').textContent = name || 'Player 2';
+        }
+    } else {
+        document.getElementById('p1-name').textContent = name || 'Player 1';
+        document.getElementById('p2-name').textContent = 'Player 2';
+    }
+}
+
+nameInput?.addEventListener('input', () => {
+    const val = nameInput.value.trim();
+    if (val) localStorage.setItem('choridor_player_name', val);
+    else localStorage.removeItem('choridor_player_name');
+    if (!onlineMode) applyPlayerNames();
+});
+
+const joinNameInput = document.getElementById('join-player-name-input');
+if (joinNameInput) {
+    joinNameInput.value = savedName;
+    joinNameInput.addEventListener('input', () => {
+        const val = joinNameInput.value.trim();
+        if (val) localStorage.setItem('choridor_player_name', val);
+        else localStorage.removeItem('choridor_player_name');
+        if (nameInput) nameInput.value = joinNameInput.value;
+    });
+}
+
+applyPlayerNames();
+
+document.getElementById('btn-local').addEventListener('click', () => { playSound('Select'); applyPlayerNames(); hideLobby(); });
 
 document.getElementById('btn-online').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-online'); });
 document.getElementById('btn-online-back').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-mode'); });
@@ -681,6 +751,7 @@ document.getElementById('change-mode-btn').addEventListener('click', () => {
     document.getElementById('win-overlay').classList.add('hidden');
     document.getElementById('lobby-overlay').classList.remove('hidden');
     showLobbyView('lview-mode');
+    applyPlayerNames();
     resetGame();
 });
 
