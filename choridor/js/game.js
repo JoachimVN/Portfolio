@@ -58,6 +58,25 @@ let gameState = {
 
 let hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
 
+// ─── Tap-to-preview state ─────────────────────────────────────────────────
+
+let tapMode    = false;
+let tapPreview = null;  // { row, col, orientation } | null while awaiting confirm
+let pawnAnims  = [];    // active pawn slide / jump animations
+let wallAnims  = [];    // active wall grow-in animations
+let _animId    = null;  // shared rAF id driving all board animations
+let animEnabled = true;  // master motion toggle (set from storage at init)
+
+const PAWN_MOVE_MS  = 200;
+const PAWN_JUMP_MS  = 300;
+const WALL_PLACE_MS = 210;
+
+// ─── Control-button animation state ───────────────────────────────────────
+
+let flipAnimating  = false;
+let flipIconDeg    = 0;
+let newGameIconDeg = 0;
+
 // ─── Online state ─────────────────────────────────────────────────────────
 
 let socket         = null;
@@ -136,16 +155,24 @@ function drawBoard() {
 }
 
 function drawWalls() {
+    const now = performance.now();
     gameState.walls.forEach(wallKey => {
         const wall  = JSON.parse(wallKey);
         const owner = gameState.wallOwners.get(wallKey);
-        ctx.fillStyle = owner === 'p1' ? P1_COLOR : P2_COLOR;
-        const x = wall.col * STEP, y = wall.row * STEP;
-        if (wall.orientation === 'H') {
-            ctx.fillRect(x, y + CELL_SIZE, CELL_SIZE * 2 + GAP, GAP);
+        const color = owner === 'p1' ? P1_COLOR : P2_COLOR;
+        const anim  = wallAnims.find(a => a.wallKey === wallKey);
+
+        ctx.save();
+        ctx.fillStyle = color;
+        if (anim) {
+            const p = Math.min((now - anim.t0) / anim.dur, 1);
+            ctx.shadowColor = color;
+            ctx.shadowBlur  = 10 * (1 - p);          // soft glow flash that fades out
+            fillWall(wall.row, wall.col, wall.orientation, easeOutBackSoft(p));
         } else {
-            ctx.fillRect(x + CELL_SIZE, y, GAP, CELL_SIZE * 2 + GAP);
+            fillWall(wall.row, wall.col, wall.orientation);
         }
+        ctx.restore();
     });
 }
 
@@ -179,35 +206,127 @@ function drawLegalMoves() {
 
 function drawPawns() {
     const radius = (CELL_SIZE - 2 * CELL_SIZE * 0.16) / 2;
-    [[gameState.p1Pawn, P1_COLOR], [gameState.p2Pawn, P2_COLOR]].forEach(([pawn, color]) => {
+    const now    = performance.now();
+    const up     = gameState.flipped ? 1 : -1;   // keep the hop visually upward
+
+    [['p1', gameState.p1Pawn, P1_COLOR], ['p2', gameState.p2Pawn, P2_COLOR]].forEach(([who, pawn, color]) => {
+        let cx = pawn.col * STEP + CELL_SIZE / 2;
+        let cy = pawn.row * STEP + CELL_SIZE / 2;
+        let r  = radius;
+        let glow = 0;
+
+        const a = pawnAnims.find(an => an.player === who);
+        if (a) {
+            const p = Math.min((now - a.t0) / a.dur, 1);
+            const e = easeInOutCubic(p);
+            const fx = a.fromCol * STEP + CELL_SIZE / 2;
+            const fy = a.fromRow * STEP + CELL_SIZE / 2;
+            const tx = a.toCol * STEP + CELL_SIZE / 2;
+            const ty = a.toRow * STEP + CELL_SIZE / 2;
+            cx = fx + (tx - fx) * e;
+            cy = fy + (ty - fy) * e;
+            const hop = Math.sin(Math.PI * p);
+            if (a.isJump) { cy += up * hop * CELL_SIZE * 0.36; r = radius * (1 + hop * 0.08); }
+            else          { r = radius * (1 + hop * 0.03); }
+            glow = hop;
+        }
+
+        ctx.save();
+        if (glow > 0) { ctx.shadowColor = color; ctx.shadowBlur = 6 * glow; }
         ctx.fillStyle = color;
         ctx.beginPath();
-        ctx.arc(pawn.col * STEP + CELL_SIZE / 2, pawn.row * STEP + CELL_SIZE / 2, radius, 0, Math.PI * 2);
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
     });
 }
 
-function drawWallPreview() {
-    if (hoverState.wallRow === null || !isMyTurn() || gameState.gameOver) return;
+function easeOutBack(t) {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+// Gentler overshoot for placements that should feel calm, not bouncy
+function easeOutBackSoft(t) {
+    const c1 = 0.9, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+// Would placing this wall still leave both pawns a path to their goal?
+function wallKeepsPathsOpen(wallKey) {
+    const saved = gameState.walls;
+    gameState.walls = new Set(saved);
+    gameState.walls.add(wallKey);
+    const ok = bothPlayersHavePath();
+    gameState.walls = saved;
+    return ok;
+}
+
+// Fill a wall rect, optionally scaled from its centre (grow ∈ [0,1])
+function fillWall(row, col, orientation, grow = 1) {
+    const x = col * STEP, y = row * STEP;
+    const span = CELL_SIZE * 2 + GAP;
+    if (orientation === 'H') {
+        const w = span * grow;
+        ctx.fillRect(x + (span - w) / 2, y + CELL_SIZE, w, GAP);
+    } else {
+        const h = span * grow;
+        ctx.fillRect(x + CELL_SIZE, y + (span - h) / 2, GAP, h);
+    }
+}
+
+function canPreviewWall() {
+    if (!isMyTurn() || gameState.gameOver) return false;
     const cp = gameState.currentPlayer;
-    if (cp === 'p1' && gameState.wallCounts.p1 === 0) return;
-    if (cp === 'p2' && gameState.wallCounts.p2 === 0) return;
+    if (cp === 'p1' && gameState.wallCounts.p1 === 0) return false;
+    if (cp === 'p2' && gameState.wallCounts.p2 === 0) return false;
+    return true;
+}
+
+// Tap-mode locked preview — grows in, then breathes with a soft glow
+function drawTapPreview(color) {
+    const { row, col, orientation, t0 } = tapPreview;
+    const wallKey = JSON.stringify({ row, col, orientation });
+    if (gameState.walls.has(wallKey) || hasWallOverlap(row, col, orientation)) return;
+
+    const now  = performance.now();
+    const grow = animEnabled ? easeOutBack(Math.min((now - t0) / 240, 1)) : 1;
+    const wave = animEnabled ? Math.sin(now * 0.005) : 0;
+
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 10 + wave * 4;
+    ctx.fillStyle   = color;
+    ctx.globalAlpha = 0.66 + wave * 0.14;
+    fillWall(row, col, orientation, grow);
+    ctx.restore();
+}
+
+// Hover preview — faint while valid, fainter when the wall would be illegal
+function drawHoverPreview(color) {
+    if (hoverState.wallRow === null) return;
     const { wallRow: row, wallCol: col, wallOrientation: orientation } = hoverState;
     const wallKey = JSON.stringify({ row, col, orientation });
-    if (gameState.walls.has(wallKey)) return;
-    if (hasWallOverlap(row, col, orientation)) return;
-    const tempWalls = gameState.walls;
-    gameState.walls = new Set(tempWalls);
-    gameState.walls.add(wallKey);
-    const valid = bothPlayersHavePath();
-    gameState.walls = tempWalls;
+    if (gameState.walls.has(wallKey) || hasWallOverlap(row, col, orientation)) return;
 
-    const x = col * STEP, y = row * STEP;
-    ctx.fillStyle = cp === 'p1' ? P1_COLOR : P2_COLOR;
-    ctx.globalAlpha = valid ? 0.45 : 0.15;
-    if (orientation === 'H') ctx.fillRect(x, y + CELL_SIZE, CELL_SIZE * 2 + GAP, GAP);
-    else                     ctx.fillRect(x + CELL_SIZE, y, GAP, CELL_SIZE * 2 + GAP);
-    ctx.globalAlpha = 1;
+    ctx.save();
+    ctx.fillStyle   = color;
+    ctx.globalAlpha = wallKeepsPathsOpen(wallKey) ? 0.45 : 0.15;
+    fillWall(row, col, orientation);
+    ctx.restore();
+}
+
+function drawWallPreview() {
+    if (!canPreviewWall()) return;
+    const color = gameState.currentPlayer === 'p1' ? P1_COLOR : P2_COLOR;
+    if (!tapPreview) { drawHoverPreview(color); return; }
+
+    drawTapPreview(color);
+    // While a wall is locked, still show a faint hover preview on other slots
+    const onLocked = hoverState.wallRow === tapPreview.row &&
+                     hoverState.wallCol === tapPreview.col &&
+                     hoverState.wallOrientation === tapPreview.orientation;
+    if (hoverState.wallRow !== null && !onLocked) drawHoverPreview(color);
 }
 
 function render() {
@@ -278,7 +397,7 @@ function hasWall(orientation, row, col) {
 // ─── Click handling ───────────────────────────────────────────────────────
 
 canvas.addEventListener('click', e => {
-    if (gameState.gameOver || !isMyTurn()) return;
+    if (gameState.gameOver || !isMyTurn() || flipAnimating) return;
     const rect = canvas.getBoundingClientRect();
     let x = (e.clientX - rect.left) / boardScale;
     let y = (e.clientY - rect.top)  / boardScale;
@@ -289,9 +408,37 @@ canvas.addEventListener('click', e => {
     const inHGap = offY >= CELL_SIZE && cellY < BOARD_SIZE - 1;
     const inVGap = offX >= CELL_SIZE && cellX < BOARD_SIZE - 1;
 
-    if (!inHGap && !inVGap) movePawn(cellY, cellX);
-    else placeWall(cellY, cellX, inHGap ? 'H' : 'V');
+    if (!inHGap && !inVGap) {
+        clearTapPreview();
+        movePawn(cellY, cellX);
+    } else if (tapMode) {
+        handleTapWall(cellY, cellX, inHGap ? 'H' : 'V');
+    } else {
+        placeWall(cellY, cellX, inHGap ? 'H' : 'V');
+    }
 });
+
+function handleTapWall(row, col, orientation) {
+    const cp = gameState.currentPlayer;
+    if (cp === 'p1' && gameState.wallCounts.p1 === 0) return;
+    if (cp === 'p2' && gameState.wallCounts.p2 === 0) return;
+
+    if (tapPreview && tapPreview.row === row && tapPreview.col === col && tapPreview.orientation === orientation) {
+        // Second tap on same spot: confirm. The preview already grew in,
+        // so skip the board grow animation to avoid playing it twice.
+        clearTapPreview();
+        placeWall(row, col, orientation, false);
+    } else {
+        // First tap or different spot → lock preview
+        const wallKey = JSON.stringify({ row, col, orientation });
+        if (gameState.walls.has(wallKey) || hasWallOverlap(row, col, orientation)) return;
+        if (!wallKeepsPathsOpen(wallKey)) return;
+        tapPreview = { row, col, orientation, t0: performance.now() };
+        playSound('Select');
+        if (animEnabled) ensureAnimLoop(); else render();
+        updateTapHint();
+    }
+}
 
 function computeHoverState(cellX, cellY, inHGap, inVGap) {
     const empty = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
@@ -326,11 +473,7 @@ canvas.addEventListener('mousemove', e => {
         const { wallRow: wr, wallCol: wc, wallOrientation: wo } = hoverState;
         const wk = JSON.stringify({ row: wr, col: wc, orientation: wo });
         if (hasWalls && !gameState.walls.has(wk) && !hasWallOverlap(wr, wc, wo)) {
-            const saved = gameState.walls;
-            gameState.walls = new Set(saved);
-            gameState.walls.add(wk);
-            pointer = bothPlayersHavePath();
-            gameState.walls = saved;
+            pointer = wallKeepsPathsOpen(wk);
         }
     }
     canvas.style.cursor = pointer ? 'pointer' : 'default';
@@ -343,30 +486,159 @@ canvas.addEventListener('mouseleave', () => {
     render();
 });
 
+// ─── Tap-to-preview helpers ───────────────────────────────────────────────
+
+function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+// Prune finished animations; report whether anything still needs frames
+function boardAnimActive() {
+    const now = performance.now();
+    pawnAnims = pawnAnims.filter(a => now - a.t0 < a.dur);
+    wallAnims = wallAnims.filter(a => now - a.t0 < a.dur);
+    return Boolean(tapPreview) || pawnAnims.length > 0 || wallAnims.length > 0;
+}
+
+// Single rAF loop shared by the tap-preview, pawn moves and wall placements
+function ensureAnimLoop() {
+    if (_animId) return;
+    const tick = () => {
+        render();
+        _animId = boardAnimActive() ? requestAnimationFrame(tick) : null;
+    };
+    _animId = requestAnimationFrame(tick);
+}
+
+function startPawnAnim(player, from, to, isJump) {
+    if (!animEnabled) return;   // state is already updated; a normal render shows it
+    pawnAnims = pawnAnims.filter(a => a.player !== player);
+    pawnAnims.push({
+        player, isJump,
+        fromRow: from.row, fromCol: from.col,
+        toRow: to.row, toCol: to.col,
+        t0: performance.now(), dur: isJump ? PAWN_JUMP_MS : PAWN_MOVE_MS
+    });
+    ensureAnimLoop();
+}
+
+function startWallAnim(wallKey) {
+    if (!animEnabled) return;
+    wallAnims.push({ wallKey, t0: performance.now(), dur: WALL_PLACE_MS });
+    ensureAnimLoop();
+}
+
+function clearTapPreview() {
+    tapPreview = null;
+    updateTapHint();
+    render();
+}
+
+function updateTapHint() {
+    const hint = document.getElementById('tap-confirm-hint');
+    if (!hint) return;
+    const show = tapPreview && tapMode && !gameState.gameOver && isMyTurn();
+    if (show) {
+        hint.className = `tap-confirm-hint ${gameState.currentPlayer} visible`;
+        hint.removeAttribute('aria-hidden');
+    } else {
+        hint.className = 'tap-confirm-hint';
+        hint.setAttribute('aria-hidden', 'true');
+    }
+}
+
+let _toastTimer = null;
+function showToast(msg) {
+    const el = document.getElementById('tap-toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('visible');
+    el.removeAttribute('aria-hidden');
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => {
+        el.classList.remove('visible');
+        el.setAttribute('aria-hidden', 'true');
+    }, 2600);
+}
+
+function setTapMode(enabled) {
+    tapMode = enabled;
+    localStorage.setItem('choridor_tap_mode', enabled ? '1' : '0');
+    const btn = document.getElementById('tap-mode-btn');
+    if (btn) {
+        btn.classList.toggle('tap-active', enabled);
+        btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    }
+    if (!enabled) clearTapPreview();
+    showToast(enabled ? 'Confirm walls: ON, pick a slot then confirm' : 'Confirm walls: OFF');
+    render();
+}
+
+const ANIM_ICON_ON = `<path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7L12 3.2z"/>
+                      <path d="M18.5 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"/>`;
+const ANIM_ICON_OFF = ANIM_ICON_ON + `<line x1="3" y1="3" x2="21" y2="21"/>`;
+
+function updateAnimButton(on) {
+    const btn  = document.getElementById('anim-btn');
+    const icon = document.getElementById('anim-icon');
+    if (btn) {
+        btn.classList.toggle('anim-off', !on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.setAttribute('aria-label', on ? 'Turn animations off' : 'Turn animations on');
+    }
+    if (icon) icon.innerHTML = on ? ANIM_ICON_ON : ANIM_ICON_OFF;
+}
+
+function stopBoardAnims() {
+    pawnAnims = [];
+    wallAnims = [];
+    if (_animId) { cancelAnimationFrame(_animId); _animId = null; }
+}
+
+function setAnimEnabled(on, silent = false) {
+    animEnabled = on;
+    localStorage.setItem('choridor_anim', on ? '1' : '0');
+    updateAnimButton(on);
+    if (!on) stopBoardAnims();
+    else if (tapPreview) ensureAnimLoop();
+    render();
+    if (!silent) showToast(on ? 'Animations: ON' : 'Animations: OFF');
+}
+
 // ─── Moves ────────────────────────────────────────────────────────────────
+
+// Delay before the win card appears, so the deciding move animates first
+function winDelay(isJump) {
+    if (!animEnabled) return 0;
+    return isJump ? PAWN_JUMP_MS : PAWN_MOVE_MS;
+}
 
 function movePawn(row, col) {
     if (gameState.gameOver) return;
     if (!gameState.legalMoves.some(m => m.row === row && m.col === col)) return;
 
-    const pawn   = gameState.currentPlayer === 'p1' ? gameState.p1Pawn : gameState.p2Pawn;
-    const isJump = Math.abs(row - pawn.row) + Math.abs(col - pawn.col) > 1;
+    const mover  = gameState.currentPlayer;
+    const from   = mover === 'p1' ? { ...gameState.p1Pawn } : { ...gameState.p2Pawn };
+    const isJump = Math.abs(row - from.row) + Math.abs(col - from.col) > 1;
 
-    if (gameState.currentPlayer === 'p1') gameState.p1Pawn = { row, col };
-    else                                  gameState.p2Pawn = { row, col };
+    if (mover === 'p1') gameState.p1Pawn = { row, col };
+    else                gameState.p2Pawn = { row, col };
 
     playSound(isJump ? 'Jump' : 'Move');
     if (socket && onlineMode) socket.emit('move', { type: 'pawn', row, col });
-    if (checkWin()) return;
-    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+    startPawnAnim(mover, from, { row, col }, isJump);
+    if (checkWin(winDelay(isJump))) return;
+    gameState.currentPlayer = mover === 'p1' ? 'p2' : 'p1';
     updateStatus();
     updateLegalMoves();
 }
 
-function placeWall(row, col, orientation) {
+// animateBoardWall=false when confirming a previewed wall (it already grew in)
+function placeWall(row, col, orientation, animateBoardWall = true) {
     if (gameState.gameOver) return;
-    if (gameState.currentPlayer === 'p1' && gameState.wallCounts.p1 === 0) return;
-    if (gameState.currentPlayer === 'p2' && gameState.wallCounts.p2 === 0) return;
+    const mover = gameState.currentPlayer;
+    if (mover === 'p1' && gameState.wallCounts.p1 === 0) return;
+    if (mover === 'p2' && gameState.wallCounts.p2 === 0) return;
 
     const wallKey = JSON.stringify({ row, col, orientation });
     if (gameState.walls.has(wallKey) || hasWallOverlap(row, col, orientation)) return;
@@ -374,38 +646,45 @@ function placeWall(row, col, orientation) {
     gameState.walls.add(wallKey);
     if (!bothPlayersHavePath()) { gameState.walls.delete(wallKey); return; }
 
-    gameState.wallOwners.set(wallKey, gameState.currentPlayer);
-    if (gameState.currentPlayer === 'p1') gameState.wallCounts.p1--;
-    else                                  gameState.wallCounts.p2--;
+    gameState.wallOwners.set(wallKey, mover);
+    if (mover === 'p1') gameState.wallCounts.p1--;
+    else                gameState.wallCounts.p2--;
 
     playSound('Wall');
     if (socket && onlineMode) socket.emit('move', { type: 'wall', row, col, orientation });
-    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+    if (animateBoardWall) startWallAnim(wallKey);
+    animateWallSpend(mover);
+    gameState.currentPlayer = mover === 'p1' ? 'p2' : 'p1';
     updateWallCounts();
     updateStatus();
     updateLegalMoves();
 }
 
 function applyOpponentPawnMove(data) {
-    const pawn   = gameState.currentPlayer === 'p1' ? gameState.p1Pawn : gameState.p2Pawn;
-    const isJump = Math.abs(data.row - pawn.row) + Math.abs(data.col - pawn.col) > 1;
-    if (gameState.currentPlayer === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
-    else                                  gameState.p2Pawn = { row: data.row, col: data.col };
+    const mover  = gameState.currentPlayer;
+    const from   = mover === 'p1' ? { ...gameState.p1Pawn } : { ...gameState.p2Pawn };
+    const isJump = Math.abs(data.row - from.row) + Math.abs(data.col - from.col) > 1;
+    if (mover === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
+    else                gameState.p2Pawn = { row: data.row, col: data.col };
     playSound(isJump ? 'Jump' : 'Move');
-    if (checkWin()) return;
-    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+    startPawnAnim(mover, from, { row: data.row, col: data.col }, isJump);
+    if (checkWin(winDelay(isJump))) return;
+    gameState.currentPlayer = mover === 'p1' ? 'p2' : 'p1';
     updateStatus();
     updateLegalMoves();
 }
 
 function applyOpponentWallMove(data) {
+    const mover   = gameState.currentPlayer;
     const wallKey = JSON.stringify({ row: data.row, col: data.col, orientation: data.orientation });
     gameState.walls.add(wallKey);
-    gameState.wallOwners.set(wallKey, gameState.currentPlayer);
-    if (gameState.currentPlayer === 'p1') gameState.wallCounts.p1--;
-    else                                  gameState.wallCounts.p2--;
+    gameState.wallOwners.set(wallKey, mover);
+    if (mover === 'p1') gameState.wallCounts.p1--;
+    else                gameState.wallCounts.p2--;
     playSound('Wall');
-    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+    startWallAnim(wallKey);
+    animateWallSpend(mover);
+    gameState.currentPlayer = mover === 'p1' ? 'p2' : 'p1';
     updateWallCounts();
     updateStatus();
     updateLegalMoves();
@@ -454,6 +733,7 @@ function updateWallCounts() {
     ['p1', 'p2'].forEach(p => {
         for (let i = 0; i < WALLS_PER_PLAYER; i++) {
             const box = document.getElementById(`${p}-wall-${i}`);
+            if (box.classList.contains('spending')) continue;   // let the animation own it
             if (i < gameState.wallCounts[p]) {
                 box.className = 'wall-box active';
                 box.style.background = p === 'p1' ? P1_COLOR : P2_COLOR;
@@ -463,6 +743,22 @@ function updateWallCounts() {
             }
         }
     });
+}
+
+// Animate the just-spent wall box (call after the count has been decremented)
+function animateWallSpend(player) {
+    if (!animEnabled) return;   // updateWallCounts will flip it to "used" instantly
+    const idx = gameState.wallCounts[player];   // the box that just flipped to "used"
+    const box = document.getElementById(`${player}-wall-${idx}`);
+    if (!box) return;
+    box.classList.remove('used');
+    box.classList.add('spending');
+    box.style.background = player === 'p1' ? P1_COLOR : P2_COLOR;
+    box.addEventListener('animationend', () => {
+        box.classList.remove('spending');
+        box.className = 'wall-box used';
+        box.style.background = WALL_USED_COLOR;
+    }, { once: true });
 }
 
 function updateStatus() {
@@ -478,43 +774,51 @@ function updateStatus() {
         status.textContent = `${name}'s Turn`;
         status.className   = `status-label ${gameState.currentPlayer}`;
     }
+    updateTapHint();
 }
 
-function checkWin() {
+function checkWin(delay = 0) {
     if (gameState.p1Pawn.row === 0) {
-        showWinScreen(document.getElementById('p1-name').textContent, 'p1');
+        showWinScreen(document.getElementById('p1-name').textContent, 'p1', delay);
         return true;
     }
     if (gameState.p2Pawn.row === BOARD_SIZE - 1) {
-        showWinScreen(document.getElementById('p2-name').textContent, 'p2');
+        showWinScreen(document.getElementById('p2-name').textContent, 'p2', delay);
         return true;
     }
     return false;
 }
 
-function showWinScreen(winner, playerClass) {
-    gameState.gameOver = true;
-    playSound('Win');
+function showWinScreen(winner, playerClass, delay = 0) {
+    clearTapPreview();
+    gameState.gameOver = true;   // lock input now; reveal the card after the move lands
     document.getElementById('win-card').className  = `win-card ${playerClass}`;
     document.getElementById('win-pawn').className  = `win-pawn ${playerClass}`;
     const msg = document.getElementById('win-message');
     msg.textContent = `${winner} Wins!`;
     msg.className   = `win-title ${playerClass}`;
 
-    const card = document.getElementById('win-card');
-    card.style.animation = 'none';
-    card.getBoundingClientRect();
-    card.style.animation = '';
-
     document.getElementById('play-again-btn').classList.toggle('hidden', onlineMode);
     document.getElementById('btn-rematch').classList.toggle('hidden', !onlineMode);
     document.getElementById('btn-leave').classList.toggle('hidden', !onlineMode);
     if (onlineMode) updateRematchBtn('idle');
 
-    document.getElementById('win-overlay').classList.remove('hidden');
+    const reveal = () => {
+        playSound('Win');
+        const card = document.getElementById('win-card');
+        card.style.animation = 'none';
+        card.getBoundingClientRect();
+        card.style.animation = '';
+        document.getElementById('win-overlay').classList.remove('hidden');
+    };
+    if (delay) setTimeout(reveal, delay);
+    else       reveal();
 }
 
 function resetGame() {
+    clearTapPreview();
+    pawnAnims = [];
+    wallAnims = [];
     gameState = {
         p1Pawn:        { row: 8, col: 4 },
         p2Pawn:        { row: 0, col: 4 },
@@ -566,7 +870,7 @@ function initSocket(errorElId, callback) {
     socket.on('connect_error', err => {
         clearTimeout(timeout);
         clearConnectingBtn();
-        showLobbyError(errorElId, `${err?.message || 'Connection failed'} — ${connInfo}`);
+        showLobbyError(errorElId, `${err?.message || 'Connection failed'}: ${connInfo}`);
         socket?.disconnect();
         socket = null;
     });
@@ -912,6 +1216,11 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
 
 document.getElementById('new-game-btn').addEventListener('click', () => {
     playSound('Select');
+    if (animEnabled) {
+        newGameIconDeg += 360;
+        const ngIcon = document.querySelector('#new-game-btn svg');
+        if (ngIcon) ngIcon.style.transform = `rotate(${newGameIconDeg}deg)`;
+    }
     if (onlineMode) {
         onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
         socket?.disconnect(); socket = null;
@@ -923,23 +1232,84 @@ document.getElementById('new-game-btn').addEventListener('click', () => {
 });
 
 document.getElementById('flip-btn').addEventListener('click', () => {
-    gameState.flipped = !gameState.flipped;
-    render();
+    if (flipAnimating) return;
+    flipAnimating = true;
+    playSound('Select');
+
+    const reduce = !animEnabled || globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+        gameState.flipped = !gameState.flipped;
+        render();
+        flipAnimating = false;
+        return;
+    }
+
+    // Spin the icon a half-turn each press, in sync with the board
+    flipIconDeg += 180;
+    const icon = document.querySelector('#flip-btn svg');
+    if (icon) icon.style.transform = `rotate(${flipIconDeg}deg)`;
+
+    // 3D flip: rotate edge-on, swap orientation while hidden, rotate back in
+    const HALF = 210;
+    canvas.style.transition = `transform ${HALF}ms ease-in`;
+    canvas.style.transform  = 'rotateX(90deg)';
+
+    setTimeout(() => {
+        gameState.flipped = !gameState.flipped;
+        render();
+        canvas.style.transition = 'none';
+        canvas.style.transform  = 'rotateX(-90deg)';
+        canvas.getBoundingClientRect();          // commit the jump while edge-on
+        requestAnimationFrame(() => {
+            canvas.style.transition = `transform ${HALF}ms ease-out`;
+            canvas.style.transform  = 'rotateX(0deg)';
+            setTimeout(() => {
+                canvas.style.transition = '';
+                canvas.style.transform  = '';
+                flipAnimating = false;
+            }, HALF + 20);
+        });
+    }, HALF);
+});
+
+document.getElementById('tap-mode-btn').addEventListener('click', () => {
+    playSound('Select');
+    setTapMode(!tapMode);
+});
+
+document.getElementById('anim-btn').addEventListener('click', () => {
+    playSound('Select');
+    setAnimEnabled(!animEnabled);
 });
 
 document.getElementById('mute-btn').addEventListener('click', () => {
     muted = !muted;
-    document.getElementById('mute-icon').innerHTML = muted
+    const btn  = document.getElementById('mute-btn');
+    const icon = document.getElementById('mute-icon');
+    btn.classList.toggle('muted', muted);
+    icon.innerHTML = muted
         ? `<path d="M11 5 6 9H2v6h4l5 4V5z"/>
            <line x1="23" y1="9" x2="17" y2="15"/>
            <line x1="17" y1="9" x2="23" y2="15"/>`
         : `<path d="M11 5 6 9H2v6h4l5 4V5z"/>
            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>`;
+    if (animEnabled) {
+        // Re-trigger the pop animation
+        icon.style.animation = 'none';
+        icon.getBoundingClientRect();
+        icon.style.animation = 'mute-pop 0.32s ease';
+    }
 });
 
 document.getElementById('change-mode-btn').addEventListener('click', () => {
     playSound('Select');
+    const cmIcon = document.querySelector('#change-mode-btn svg');
+    if (animEnabled && cmIcon) {
+        cmIcon.style.animation = 'none';
+        cmIcon.getBoundingClientRect();
+        cmIcon.style.animation = 'ctrl-icon-pop 0.34s ease';
+    }
     onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
     socket?.disconnect(); socket = null;
     document.getElementById('win-overlay').classList.add('hidden');
@@ -1000,11 +1370,48 @@ if (isDiscord) try {
     if (errEl) { errEl.textContent = `Discord setup failed: ${e?.message || e}`; errEl.classList.remove('hidden'); }
 }
 
+// ─── Tap-confirm hint buttons ─────────────────────────────────────────────
+
+document.getElementById('tap-confirm-yes')?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (tapPreview && tapMode && isMyTurn() && !gameState.gameOver) {
+        const { row, col, orientation } = tapPreview;
+        clearTapPreview();
+        placeWall(row, col, orientation, false);
+    }
+});
+
+document.getElementById('tap-confirm-no')?.addEventListener('click', e => {
+    e.stopPropagation();
+    clearTapPreview();
+    render();
+});
+
 // ─── Init ─────────────────────────────────────────────────────────────────
 
 buildWallBoxes();
 updateWallCounts();
 updateStatus();
+
+// Animations: off by default; only on when the player has explicitly enabled them
+setAnimEnabled(localStorage.getItem('choridor_anim') === '1', true);
+
+// Auto-enable tap mode on touch-primary devices (no hover, coarse pointer)
+{
+    const saved     = localStorage.getItem('choridor_tap_mode');
+    const autoTouch = globalThis.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    const enable    = saved === null ? autoTouch : saved === '1';
+    if (enable) {
+        tapMode = true;
+        const btn = document.getElementById('tap-mode-btn');
+        if (btn) { btn.classList.add('tap-active'); btn.setAttribute('aria-pressed', 'true'); }
+        // First-time touch users: a one-off nudge so the flow is discoverable
+        if (saved === null && autoTouch && !localStorage.getItem('choridor_tap_hint_seen')) {
+            localStorage.setItem('choridor_tap_hint_seen', '1');
+            setTimeout(() => showToast('Confirm walls is on, pick a slot then confirm'), 800);
+        }
+    }
+}
 
 requestAnimationFrame(() => {
     resizeCanvas();

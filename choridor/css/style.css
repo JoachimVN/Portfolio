@@ -91,6 +91,7 @@ body {
     height: 2.25vh;
     border-radius: 0.25vh;
     flex-shrink: 0;
+    transform-origin: center bottom;
 }
 
 .wall-box.active {
@@ -99,6 +100,18 @@ body {
 
 .wall-box.used {
     background: #252838;
+}
+
+/* A wall being spent lifts slightly, glows, then drains to the "used" colour */
+.wall-box.spending {
+    animation: wall-spend 0.42s ease-out forwards;
+}
+
+@keyframes wall-spend {
+    0%   { transform: translateY(0) scaleY(1);    filter: brightness(1); }
+    30%  { transform: translateY(-0.35vh) scaleY(1.15); filter: brightness(1.35); }
+    60%  { transform: translateY(0) scaleY(0.94); }
+    100% { transform: translateY(0) scaleY(1);    filter: brightness(1); background: #252838; }
 }
 
 .logo {
@@ -114,11 +127,15 @@ body {
     overflow: hidden;
     background: #0F1117;
     min-height: 0;
+    position: relative;
+    perspective: 1400px;
 }
 
 canvas {
     display: block;
     cursor: default;
+    transform-origin: center center;
+    backface-visibility: hidden;
 }
 
 .bottom-bar {
@@ -130,6 +147,7 @@ canvas {
     align-items: center;
     gap: 20px;
     flex-shrink: 0;
+    position: relative;
 }
 
 .status-label {
@@ -189,8 +207,156 @@ button:active {
     height: 2vh;
 }
 
-button:hover .icon-btn svg {
+.icon-btn:hover svg {
     color: #C8CCDC;
+}
+
+/* Bottom-bar controls, tactile and animated */
+.controls button {
+    height: 4.4vh;
+    min-height: 38px;
+    padding: 0 18px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #AEB6D2;
+    background: #1B1F2E;
+    border: 1px solid #2A3047;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background 0.2s ease, border-color 0.2s ease,
+                box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.controls .icon-btn {
+    width: 4.4vh;
+    min-width: 38px;
+    padding: 0;
+}
+
+.controls button:hover {
+    transform: translateY(-2px);
+    color: #EAEDF6;
+    background: #232A40;
+    border-color: rgba(62, 104, 168, 0.7);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(62, 104, 168, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.controls button:active {
+    transform: translateY(0) scale(0.93);
+    color: #EAEDF6;
+    background: #161926;
+    border-color: rgba(62, 104, 168, 0.6);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    transition-duration: 0.08s;
+}
+
+.controls button svg {
+    width: 2vh;
+    height: 2vh;
+    color: inherit;
+    transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+}
+
+.controls .icon-btn:hover svg { color: #EAEDF6; }
+
+/* New Game, the main action: a flat, slightly muted blue from the game's
+   palette so it stays distinct without the loud gradient */
+#new-game-btn {
+    color: #FFFFFF;
+    background: #3A5E92;
+    border-color: #5079AE;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+#new-game-btn:hover {
+    color: #FFFFFF;
+    background: #436BA3;
+    border-color: #6791C8;
+    box-shadow: 0 6px 16px rgba(62, 104, 168, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+#new-game-btn:active {
+    color: #FFFFFF;
+    background: #314F7C;
+    border-color: #4C7AC0;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* Active toggle look shared by Confirm walls (on) and Animations (on): the
+   blue. Solid colours (translucent blue composited over the dark bar) so the
+   contrast checker can evaluate them. */
+.icon-btn.tap-active,
+#anim-btn:not(.anim-off) {
+    color: #C3D6F4;
+    background: linear-gradient(180deg, #243450, #1B2438);
+    border-color: rgba(90, 140, 210, 0.8);
+    box-shadow: 0 0 14px rgba(62, 104, 168, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.icon-btn.tap-active svg,
+#anim-btn:not(.anim-off) svg { color: #C3D6F4; }
+
+.icon-btn.tap-active:hover,
+#anim-btn:not(.anim-off):hover {
+    transform: translateY(-2px);
+    color: #EAF1FB;
+    background: linear-gradient(180deg, #314A72, #202E48);
+    border-color: rgba(122, 168, 230, 0.95);
+    box-shadow: 0 6px 18px rgba(62, 104, 168, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.icon-btn.tap-active:hover svg,
+#anim-btn:not(.anim-off):hover svg { color: #EAF1FB; }
+
+.icon-btn.tap-active:active,
+#anim-btn:not(.anim-off):active {
+    transform: translateY(0) scale(0.93);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* Animations off: dimmed with a slashed icon, brightening on hover */
+.icon-btn.anim-off {
+    opacity: 0.5;
+}
+
+.icon-btn.anim-off:hover {
+    opacity: 0.85;
+}
+
+/* Mute, red tint while muted, with a brighter hover (solid colours for the
+   contrast checker) */
+#mute-btn.muted {
+    color: #E0998C;
+    border-color: rgba(158, 74, 64, 0.6);
+    background: linear-gradient(180deg, #3A2530, #221A22);
+}
+
+#mute-btn.muted svg { color: #E0998C; }
+
+#mute-btn.muted:hover {
+    color: #F2B7AA;
+    border-color: rgba(196, 96, 84, 0.9);
+    background: linear-gradient(180deg, #4A2F3A, #2C212A);
+    box-shadow: 0 6px 18px rgba(158, 74, 64, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+#mute-btn.muted:hover svg { color: #F2B7AA; }
+
+@keyframes mute-pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.68); }
+    100% { transform: scale(1); }
+}
+
+@keyframes ctrl-icon-pop {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.22); }
+    100% { transform: scale(1); }
 }
 
 /* Win Screen */
@@ -328,7 +494,7 @@ button:hover .icon-btn svg {
     background: #191C2A;
     border: 1px solid #242842;
     border-radius: 12px;
-    color: #6E7694;
+    color: #9BA3C3;
     font-size: 12px;
     font-weight: bold;
     cursor: pointer;
@@ -728,15 +894,178 @@ button:hover .icon-btn svg {
         gap: 8px;
     }
 
+    /* Collapse text actions to icon-only squares so the row never overflows */
     .controls button:not(.icon-btn) {
-        padding: 0.9vh 12px;
-        font-size: 1.5vh;
+        width: 4.4vh;
+        min-width: 38px;
+        padding: 0;
+    }
+
+    #change-mode-btn span,
+    #new-game-btn span {
+        display: none;
     }
 
     .lobby-card {
         width: calc(100vw - 40px);
         padding: 36px 24px 28px;
     }
+}
+
+/* ─── Tap-to-preview mode ─────────────────────────────────────────────── */
+
+
+/* Confirm bar — overlays the bottom bar, replacing status + controls */
+.tap-confirm-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 12;
+    background: #13151F;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+}
+
+.tap-confirm-hint.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Inner row springs in while the backdrop fades */
+.tap-confirm-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(12px) scale(0.92);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tap-confirm-hint.visible .tap-confirm-row {
+    transform: translateY(0) scale(1);
+}
+
+.tap-confirm-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 1px solid;
+    border-radius: 99px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
+    backdrop-filter: blur(16px);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s ease, background 0.16s ease,
+                border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.tap-confirm-btn:active { transform: scale(0.93); }
+
+/* Primary "place" pill — generous 48px tap target with a label */
+.tap-confirm-place {
+    height: 48px;
+    padding: 0 22px 0 18px;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    color: #FFFFFF;
+}
+
+.tap-confirm-place svg { flex-shrink: 0; }
+.tap-confirm-label { white-space: nowrap; }
+
+.tap-confirm-hint.p1 .tap-confirm-place {
+    background: rgba(158, 74, 64, 0.92);
+    border-color: rgba(216, 130, 118, 0.7);
+    animation: tap-place-pulse-p1 1.8s ease-in-out infinite;
+}
+
+.tap-confirm-hint.p1 .tap-confirm-place:hover { background: rgba(176, 84, 73, 0.96); }
+
+.tap-confirm-hint.p2 .tap-confirm-place {
+    background: rgba(62, 104, 168, 0.92);
+    border-color: rgba(122, 170, 232, 0.7);
+    animation: tap-place-pulse-p2 1.8s ease-in-out infinite;
+}
+
+.tap-confirm-hint.p2 .tap-confirm-place:hover { background: rgba(72, 118, 188, 0.96); }
+
+@keyframes tap-place-pulse-p1 {
+    0%, 100% { box-shadow: 0 6px 26px rgba(158, 74, 64, 0.5), 0 0 0 0 rgba(216, 130, 118, 0.5); }
+    50%      { box-shadow: 0 8px 30px rgba(158, 74, 64, 0.6), 0 0 0 8px rgba(216, 130, 118, 0); }
+}
+
+@keyframes tap-place-pulse-p2 {
+    0%, 100% { box-shadow: 0 6px 26px rgba(62, 104, 168, 0.5), 0 0 0 0 rgba(122, 170, 232, 0.5); }
+    50%      { box-shadow: 0 8px 30px rgba(62, 104, 168, 0.6), 0 0 0 8px rgba(122, 170, 232, 0); }
+}
+
+/* Secondary "cancel" — circular, neutral, high-contrast glyph */
+.tap-confirm-cancel {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    color: #C8CCDC;
+    background: rgba(13, 15, 24, 0.9);
+    border-color: rgba(120, 128, 160, 0.4);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
+.tap-confirm-cancel:hover {
+    background: rgba(32, 36, 52, 0.95);
+    border-color: rgba(150, 158, 190, 0.6);
+    color: #FFFFFF;
+}
+
+/* Transient toast — announces mode changes / first-use hint */
+.tap-toast {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    z-index: 11;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: calc(100% - 28px);
+    padding: 9px 16px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #D4D8E6;
+    background: rgba(13, 15, 24, 0.94);
+    border: 1px solid rgba(120, 128, 160, 0.32);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(-16px) scale(0.95);
+    transition: opacity 0.25s ease,
+                transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tap-toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tap-confirm-hint,
+    .tap-confirm-row,
+    .tap-toast { transition-duration: 0.12s; }
+    .tap-confirm-place { animation: none; }
+    .controls button svg { transition: color 0.2s ease; }
+    .controls button:hover { transform: none; }
+}
+
+/* Keep the confirm buttons within a short landscape bottom bar */
+@media (max-height: 480px) {
+    .tap-confirm-place { height: 38px; padding: 0 18px 0 14px; font-size: 13px; }
+    .tap-confirm-cancel { width: 38px; height: 38px; }
 }
 
 /* Landscape phone — tighten both bars vertically */

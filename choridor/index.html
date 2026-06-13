@@ -167,26 +167,71 @@
 
         <div class="board-wrapper">
             <canvas id="gameBoard"></canvas>
+            <output id="tap-toast" class="tap-toast" aria-live="polite" aria-hidden="true"></output>
         </div>
 
         <div class="bottom-bar">
+            <div id="tap-confirm-hint" class="tap-confirm-hint" aria-hidden="true">
+                <div class="tap-confirm-row">
+                    <button type="button" class="tap-confirm-btn tap-confirm-cancel" id="tap-confirm-no" aria-label="Cancel wall preview" title="Cancel">
+                        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                        </svg>
+                    </button>
+                    <button type="button" class="tap-confirm-btn tap-confirm-place" id="tap-confirm-yes" aria-label="Place wall here">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="4,12.5 9.5,18 20,6"/>
+                        </svg>
+                        <span class="tap-confirm-label">Place wall</span>
+                    </button>
+                </div>
+            </div>
             <div class="status-label" id="status">Player 1's Turn</div>
             <div class="controls">
-                <button id="flip-btn" class="icon-btn" title="Flip board">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 4v6h6M23 20v-6h-6"></path>
-                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64M3.51 15A9 9 0 0 0 18.36 18.36"></path>
+                <button id="anim-btn" class="icon-btn anim-off" type="button" aria-pressed="false" aria-label="Turn animations on" title="Toggle animations">
+                    <svg id="anim-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7L12 3.2z"/>
+                        <path d="M18.5 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"/>
+                        <line x1="3" y1="3" x2="21" y2="21"/>
                     </svg>
                 </button>
-                <button id="mute-btn" class="icon-btn" title="Mute">
+                <button id="mute-btn" class="icon-btn" type="button" title="Sound effects" aria-label="Toggle sound effects">
                     <svg id="mute-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 5 6 9H2v6h4l5 4V5z"/>
                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
                     </svg>
                 </button>
-                <button id="change-mode-btn">Change Mode</button>
-                <button id="new-game-btn">New Game</button>
+                <button id="flip-btn" class="icon-btn" type="button" title="Flip board" aria-label="Flip board">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 4v6h6M23 20v-6h-6"></path>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64M3.51 15A9 9 0 0 0 18.36 18.36"></path>
+                    </svg>
+                </button>
+                <button id="tap-mode-btn" class="icon-btn" type="button" aria-pressed="false" aria-label="Toggle confirm walls" title="Confirm walls: pick a slot, then confirm before it's placed (works with mouse too)">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 9.5V4a2 2 0 0 1 4 0v8"/>
+                        <path d="M14 8.5a2 2 0 0 1 4 0V12"/>
+                        <path d="M18 10.5a2 2 0 0 1 4 0V15a7 7 0 0 1-7 7h-1.5a6 6 0 0 1-4.24-1.76l-4.6-4.6a2 2 0 0 1 2.83-2.83L10 14.5"/>
+                    </svg>
+                </button>
+                <button id="change-mode-btn" type="button" title="Change mode" aria-label="Change mode">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                    </svg>
+                    <span>Change Mode</span>
+                </button>
+                <button id="new-game-btn" type="button" title="New game" aria-label="New game">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                    </svg>
+                    <span>New Game</span>
+                </button>
             </div>
         </div>
     </div>
