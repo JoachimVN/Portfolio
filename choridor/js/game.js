@@ -576,24 +576,27 @@ function showLobbyError(elId, msg) {
     el.classList.remove('hidden');
 }
 
-document.getElementById('btn-local').addEventListener('click', () => hideLobby());
+document.getElementById('btn-local').addEventListener('click', () => { playSound('Select'); hideLobby(); });
 
-document.getElementById('btn-online').addEventListener('click', () => showLobbyView('lview-online'));
-document.getElementById('btn-online-back').addEventListener('click', () => showLobbyView('lview-mode'));
+document.getElementById('btn-online').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-online'); });
+document.getElementById('btn-online-back').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-mode'); });
 
 document.getElementById('btn-create').addEventListener('click', () => {
+    playSound('Select');
     initSocket('create-error', () => socket.emit('create-room'));
 });
 
-document.getElementById('btn-join').addEventListener('click', () => showLobbyView('lview-join'));
-document.getElementById('btn-join-back').addEventListener('click', () => showLobbyView('lview-online'));
+document.getElementById('btn-join').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-join'); });
+document.getElementById('btn-join-back').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-online'); });
 
 document.getElementById('btn-waiting-back').addEventListener('click', () => {
+    playSound('Select');
     socket?.disconnect(); socket = null;
     showLobbyView('lview-mode');
 });
 
 document.getElementById('btn-copy-link').addEventListener('click', () => {
+    playSound('Jump');
     const code = document.getElementById('room-code-display').textContent;
     const url  = `${location.origin}${location.pathname}?room=${code}`;
     navigator.clipboard.writeText(url).then(() => {
@@ -606,6 +609,7 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
 document.getElementById('btn-join-confirm').addEventListener('click', () => {
     const code = document.getElementById('room-code-input').value.trim().toUpperCase();
     if (!code) return;
+    playSound('Select');
     document.getElementById('join-error').classList.add('hidden');
     initSocket('join-error', () => socket.emit('join-room', code));
 });
