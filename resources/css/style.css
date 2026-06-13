@@ -669,6 +669,42 @@ a { text-decoration: none; }
   background: var(--brand-color, var(--accent));
 }
 
+.card-toggle {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: flex;
+  background: rgba(0, 0, 0, 0.48);
+  border-radius: 99px;
+  padding: 2px;
+  gap: 2px;
+  z-index: 10;
+  backdrop-filter: blur(6px);
+}
+
+.card-toggle-btn {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.6rem;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+  color: rgba(242, 239, 230, 0.45);
+  background: transparent;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.card-toggle-btn.active {
+  background: var(--brand-color, #3e67a7);
+  color: #fff;
+}
+
+.card-toggle-btn:not(.active):hover {
+  color: rgba(242, 239, 230, 0.75);
+}
+
 .card-logo--lg {
   height: 44px;
   top: 0;

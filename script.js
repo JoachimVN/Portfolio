@@ -11,17 +11,29 @@ const PROJECTS = [
     brandColor:  '#E7AB14',
   },
   {
-    github:      'JoachimVN/CHORIDOR',
-    playUrl:     '/choridor/',
-    screenshots: [
-      'resources/images/screenshots/CHORIDOR_Screenshot1.png',
-      'resources/images/screenshots/CHORIDOR_Screenshot2.png',
-      'resources/images/screenshots/CHORIDOR_Screenshot3.png',
+    isVariant:  true,
+    logo:       'resources/images/logos/CHORIDOR_Logo_Square.png',
+    logoLarge:  true,
+    brandColor: '#3e67a7',
+    variants: [
+      {
+        label:       'Web',
+        github:      'JoachimVN/CHORIDOR-web',
+        playUrl:     '/choridor/',
+        screenshots: ['https://raw.githubusercontent.com/JoachimVN/CHORIDOR-web/main/docs/screenshots/Board.png'],
+        positions:   ['center'],
+      },
+      {
+        label:       'Desktop',
+        github:      'JoachimVN/CHORIDOR',
+        screenshots: [
+          'resources/images/screenshots/CHORIDOR_Screenshot1.png',
+          'resources/images/screenshots/CHORIDOR_Screenshot2.png',
+          'resources/images/screenshots/CHORIDOR_Screenshot3.png',
+        ],
+        positions:   ['center', 'center', 'right center'],
+      },
     ],
-    logo:        'resources/images/logos/CHORIDOR_Logo_Square.png',
-    positions:   ['center', 'center', 'right center'],
-    logoLarge:   true,
-    brandColor:  '#3e67a7',
   },
   {
     name:        'LEGO MINDSTORMS EV3',
@@ -78,7 +90,57 @@ function starSVG() {
   </svg>`;
 }
 
-function renderCard({ name, description, language, stars, url, pageUrl, playUrl, screenshots, positions, logo, logoLarge, isProduct, brandColor }, index = 0) {
+function renderVariantCard({ variants, logo, logoLarge, brandColor }, index = 0) {
+  const v = variants[0];
+  const color    = LANG_COLORS[v.language] || '#888';
+  const multiShot = v.screenshots.length > 1;
+
+  const dotButtons = multiShot
+    ? v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')
+    : '';
+  const dots = dotButtons ? `<div class="card-dots">${dotButtons}</div>` : '';
+  const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
+
+  const toggle = `<div class="card-toggle">
+    ${variants.map((va, i) => `<button class="card-toggle-btn${i === 0 ? ' active' : ''}" data-variant="${i}">${va.label}</button>`).join('')}
+  </div>`;
+
+  const playLabel = v.playUrl
+    ? `<span class="card-play-btn" onclick="event.preventDefault();event.stopPropagation();window.open('${v.playUrl}','_blank')"><span>▶ Play</span></span>`
+    : '';
+  const ctaLabel = v.url
+    ? `<a class="card-link" href="${v.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">GitHub ↗</a>`
+    : '';
+
+  const inner = `
+    <div class="card-bg" style="background-image:url('${v.screenshots[0]}');background-position:${v.positions?.[0] || 'center'}"></div>
+    <div class="card-overlay"></div>
+    <div class="card-shine"></div>
+    ${dots}
+    ${toggle}
+    ${logo ? `<img class="${logoClass}" src="${logo}" alt="CHORIDOR">` : ''}
+    <div class="card-content">
+      <h3 class="card-title">${v.name || 'CHORIDOR'}</h3>
+      <p class="card-desc">${v.description || 'No description available.'}</p>
+      <div class="card-meta">
+        ${v.language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${v.language}</span>` : ''}
+        ${v.stars != null ? `<span class="card-stars">${starSVG()} ${v.stars}</span>` : ''}
+        ${playLabel}
+        ${ctaLabel}
+      </div>
+    </div>
+  `;
+
+  const brand    = brandColor || 'var(--accent)';
+  const brandRgb = brandColor ? hexToRgb(brandColor) : '201,149,42';
+  const delay    = `animation-delay:${index * 0.12 + 0.08}s;--brand-color:${brand};--brand-color-rgb:${brandRgb}`;
+  const data     = `data-screenshots='${JSON.stringify(v.screenshots)}' data-positions='${JSON.stringify(v.positions || [])}' data-variants='${JSON.stringify(variants)}' data-active-variant="0"`;
+
+  return `<div class="card" style="${delay}" ${data}>${inner}</div>`;
+}
+
+function renderCard({ name, description, language, stars, url, pageUrl, playUrl, screenshots, positions, logo, logoLarge, isProduct, brandColor, isVariant, variants }, index = 0) {
+  if (isVariant) return renderVariantCard({ variants, logo, logoLarge, brandColor }, index);
   const color    = LANG_COLORS[language] || '#888';
   const mainShot = screenshots[0];
   const mainPos  = positions?.[0] || 'center';
@@ -136,6 +198,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, playUrl,
 }
 
 const SLIDE_DURATION = 3500;
+const cardSlideshows = new WeakMap();
 
 function goToSlide(card, idx) {
   const screenshots = JSON.parse(card.dataset.screenshots);
@@ -156,31 +219,33 @@ function goToSlide(card, idx) {
   dots[idx]?.classList.add('active');
 }
 
-function initNavigation() {
-  document.querySelectorAll('.card').forEach(card => {
-    const screenshots = JSON.parse(card.dataset.screenshots || '[]');
-    if (screenshots.length <= 1) return;
+function startSlideshow(card) {
+  const prev = cardSlideshows.get(card);
+  if (prev) clearInterval(prev);
 
-    let idx = 0;
+  const screenshots = JSON.parse(card.dataset.screenshots || '[]');
+  if (screenshots.length <= 1) { cardSlideshows.set(card, null); return; }
 
-    const advance = () => {
-      idx = (idx + 1) % screenshots.length;
+  let idx = 0;
+  const advance = () => { idx = (idx + 1) % screenshots.length; goToSlide(card, idx); };
+  let timer = setInterval(advance, SLIDE_DURATION);
+  cardSlideshows.set(card, timer);
+
+  card.querySelectorAll('.dot').forEach((dot, i) => {
+    dot.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      clearInterval(cardSlideshows.get(card));
+      idx = i;
       goToSlide(card, idx);
-    };
-
-    let timer = setInterval(advance, SLIDE_DURATION);
-
-    card.querySelectorAll('.dot').forEach((dot, i) => {
-      dot.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        clearInterval(timer);
-        idx = i;
-        goToSlide(card, idx);
-        timer = setInterval(advance, SLIDE_DURATION);
-      });
+      timer = setInterval(advance, SLIDE_DURATION);
+      cardSlideshows.set(card, timer);
     });
   });
+}
+
+function initNavigation() {
+  document.querySelectorAll('.card').forEach(card => startSlideshow(card));
 }
 
 async function loadProjects() {
@@ -188,6 +253,19 @@ async function loadProjects() {
 
   const cards = await Promise.all(
     PROJECTS.map(async (project) => {
+      if (project.isVariant) {
+        const fetchedVariants = await Promise.all(
+          project.variants.map(async v => {
+            try {
+              const data = await fetchRepo(v.github);
+              return { ...v, name: data.name.replaceAll('-', ' '), description: data.description, language: data.language, stars: data.stargazers_count, url: data.html_url };
+            } catch {
+              return { ...v, name: v.github.split('/')[1], description: 'Could not load project data.', url: `https://github.com/${v.github}` };
+            }
+          })
+        );
+        return { ...project, variants: fetchedVariants };
+      }
       if (!project.github) return project;
       try {
         const data = await fetchRepo(project.github);
@@ -212,6 +290,7 @@ async function loadProjects() {
 
   grid.innerHTML = cards.map((card, i) => renderCard(card, i)).join('');
   initNavigation();
+  initVariantToggles();
   initCardTilt();
 }
 
@@ -414,11 +493,104 @@ function initFooter() {
   }
 }
 
+function initVariantToggles() {
+  document.querySelectorAll('.card[data-variants]').forEach(card => {
+    card.querySelectorAll('.card-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const idx = Number(btn.dataset.variant);
+        if (idx === Number(card.dataset.activeVariant)) return;
+
+        const variants = JSON.parse(card.dataset.variants);
+        const v = variants[idx];
+        const color = LANG_COLORS[v.language] || '#888';
+
+        card.dataset.activeVariant = idx;
+        card.dataset.screenshots = JSON.stringify(v.screenshots);
+        card.dataset.positions   = JSON.stringify(v.positions || []);
+
+        card.querySelectorAll('.card-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+
+        // Background crossfade
+        const bg = card.querySelector('.card-bg');
+        bg.style.opacity = '0';
+        setTimeout(() => {
+          bg.style.backgroundImage    = `url('${v.screenshots[0]}')`;
+          bg.style.backgroundPosition = v.positions?.[0] || 'center';
+          bg.style.opacity = '1';
+        }, 320);
+
+        // Dots
+        let dotsContainer = card.querySelector('.card-dots');
+        if (v.screenshots.length > 1) {
+          const html = v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('');
+          if (dotsContainer) { dotsContainer.innerHTML = html; }
+          else {
+            dotsContainer = document.createElement('div');
+            dotsContainer.className = 'card-dots';
+            dotsContainer.innerHTML = html;
+            card.querySelector('.card-content').before(dotsContainer);
+          }
+        } else {
+          dotsContainer?.remove();
+        }
+
+        // Text
+        card.querySelector('.card-title').textContent = v.name || 'CHORIDOR';
+        card.querySelector('.card-desc').textContent  = v.description || 'No description available.';
+
+        // Meta
+        const meta     = card.querySelector('.card-meta');
+        const langEl   = meta.querySelector('.card-lang');
+        const starsEl  = meta.querySelector('.card-stars');
+        let   playEl   = meta.querySelector('.card-play-btn');
+        let   linkEl   = meta.querySelector('.card-link');
+
+        if (langEl)  langEl.innerHTML  = `<span class="lang-dot" style="background:${color}"></span>${v.language || ''}`;
+        if (starsEl) starsEl.innerHTML = `${starSVG()} ${v.stars ?? 0}`;
+
+        if (v.playUrl) {
+          if (!playEl) {
+            playEl = document.createElement('span');
+            playEl.className = 'card-play-btn';
+            playEl.innerHTML = '<span>▶ Play</span>';
+            meta.insertBefore(playEl, linkEl);
+          }
+          playEl.onclick = e => { e.preventDefault(); e.stopPropagation(); window.open(v.playUrl, '_blank'); };
+        } else {
+          playEl?.remove();
+        }
+
+        if (v.url) {
+          if (!linkEl) {
+            linkEl = document.createElement('a');
+            linkEl.className = 'card-link';
+            linkEl.target    = '_blank';
+            linkEl.rel       = 'noopener';
+            linkEl.textContent = 'GitHub ↗';
+            linkEl.onclick   = e => e.stopPropagation();
+            meta.appendChild(linkEl);
+          }
+          linkEl.href = v.url;
+        } else {
+          linkEl?.remove();
+        }
+
+        startSlideshow(card);
+      });
+    });
+  });
+}
+
 function preloadScreenshots() {
-  PROJECTS.forEach(p => p.screenshots.forEach(url => {
-    const img = new Image();
-    img.src = url;
-  }));
+  PROJECTS.forEach(p => {
+    if (p.isVariant) {
+      p.variants.forEach(v => v.screenshots.forEach(url => { const img = new Image(); img.src = url; }));
+    } else {
+      p.screenshots?.forEach(url => { const img = new Image(); img.src = url; });
+    }
+  });
 }
 
 function initTypewriter() {
