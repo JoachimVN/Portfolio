@@ -726,6 +726,22 @@ a { text-decoration: none; }
   top: 2.9rem;
 }
 
+/* variant reveal — new screenshot wipes in behind a slanted, glowing brand edge */
+.card-bg--edge {
+  position: absolute;
+  inset: 0;
+  background: var(--brand-color, #3e67a7);
+  opacity: 0.7;
+  filter: blur(6px) saturate(1.25);
+  pointer-events: none;
+  will-change: clip-path;
+}
+
+.card-bg--reveal {
+  pointer-events: none;
+  will-change: clip-path;
+}
+
 .card-logo--lg {
   height: 44px;
   top: 0;
