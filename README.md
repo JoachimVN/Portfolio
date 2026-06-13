@@ -1,10 +1,10 @@
 <div align="center">
 
-[![Portfolio preview](resources/images/screenshots/Portfolio_Landing.png)](https://joachimvn.github.io)
+[![Portfolio preview](resources/images/screenshots/Portfolio_Landing.png)](https://joavn.dev)
 
 <br/>
 
-[![Live](https://img.shields.io/badge/live-joachimvn.github.io-brightgreen?style=flat-square&logo=github)](https://joavn.dev)
+[![Live](https://img.shields.io/badge/live-joavn.dev-brightgreen?style=flat-square&logo=vercel)](https://joavn.dev)
 &nbsp;
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-563d7c?style=flat-square&logo=css3&logoColor=white)
@@ -23,8 +23,9 @@
 | Project | Stack | Source |
 | --- | --- | --- |
 | **After Hours** | Java · JavaFX | [repo](https://github.com/JoachimVN/After-Hours) |
-| **CHORIDOR** | Java · JavaFX | [repo](https://github.com/JoachimVN/CHORIDOR) |
-| **LEGO MINDSTORMS EV3** | Python | [page](https://joachimvn.github.io/lego.html) |
+| **CHORIDOR** (Desktop) | Java · JavaFX | [repo](https://github.com/JoachimVN/CHORIDOR) |
+| **CHORIDOR** (Web) | JavaScript · Socket.IO | [repo](https://github.com/JoachimVN/CHORIDOR-web) · [play](https://joavn.dev/choridor/) |
+| **LEGO MINDSTORMS EV3** | Python | [page](https://joavn.dev/lego/) |
 
 ## Features
 
@@ -48,13 +49,25 @@ Opening `index.html` directly works for most features, but the LEGO page loads P
 
 ```text
 index.html
-lego.html
 script.js
+vercel.json
+lego/
+  index.html          LEGO MINDSTORMS EV3 project page
+choridor/
+  index.html          CHORIDOR web game
+  js/game.js
+  css/style.css
+  audio/sfx/          Move · Jump · Wall · Win · Loss · Select
+  fonts/
+  images/logos/
 resources/
   css/style.css
-  fonts/          Syne + Inter variable fonts
-  images/         Photos, screenshots, logos
-  code/           line_follower.py · waste_handler.py
+  fonts/              Syne + Inter variable fonts
+  images/
+    logos/            Project logos
+    screenshots/      Card screenshots + portfolio landing
+    Me.jpg · Me2.jpg
+  code/               line_follower.py · waste_handler.py
 ```
 
 </details>
