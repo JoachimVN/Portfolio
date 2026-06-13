@@ -307,7 +307,6 @@ function calcAge(year, month, day) {
 
 function initParallax() {
   const photoWrap = document.querySelector('.hero-photo-wrap');
-  const hero = document.querySelector('.hero');
   if (!photoWrap) return;
 
   let scrollY = window.scrollY;
@@ -335,17 +334,15 @@ function initParallax() {
 
   window.addEventListener('scroll', () => { scrollY = window.scrollY; update(); }, { passive: true });
 
-  if (hero) {
-    hero.addEventListener('mousemove', e => {
-      mx = (e.clientX / window.innerWidth  - 0.5) * 20;
-      my = (e.clientY / window.innerHeight - 0.5) * 12;
-      startTick();
-    });
-    hero.addEventListener('mouseleave', () => {
-      mx = 0; my = 0;
-      startTick();
-    });
-  }
+  photoWrap.addEventListener('mousemove', e => {
+    mx = (e.clientX / window.innerWidth  - 0.5) * 20;
+    my = (e.clientY / window.innerHeight - 0.5) * 12;
+    startTick();
+  });
+  photoWrap.addEventListener('mouseleave', () => {
+    mx = 0; my = 0;
+    startTick();
+  });
 }
 
 function initSectionReveal() {
