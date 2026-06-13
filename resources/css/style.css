@@ -705,6 +705,10 @@ a { text-decoration: none; }
   color: rgba(242, 239, 230, 0.75);
 }
 
+.card[data-variants] .card-dots {
+  top: 2.9rem;
+}
+
 .card-logo--lg {
   height: 44px;
   top: 0;
