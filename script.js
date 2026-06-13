@@ -41,7 +41,7 @@ const PROJECTS = [
     language:    'Python',
     stars:       null,
     url:         null,
-    pageUrl:     'lego.html',
+    pageUrl:     '/lego/',
     screenshots: [
       'resources/images/LEGO_Robot2.png',
       'resources/images/LEGO_Robot1.png',
@@ -812,13 +812,13 @@ function initCardTilt() {
 // Strategy: set a sessionStorage flag on departure, read it synchronously
 // on arrival (before any paint), and clean up after the transition.
 ;(function initViewTransitionDirection() {
-  const isLego = location.pathname.endsWith('lego.html');
+  const isLego = location.pathname.startsWith('/lego');
 
   if (isLego) {
     // Link clicks away from lego (nav bar, etc.)
     document.addEventListener('click', e => {
       const a = e.target.closest('a[href]');
-      if (a && !new URL(a.href).pathname.endsWith('lego.html')) {
+      if (a && !new URL(a.href).pathname.startsWith('/lego')) {
         sessionStorage.setItem('vt-dir', 'back');
       }
     });
