@@ -877,8 +877,8 @@ document.getElementById('room-code-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btn-join-confirm').click();
 });
 
-// Auto-join if URL contains ?room=CODE
-const urlRoom = new URLSearchParams(location.search).get('room');
+// Auto-join if URL contains ?room=CODE (skip in Discord — uses join-activity instead)
+const urlRoom = !isDiscord && new URLSearchParams(location.search).get('room');
 if (urlRoom) {
     showLobbyView('lview-join');
     document.getElementById('room-code-input').value = urlRoom.toUpperCase();
@@ -985,6 +985,16 @@ if (isDiscord) try {
             }
         }
     } catch { /* OAuth declined or unavailable */ }
+    // Auto-enter matchmaking queue — no button press needed in Discord Activity
+    setConnectingBtn('btn-discord-play');
+    initSocket('discord-error', () => {
+        socket.emit('join-activity', { instanceId: discordInstanceId, name: getMyName(), avatarUrl: myAvatar });
+        socket.once('activity-waiting', () => {
+            const btn = document.getElementById('btn-discord-play');
+            if (btn) { btn.querySelector('span').textContent = 'Waiting for opponent…'; btn.disabled = true; }
+            document.getElementById('btn-discord-cancel')?.classList.remove('hidden');
+        });
+    });
 } catch { /* not in Discord, or SDK unavailable */ }
 
 // ─── Init ─────────────────────────────────────────────────────────────────
