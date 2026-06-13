@@ -808,6 +808,39 @@ function initCardTilt() {
 
 
 
+// View-transition direction: lego → index should wipe the opposite way.
+// Strategy: set a sessionStorage flag on departure, read it synchronously
+// on arrival (before any paint), and clean up after the transition.
+;(function initViewTransitionDirection() {
+  const isLego = location.pathname.endsWith('lego.html');
+
+  if (isLego) {
+    // Link clicks away from lego (nav bar, etc.)
+    document.addEventListener('click', e => {
+      const a = e.target.closest('a[href]');
+      if (a && !new URL(a.href).pathname.endsWith('lego.html')) {
+        sessionStorage.setItem('vt-dir', 'back');
+      }
+    });
+    // Browser back button — pageswap fires on the outgoing page
+    globalThis.addEventListener('pageswap', e => {
+      if (e.viewTransition) sessionStorage.setItem('vt-dir', 'back');
+    });
+  } else {
+    // Synchronous check — runs before any paint, before pagereveal
+    if (sessionStorage.getItem('vt-dir') === 'back') {
+      sessionStorage.removeItem('vt-dir');
+      document.documentElement.classList.add('vt-back');
+      // Clean up after the transition so the next index → lego is still forward
+      globalThis.addEventListener('pagereveal', e => {
+        (e.viewTransition?.finished ?? Promise.resolve()).then(() => {
+          document.documentElement.classList.remove('vt-back');
+        });
+      }, { once: true });
+    }
+  }
+}());
+
 document.addEventListener('DOMContentLoaded', () => {
   preloadScreenshots();
   loadProjects();
