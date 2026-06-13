@@ -281,6 +281,22 @@ canvas.addEventListener('click', e => {
     else placeWall(cellY, cellX, inHGap ? 'H' : 'V');
 });
 
+function computePointerForHover(hs) {
+    if (hs.moveRow !== null) return true;
+    if (hs.wallRow === null) return false;
+    const cp = gameState.currentPlayer;
+    const hasWalls = cp === 'p1' ? gameState.wallCounts.p1 > 0 : gameState.wallCounts.p2 > 0;
+    if (!hasWalls) return false;
+    const wk = JSON.stringify({ row: hs.wallRow, col: hs.wallCol, orientation: hs.wallOrientation });
+    if (gameState.walls.has(wk) || hasWallOverlap(hs.wallRow, hs.wallCol, hs.wallOrientation)) return false;
+    const saved = gameState.walls;
+    gameState.walls = new Set(saved);
+    gameState.walls.add(wk);
+    const result = bothPlayersHavePath();
+    gameState.walls = saved;
+    return result;
+}
+
 canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     let x = (e.clientX - rect.left) / boardScale;
@@ -305,23 +321,7 @@ canvas.addEventListener('mousemove', e => {
                        moveRow: null, moveCol: null };
     }
 
-    let pointer = false;
-    if (hoverState.moveRow !== null) {
-        pointer = true;
-    } else if (hoverState.wallRow !== null) {
-        const cp = gameState.currentPlayer;
-        const hasWalls = cp === 'p1' ? gameState.wallCounts.p1 > 0 : gameState.wallCounts.p2 > 0;
-        const { wallRow: wr, wallCol: wc, wallOrientation: wo } = hoverState;
-        const wk = JSON.stringify({ row: wr, col: wc, orientation: wo });
-        if (hasWalls && !gameState.walls.has(wk) && !hasWallOverlap(wr, wc, wo)) {
-            const saved = gameState.walls;
-            gameState.walls = new Set(saved);
-            gameState.walls.add(wk);
-            pointer = bothPlayersHavePath();
-            gameState.walls = saved;
-        }
-    }
-    canvas.style.cursor = pointer ? 'pointer' : 'default';
+    canvas.style.cursor = computePointerForHover(hoverState) ? 'pointer' : 'default';
     if (JSON.stringify(hoverState) !== prev) render();
 });
 
@@ -374,29 +374,34 @@ function placeWall(row, col, orientation) {
     updateLegalMoves();
 }
 
+function applyOpponentPawnMove(data) {
+    const pawn   = gameState.currentPlayer === 'p1' ? gameState.p1Pawn : gameState.p2Pawn;
+    const isJump = Math.abs(data.row - pawn.row) + Math.abs(data.col - pawn.col) > 1;
+    if (gameState.currentPlayer === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
+    else                                  gameState.p2Pawn = { row: data.row, col: data.col };
+    playSound(isJump ? 'Jump' : 'Move');
+    if (checkWin()) return;
+    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+    updateStatus();
+    updateLegalMoves();
+}
+
+function applyOpponentWallMove(data) {
+    const wallKey = JSON.stringify({ row: data.row, col: data.col, orientation: data.orientation });
+    gameState.walls.add(wallKey);
+    gameState.wallOwners.set(wallKey, gameState.currentPlayer);
+    if (gameState.currentPlayer === 'p1') gameState.wallCounts.p1--;
+    else                                  gameState.wallCounts.p2--;
+    playSound('Wall');
+    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+    updateWallCounts();
+    updateStatus();
+    updateLegalMoves();
+}
+
 function applyOpponentMove(data) {
-    if (data.type === 'pawn') {
-        const pawn   = gameState.currentPlayer === 'p1' ? gameState.p1Pawn : gameState.p2Pawn;
-        const isJump = Math.abs(data.row - pawn.row) + Math.abs(data.col - pawn.col) > 1;
-        if (gameState.currentPlayer === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
-        else                                  gameState.p2Pawn = { row: data.row, col: data.col };
-        playSound(isJump ? 'Jump' : 'Move');
-        if (checkWin()) return;
-        gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
-        updateStatus();
-        updateLegalMoves();
-    } else if (data.type === 'wall') {
-        const wallKey = JSON.stringify({ row: data.row, col: data.col, orientation: data.orientation });
-        gameState.walls.add(wallKey);
-        gameState.wallOwners.set(wallKey, gameState.currentPlayer);
-        if (gameState.currentPlayer === 'p1') gameState.wallCounts.p1--;
-        else                                  gameState.wallCounts.p2--;
-        playSound('Wall');
-        gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
-        updateWallCounts();
-        updateStatus();
-        updateLegalMoves();
-    }
+    if (data.type === 'pawn')       applyOpponentPawnMove(data);
+    else if (data.type === 'wall')  applyOpponentWallMove(data);
 }
 
 function hasWallOverlap(row, col, orientation) {
@@ -477,8 +482,7 @@ function showWinScreen(winner, playerClass) {
 
     const card = document.getElementById('win-card');
     card.style.animation = 'none';
-    card.offsetHeight;
-    card.style.animation = '';
+    requestAnimationFrame(() => { card.style.animation = ''; });
 
     document.getElementById('win-overlay').classList.remove('hidden');
 }
