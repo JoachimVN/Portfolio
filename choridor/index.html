@@ -53,10 +53,10 @@
                 </button>
 
                 <div class="lobby-footer">
-                    <a href="tos.html">Terms</a>
+                    <a href="tos.html" id="btn-tos">Terms</a>
                     <span>·</span>
                     <a href="privacy.html">Privacy</a>
-                    <span class="lobby-version">v1.0.2</span>
+                    <span class="lobby-version">v1.0.3</span>
                 </div>
             </div>
 
@@ -103,6 +103,15 @@
                 <button class="win-btn" id="btn-join-confirm">Join Game</button>
                 <button class="lobby-back" id="btn-join-back">← Back</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Legal modal -->
+    <div id="legal-modal" class="legal-modal hidden">
+        <div class="legal-modal-backdrop" id="legal-modal-close"></div>
+        <div class="legal-modal-card">
+            <button class="legal-modal-x" id="legal-modal-x">✕</button>
+            <div id="legal-modal-content"></div>
         </div>
     </div>
 

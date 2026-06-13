@@ -531,6 +531,7 @@ function initSocket(errorElId, callback) {
 
     const timeout = setTimeout(() => {
         if (!socket?.connected) {
+            clearConnectingBtn();
             showLobbyError(errorElId, `Timed out connecting to ${connInfo}`);
             socket?.disconnect();
             socket = null;
@@ -539,11 +540,13 @@ function initSocket(errorElId, callback) {
 
     socket.once('connect', () => {
         clearTimeout(timeout);
+        clearConnectingBtn();
         callback();
     });
 
     socket.on('connect_error', err => {
         clearTimeout(timeout);
+        clearConnectingBtn();
         showLobbyError(errorElId, `${err?.message || 'Connection failed'} — ${connInfo}`);
         socket?.disconnect();
         socket = null;
@@ -575,6 +578,53 @@ function initSocket(errorElId, callback) {
         s.textContent = 'Opponent disconnected';
         s.className   = 'status-label';
     });
+}
+
+// ─── Legal modal ──────────────────────────────────────────────────────────
+
+async function openLegal(url) {
+    const modal   = document.getElementById('legal-modal');
+    const content = document.getElementById('legal-modal-content');
+    content.innerHTML = '<p style="color:#8890A8;padding:20px 0">Loading…</p>';
+    modal.classList.remove('hidden');
+    try {
+        const res = await fetch(url);
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const card = doc.querySelector('.card');
+        card?.querySelector('.back')?.remove();
+        content.innerHTML = card?.innerHTML ?? '<p>Content unavailable.</p>';
+    } catch {
+        content.innerHTML = '<p style="color:#9E4A40">Failed to load content.</p>';
+    }
+}
+
+function closeLegal() {
+    document.getElementById('legal-modal').classList.add('hidden');
+}
+
+// ─── Button loading state ─────────────────────────────────────────────────
+
+let _connectingBtnId = null;
+
+function setConnectingBtn(btnId) {
+    _connectingBtnId = btnId;
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = true;
+    const span = btn.querySelector('span') ?? btn;
+    btn.dataset.prevText = span.textContent;
+    span.textContent = 'Connecting…';
+}
+
+function clearConnectingBtn() {
+    if (!_connectingBtnId) return;
+    const btn = document.getElementById(_connectingBtnId);
+    if (btn) {
+        btn.disabled = false;
+        const span = btn.querySelector('span') ?? btn;
+        span.textContent = btn.dataset.prevText ?? span.textContent;
+    }
+    _connectingBtnId = null;
 }
 
 // ─── Online: lobby UI ─────────────────────────────────────────────────────
@@ -666,6 +716,7 @@ document.getElementById('btn-online-back').addEventListener('click', () => { pla
 
 document.getElementById('btn-create').addEventListener('click', () => {
     playSound('Select');
+    setConnectingBtn('btn-create');
     initSocket('create-error', () => socket.emit('create-room'));
 });
 
@@ -694,6 +745,7 @@ document.getElementById('btn-join-confirm').addEventListener('click', () => {
     if (!code) return;
     playSound('Select');
     document.getElementById('join-error').classList.add('hidden');
+    setConnectingBtn('btn-join-confirm');
     initSocket('join-error', () => socket.emit('join-room', code));
 });
 
@@ -707,6 +759,15 @@ if (urlRoom) {
     showLobbyView('lview-join');
     document.getElementById('room-code-input').value = urlRoom.toUpperCase();
 }
+
+['btn-tos', 'btn-privacy'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('click', e => { e.preventDefault(); openLegal(el.href); });
+});
+document.getElementById('legal-modal-close').addEventListener('click', closeLegal);
+document.getElementById('legal-modal-x').addEventListener('click', closeLegal);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLegal(); });
 
 // ─── Buttons ──────────────────────────────────────────────────────────────
 
