@@ -826,18 +826,16 @@ function initCardTilt() {
     globalThis.addEventListener('pageswap', e => {
       if (e.viewTransition) sessionStorage.setItem('vt-dir', 'back');
     });
-  } else {
+  } else if (sessionStorage.getItem('vt-dir') === 'back') {
     // Synchronous check — runs before any paint, before pagereveal
-    if (sessionStorage.getItem('vt-dir') === 'back') {
-      sessionStorage.removeItem('vt-dir');
-      document.documentElement.classList.add('vt-back');
-      // Clean up after the transition so the next index → lego is still forward
-      globalThis.addEventListener('pagereveal', e => {
-        (e.viewTransition?.finished ?? Promise.resolve()).then(() => {
-          document.documentElement.classList.remove('vt-back');
-        });
-      }, { once: true });
-    }
+    sessionStorage.removeItem('vt-dir');
+    document.documentElement.classList.add('vt-back');
+    // Clean up after the transition so the next index → lego is still forward
+    globalThis.addEventListener('pagereveal', e => {
+      (e.viewTransition?.finished ?? Promise.resolve()).then(() => {
+        document.documentElement.classList.remove('vt-back');
+      });
+    }, { once: true });
   }
 }());
 
