@@ -13,9 +13,12 @@ const WALL_USED_COLOR = '#252838';
 const P1_STRIP       = 'rgba(158, 74, 64, 0.7)';
 const P2_STRIP       = 'rgba(62, 104, 168, 0.7)';
 
-const BACKEND_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
-    ? 'http://localhost:3001'
-    : window.location.origin;
+function getBackendUrl() {
+    if (['localhost', '127.0.0.1'].includes(location.hostname)) return 'http://localhost:3001';
+    if (location.hostname.endsWith('.discordsays.com')) return 'https://choridor-web-production.up.railway.app';
+    return globalThis.location.origin;
+}
+const BACKEND_URL = getBackendUrl();
 
 // ─── Audio ────────────────────────────────────────────────────────────────
 
@@ -281,6 +284,16 @@ canvas.addEventListener('click', e => {
     else placeWall(cellY, cellX, inHGap ? 'H' : 'V');
 });
 
+function computeHoverState(cellX, cellY, inHGap, inVGap) {
+    const empty = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
+    if (!isMyTurn() || gameState.gameOver) return empty;
+    if (!inHGap && !inVGap) {
+        const move = gameState.legalMoves.find(m => m.row === cellY && m.col === cellX);
+        return { ...empty, moveRow: move?.row ?? null, moveCol: move?.col ?? null };
+    }
+    return { ...empty, wallRow: cellY, wallCol: cellX, wallOrientation: inHGap ? 'H' : 'V' };
+}
+
 canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     let x = (e.clientX - rect.left) / boardScale;
@@ -293,17 +306,7 @@ canvas.addEventListener('mousemove', e => {
     const inVGap = offX >= CELL_SIZE && cellX < BOARD_SIZE - 1;
 
     const prev = JSON.stringify(hoverState);
-
-    if (!isMyTurn() || gameState.gameOver) {
-        hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
-    } else if (!inHGap && !inVGap) {
-        const move = gameState.legalMoves.find(m => m.row === cellY && m.col === cellX);
-        hoverState = { wallRow: null, wallCol: null, wallOrientation: null,
-                       moveRow: move?.row ?? null, moveCol: move?.col ?? null };
-    } else {
-        hoverState = { wallRow: cellY, wallCol: cellX, wallOrientation: inHGap ? 'H' : 'V',
-                       moveRow: null, moveCol: null };
-    }
+    hoverState = computeHoverState(cellX, cellY, inHGap, inVGap);
 
     let pointer = false;
     if (hoverState.moveRow !== null) {
@@ -374,29 +377,34 @@ function placeWall(row, col, orientation) {
     updateLegalMoves();
 }
 
+function applyOpponentPawnMove(data) {
+    const pawn   = gameState.currentPlayer === 'p1' ? gameState.p1Pawn : gameState.p2Pawn;
+    const isJump = Math.abs(data.row - pawn.row) + Math.abs(data.col - pawn.col) > 1;
+    if (gameState.currentPlayer === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
+    else                                  gameState.p2Pawn = { row: data.row, col: data.col };
+    playSound(isJump ? 'Jump' : 'Move');
+    if (checkWin()) return;
+    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+    updateStatus();
+    updateLegalMoves();
+}
+
+function applyOpponentWallMove(data) {
+    const wallKey = JSON.stringify({ row: data.row, col: data.col, orientation: data.orientation });
+    gameState.walls.add(wallKey);
+    gameState.wallOwners.set(wallKey, gameState.currentPlayer);
+    if (gameState.currentPlayer === 'p1') gameState.wallCounts.p1--;
+    else                                  gameState.wallCounts.p2--;
+    playSound('Wall');
+    gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
+    updateWallCounts();
+    updateStatus();
+    updateLegalMoves();
+}
+
 function applyOpponentMove(data) {
-    if (data.type === 'pawn') {
-        const pawn   = gameState.currentPlayer === 'p1' ? gameState.p1Pawn : gameState.p2Pawn;
-        const isJump = Math.abs(data.row - pawn.row) + Math.abs(data.col - pawn.col) > 1;
-        if (gameState.currentPlayer === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
-        else                                  gameState.p2Pawn = { row: data.row, col: data.col };
-        playSound(isJump ? 'Jump' : 'Move');
-        if (checkWin()) return;
-        gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
-        updateStatus();
-        updateLegalMoves();
-    } else if (data.type === 'wall') {
-        const wallKey = JSON.stringify({ row: data.row, col: data.col, orientation: data.orientation });
-        gameState.walls.add(wallKey);
-        gameState.wallOwners.set(wallKey, gameState.currentPlayer);
-        if (gameState.currentPlayer === 'p1') gameState.wallCounts.p1--;
-        else                                  gameState.wallCounts.p2--;
-        playSound('Wall');
-        gameState.currentPlayer = gameState.currentPlayer === 'p1' ? 'p2' : 'p1';
-        updateWallCounts();
-        updateStatus();
-        updateLegalMoves();
-    }
+    if (data.type === 'pawn') applyOpponentPawnMove(data);
+    else if (data.type === 'wall') applyOpponentWallMove(data);
 }
 
 function hasWallOverlap(row, col, orientation) {
@@ -486,7 +494,7 @@ function showWinScreen(winner, playerClass) {
 
     const card = document.getElementById('win-card');
     card.style.animation = 'none';
-    card.offsetHeight;
+    card.getBoundingClientRect();
     card.style.animation = '';
 
     document.getElementById('win-overlay').classList.remove('hidden');
@@ -757,15 +765,11 @@ document.getElementById('change-mode-btn').addEventListener('click', () => {
 
 // ─── Discord Activity ─────────────────────────────────────────────────────
 
-async function initDiscord() {
-    try {
-        const { DiscordSDK } = await import('https://esm.sh/@discord/embedded-app-sdk@1');
-        const sdk = new DiscordSDK('1515199692793843712');
-        await sdk.ready();
-    } catch { /* not in Discord, or SDK unavailable */ }
-}
-
-initDiscord();
+try {
+    const { DiscordSDK } = await import('https://esm.sh/@discord/embedded-app-sdk@1');
+    const sdk = new DiscordSDK('1515199692793843712');
+    await sdk.ready();
+} catch { /* not in Discord, or SDK unavailable */ }
 
 // ─── Init ─────────────────────────────────────────────────────────────────
 
