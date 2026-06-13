@@ -522,72 +522,92 @@ function initVariantToggles() {
         card.querySelectorAll('.card-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
         updateToggleIndicator(card);
 
-        // Background crossfade
-        const bg = card.querySelector('.card-bg');
-        bg.style.opacity = '0';
+        // Bg blurs out, content slides down-out
+        const bg      = card.querySelector('.card-bg');
+        const content = card.querySelector('.card-content');
+        bg.style.transition      = 'opacity 0.28s ease, filter 0.28s ease';
+        bg.style.opacity         = '0';
+        bg.style.filter          = 'blur(10px)';
+        content.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        content.style.opacity    = '0';
+        content.style.transform  = 'translateY(10px)';
+
         setTimeout(() => {
+          // Bg swaps and focuses back in
           bg.style.backgroundImage    = `url('${v.screenshots[0]}')`;
           bg.style.backgroundPosition = v.positions?.[0] || 'center';
           bg.style.opacity = '1';
-        }, 320);
+          bg.style.filter  = 'blur(0px)';
+          setTimeout(() => { bg.style.transition = ''; bg.style.filter = ''; }, 380);
 
-        // Dots
-        let dotsContainer = card.querySelector('.card-dots');
-        if (v.screenshots.length > 1) {
-          const html = v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('');
-          if (dotsContainer) { dotsContainer.innerHTML = html; }
-          else {
-            dotsContainer = document.createElement('div');
-            dotsContainer.className = 'card-dots';
-            dotsContainer.innerHTML = html;
-            card.querySelector('.card-content').before(dotsContainer);
+          // Dots
+          let dotsContainer = card.querySelector('.card-dots');
+          if (v.screenshots.length > 1) {
+            const html = v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('');
+            if (dotsContainer) { dotsContainer.innerHTML = html; }
+            else {
+              dotsContainer = document.createElement('div');
+              dotsContainer.className = 'card-dots';
+              dotsContainer.innerHTML = html;
+              card.querySelector('.card-content').before(dotsContainer);
+            }
+          } else {
+            dotsContainer?.remove();
           }
-        } else {
-          dotsContainer?.remove();
-        }
 
-        // Text
-        card.querySelector('.card-title').textContent = v.name || 'CHORIDOR';
-        card.querySelector('.card-desc').textContent  = v.description || 'No description available.';
+          // Text
+          card.querySelector('.card-title').textContent = v.name || 'CHORIDOR';
+          card.querySelector('.card-desc').textContent  = v.description || 'No description available.';
 
-        // Meta
-        const meta     = card.querySelector('.card-meta');
-        const langEl   = meta.querySelector('.card-lang');
-        const starsEl  = meta.querySelector('.card-stars');
-        let   playEl   = meta.querySelector('.card-play-btn');
-        let   linkEl   = meta.querySelector('.card-link');
+          // Meta
+          const meta    = card.querySelector('.card-meta');
+          const langEl  = meta.querySelector('.card-lang');
+          const starsEl = meta.querySelector('.card-stars');
+          let   playEl  = meta.querySelector('.card-play-btn');
+          let   linkEl  = meta.querySelector('.card-link');
 
-        if (langEl)  langEl.innerHTML  = `<span class="lang-dot" style="background:${color}"></span>${v.language || ''}`;
-        if (starsEl) starsEl.innerHTML = `${starSVG()} ${v.stars ?? 0}`;
+          if (langEl)  langEl.innerHTML  = `<span class="lang-dot" style="background:${color}"></span>${v.language || ''}`;
+          if (starsEl) starsEl.innerHTML = `${starSVG()} ${v.stars ?? 0}`;
 
-        if (v.playUrl) {
-          if (!playEl) {
-            playEl = document.createElement('span');
-            playEl.className = 'card-play-btn';
-            playEl.innerHTML = '<span>▶ Play</span>';
-            meta.insertBefore(playEl, linkEl);
+          if (v.playUrl) {
+            if (!playEl) {
+              playEl = document.createElement('span');
+              playEl.className = 'card-play-btn';
+              playEl.innerHTML = '<span>▶ Play</span>';
+              meta.insertBefore(playEl, linkEl);
+            }
+            playEl.onclick = e => { e.preventDefault(); e.stopPropagation(); window.open(v.playUrl, '_blank'); };
+          } else {
+            playEl?.remove();
           }
-          playEl.onclick = e => { e.preventDefault(); e.stopPropagation(); window.open(v.playUrl, '_blank'); };
-        } else {
-          playEl?.remove();
-        }
 
-        if (v.url) {
-          if (!linkEl) {
-            linkEl = document.createElement('a');
-            linkEl.className = 'card-link';
-            linkEl.target    = '_blank';
-            linkEl.rel       = 'noopener';
-            linkEl.textContent = 'GitHub ↗';
-            linkEl.onclick   = e => e.stopPropagation();
-            meta.appendChild(linkEl);
+          if (v.url) {
+            if (!linkEl) {
+              linkEl = document.createElement('a');
+              linkEl.className   = 'card-link';
+              linkEl.target      = '_blank';
+              linkEl.rel         = 'noopener';
+              linkEl.textContent = 'GitHub ↗';
+              linkEl.onclick     = e => e.stopPropagation();
+              meta.appendChild(linkEl);
+            }
+            linkEl.href = v.url;
+          } else {
+            linkEl?.remove();
           }
-          linkEl.href = v.url;
-        } else {
-          linkEl?.remove();
-        }
 
-        startSlideshow(card);
+          // Content slides in from above
+          content.style.transition = 'none';
+          content.style.transform  = 'translateY(-10px)';
+          content.style.opacity    = '0';
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            content.style.transition = 'opacity 0.32s ease, transform 0.32s cubic-bezier(0.34, 1.2, 0.64, 1)';
+            content.style.opacity    = '1';
+            content.style.transform  = '';
+          }));
+
+          startSlideshow(card);
+        }, 220);
       });
     });
   });

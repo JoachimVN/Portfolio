@@ -523,6 +523,33 @@ a { text-decoration: none; }
 
 .card-play-btn span { position: relative; z-index: 1; }
 
+@keyframes btn-shimmer {
+  0%, 60% { transform: translateX(-130%) skewX(-18deg); opacity: 0.9; }
+  100%     { transform: translateX(230%)  skewX(-18deg); opacity: 0;   }
+}
+
+.card-play-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  animation: btn-shimmer 2.4s ease-in-out 0.8s infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-5px); }
+}
+
+.card:hover .card-logo {
+  animation: logo-float 2.8s ease-in-out infinite;
+}
+
 .card--product .card-bg {
   background-color: #131320;
   background-size: 62%;
