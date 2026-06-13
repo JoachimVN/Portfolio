@@ -12,7 +12,7 @@
 
 *Personal portfolio. No frameworks, no build tools.*
 
-**https://joavn.dev**
+**[https://joavn.dev](https://joavn.dev)**
 
 </div>
 
