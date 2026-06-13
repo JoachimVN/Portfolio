@@ -124,7 +124,7 @@ function renderVariantCard({ variants, logo, logoLarge, brandColor }, index = 0)
       <p class="card-desc">${v.description || 'No description available.'}</p>
       <div class="card-meta">
         ${v.language ? `<span class="card-lang"><span class="lang-dot" style="background:${color}"></span>${v.language}</span>` : ''}
-        ${v.stars != null ? `<span class="card-stars">${starSVG()} ${v.stars}</span>` : ''}
+        ${v.stars == null ? '' : `<span class="card-stars">${starSVG()} ${v.stars}</span>`}
         ${playLabel}
         ${ctaLabel}
       </div>
@@ -542,7 +542,7 @@ function swapVariantContent(card, v) {
       playEl = document.createElement('span');
       playEl.className = 'card-play-btn';
       playEl.innerHTML = '<span>▶ Play</span>';
-      meta.insertBefore(playEl, linkEl);
+      linkEl.before(playEl);
     }
     playEl.onclick = e => { e.preventDefault(); e.stopPropagation(); window.open(v.playUrl, '_blank'); };
   } else {
@@ -585,113 +585,127 @@ function commitVariantReveal(card) {
   });
 }
 
+const variantSwapTokens = new WeakMap();
+
+function applyVariantSwap(card, v, fromRight) {
+  const token = (variantSwapTokens.get(card) ?? 0) + 1;
+  variantSwapTokens.set(card, token);
+
+  const isStale  = () => variantSwapTokens.get(card) !== token;
+  const bg       = card.querySelector('.card-bg');
+  const content  = card.querySelector('.card-content');
+  const reduced  = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let exitX  = 0;
+  let enterX = 0;
+  if (!reduced) {
+    exitX  = fromRight ? -10 : 10;
+    enterX = fromRight ? 14 : -14;
+  }
+
+  // Content fades out toward the exit side, swaps, then eases in from the entry side
+  content.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+  content.style.opacity    = '0';
+  content.style.transform  = `translateX(${exitX}px)`;
+
+  function applyContentIn() {
+    if (isStale()) return;
+    content.style.transition = 'opacity 0.3s ease, transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
+    content.style.opacity    = '1';
+    content.style.transform  = '';
+  }
+
+  setTimeout(() => {
+    if (isStale()) return;
+    swapVariantContent(card, v);
+    content.style.transition = 'none';
+    content.style.transform  = `translateX(${enterX}px)`;
+    requestAnimationFrame(() => requestAnimationFrame(applyContentIn));
+  }, 220);
+
+  if (reduced) {
+    bg.style.opacity = '0';
+    setTimeout(() => {
+      if (isStale()) return;
+      bg.style.backgroundImage    = `url('${v.screenshots[0]}')`;
+      bg.style.backgroundPosition = v.positions?.[0] || 'center';
+      bg.style.opacity = '1';
+    }, 280);
+    return;
+  }
+
+  // Slash wipe: new screenshot sweeps in from the side of the clicked button
+  // behind a slanted brand-glow edge; old screenshot is pushed the opposite way.
+  // poly(t) describes the revealed region whose slanted edge sits at t% across the card.
+  const slant = 12;
+  const lead  = fromRight ? -6 : 6;
+  const t0    = fromRight ? 116 : -16;
+  const t1    = fromRight ? -16 : 116;
+  const poly  = t => fromRight
+    ? `polygon(${t + slant}% 0%, 100% 0%, 100% 100%, ${t - slant}% 100%)`
+    : `polygon(0% 0%, ${t + slant}% 0%, ${t - slant}% 100%, 0% 100%)`;
+
+  const edge = document.createElement('div');
+  edge.className  = 'card-bg--edge';
+  edge.style.clipPath = poly(fromRight ? 130 : -30);
+
+  const reveal = document.createElement('div');
+  reveal.className = 'card-bg card-bg--reveal';
+  reveal.style.backgroundImage    = `url('${v.screenshots[0]}')`;
+  reveal.style.backgroundPosition = v.positions?.[0] || 'center';
+  reveal.style.clipPath = poly(t0);
+
+  bg.after(edge, reveal);
+
+  const D    = 560;
+  const ease = 'cubic-bezier(0.7, 0, 0.25, 1)';
+
+  edge.animate(
+    { clipPath: [poly(t0 + lead), poly(t1 + lead)] },
+    { duration: D, easing: ease, fill: 'forwards' }
+  );
+  const sweep = reveal.animate(
+    { clipPath: [poly(t0), poly(t1)] },
+    { duration: D, easing: ease, fill: 'forwards' }
+  );
+  // composite: 'add' so the push stacks on top of the hover zoom
+  bg.animate(
+    { transform: ['translateX(0%)', `translateX(${fromRight ? -3.5 : 3.5}%)`] },
+    { duration: D, easing: ease, composite: 'add', fill: 'forwards' }
+  );
+  sweep.onfinish = () => commitVariantReveal(card);
+}
+
+function handleVariantClick(card, e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  const btn     = e.currentTarget;
+  const idx     = Number(btn.dataset.variant);
+  const prevIdx = Number(card.dataset.activeVariant);
+  if (idx === prevIdx) return;
+
+  const variants = JSON.parse(card.dataset.variants);
+  const v = variants[idx];
+
+  card.dataset.activeVariant = idx;
+  card.dataset.screenshots   = JSON.stringify(v.screenshots);
+  card.dataset.positions     = JSON.stringify(v.positions || []);
+
+  card.querySelectorAll('.card-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  updateToggleIndicator(card);
+
+  clearInterval(cardSlideshows.get(card));
+  commitVariantReveal(card);
+
+  applyVariantSwap(card, v, idx > prevIdx);
+}
+
 function initVariantToggles() {
   document.querySelectorAll('.card[data-variants]').forEach(card => {
     requestAnimationFrame(() => updateToggleIndicator(card));
-    let swapToken = 0;
     card.querySelectorAll('.card-toggle-btn').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.preventDefault();
-        e.stopPropagation();
-        const idx     = Number(btn.dataset.variant);
-        const prevIdx = Number(card.dataset.activeVariant);
-        if (idx === prevIdx) return;
-
-        const variants = JSON.parse(card.dataset.variants);
-        const v = variants[idx];
-
-        card.dataset.activeVariant = idx;
-        card.dataset.screenshots = JSON.stringify(v.screenshots);
-        card.dataset.positions   = JSON.stringify(v.positions || []);
-
-        card.querySelectorAll('.card-toggle-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-        updateToggleIndicator(card);
-
-        // Finish anything still mid-flight from a rapid previous toggle
-        clearInterval(cardSlideshows.get(card));
-        commitVariantReveal(card);
-
-        const token     = ++swapToken;
-        const bg        = card.querySelector('.card-bg');
-        const content   = card.querySelector('.card-content');
-        const reduced   = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const fromRight = idx > prevIdx;
-        const exitX     = reduced ? 0 : (fromRight ? -10 : 10);
-        const enterX    = reduced ? 0 : (fromRight ? 14 : -14);
-
-        // Content: fades out the way the old shot is pushed, swaps, then eases
-        // in from the side the wipe enters. Stale timers bail on the token
-        // check, and the newest click's timer always runs — so the content can
-        // never be left hidden, no matter how fast the toggle is spammed.
-        content.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
-        content.style.opacity    = '0';
-        content.style.transform  = `translateX(${exitX}px)`;
-        setTimeout(() => {
-          if (token !== swapToken) return;
-          swapVariantContent(card, v);
-          content.style.transition = 'none';
-          content.style.transform  = `translateX(${enterX}px)`;
-          requestAnimationFrame(() => requestAnimationFrame(() => {
-            if (token !== swapToken) return;
-            content.style.transition = 'opacity 0.3s ease, transform 0.34s cubic-bezier(0.22, 1, 0.36, 1)';
-            content.style.opacity    = '1';
-            content.style.transform  = '';
-          }));
-        }, 220);
-
-        if (reduced) {
-          bg.style.opacity = '0';
-          setTimeout(() => {
-            if (token !== swapToken) return;
-            bg.style.backgroundImage    = `url('${v.screenshots[0]}')`;
-            bg.style.backgroundPosition = v.positions?.[0] || 'center';
-            bg.style.opacity = '1';
-          }, 280);
-          return;
-        }
-
-        // Slash wipe: the new screenshot sweeps in from the side of the clicked
-        // button behind a slanted, glowing brand edge, while the old screenshot
-        // drifts out the opposite way. poly(t) is the revealed region whose
-        // slanted leading edge sits at t% across the card.
-        const slant = 12;
-        const lead  = fromRight ? -6 : 6;
-        const t0    = fromRight ? 116 : -16;
-        const t1    = fromRight ? -16 : 116;
-        const poly  = t => fromRight
-          ? `polygon(${t + slant}% 0%, 100% 0%, 100% 100%, ${t - slant}% 100%)`
-          : `polygon(0% 0%, ${t + slant}% 0%, ${t - slant}% 100%, 0% 100%)`;
-
-        const edge = document.createElement('div');
-        edge.className = 'card-bg--edge';
-        edge.style.clipPath = poly(fromRight ? 130 : -30);
-
-        const reveal = document.createElement('div');
-        reveal.className = 'card-bg card-bg--reveal';
-        reveal.style.backgroundImage    = `url('${v.screenshots[0]}')`;
-        reveal.style.backgroundPosition = v.positions?.[0] || 'center';
-        reveal.style.clipPath = poly(t0);
-
-        bg.after(edge, reveal);
-
-        const D    = 560;
-        const ease = 'cubic-bezier(0.7, 0, 0.25, 1)';
-
-        edge.animate(
-          { clipPath: [poly(t0 + lead), poly(t1 + lead)] },
-          { duration: D, easing: ease, fill: 'forwards' }
-        );
-        const sweep = reveal.animate(
-          { clipPath: [poly(t0), poly(t1)] },
-          { duration: D, easing: ease, fill: 'forwards' }
-        );
-        // composite: 'add' so the push stacks on top of the hover zoom
-        bg.animate(
-          { transform: ['translateX(0%)', `translateX(${fromRight ? -3.5 : 3.5}%)`] },
-          { duration: D, easing: ease, composite: 'add', fill: 'forwards' }
-        );
-        sweep.onfinish = () => commitVariantReveal(card);
-      });
+      btn.addEventListener('click', e => handleVariantClick(card, e));
     });
   });
 }
