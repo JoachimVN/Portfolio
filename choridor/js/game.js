@@ -527,9 +527,11 @@ function initSocket(errorElId, callback) {
 
     socket = io(BACKEND_URL, { path: SOCKET_PATH, transports: ['websocket', 'polling'] });
 
+    const connInfo = `${BACKEND_URL}${SOCKET_PATH}`;
+
     const timeout = setTimeout(() => {
         if (!socket?.connected) {
-            showLobbyError(errorElId, 'Could not connect to server');
+            showLobbyError(errorElId, `Timed out connecting to ${connInfo}`);
             socket?.disconnect();
             socket = null;
         }
@@ -540,9 +542,9 @@ function initSocket(errorElId, callback) {
         callback();
     });
 
-    socket.on('connect_error', () => {
+    socket.on('connect_error', err => {
         clearTimeout(timeout);
-        showLobbyError(errorElId, 'Could not connect to server');
+        showLobbyError(errorElId, `${err?.message || 'Connection failed'} — ${connInfo}`);
         socket?.disconnect();
         socket = null;
     });
@@ -573,8 +575,6 @@ function initSocket(errorElId, callback) {
         s.textContent = 'Opponent disconnected';
         s.className   = 'status-label';
     });
-
-    callback();
 }
 
 // ─── Online: lobby UI ─────────────────────────────────────────────────────
