@@ -15,6 +15,7 @@ const P2_STRIP       = 'rgba(62, 104, 168, 0.7)';
 
 function getBackendUrl() {
     if (['localhost', '127.0.0.1'].includes(location.hostname)) return 'http://localhost:3001';
+    if (location.hostname.endsWith('.discordsays.com')) return globalThis.location.origin;
     return 'https://choridor-web-production.up.railway.app';
 }
 const BACKEND_URL = getBackendUrl();

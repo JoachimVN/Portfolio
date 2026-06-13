@@ -57,6 +57,8 @@
             cursor: pointer;
             padding: 0;
             font-family: inherit;
+            appearance: none;
+            -webkit-appearance: none;
         }
         .back:hover { color: #8890A8; text-decoration: none; }
         .divider {

@@ -578,6 +578,7 @@ button:hover .icon-btn svg {
 /* Lobby footer */
 .lobby-footer {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     justify-content: center;
@@ -588,12 +589,18 @@ button:hover .icon-btn svg {
 }
 
 .lobby-footer a {
-    color: #2E3250;
+    color: #4A5080;
     text-decoration: none;
     transition: color 0.15s;
 }
 
-.lobby-footer a:hover { color: #6870A0; }
+.lobby-footer a:hover { color: #7880B0; }
+
+.lobby-version {
+    width: 100%;
+    text-align: center;
+    color: #6870A0;
+}
 
 @media (max-width: 520px) {
     .top-bar {
