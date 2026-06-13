@@ -462,4 +462,9 @@ button:hover .icon-btn svg {
     .player-name {
         display: none;
     }
+
+    .logo {
+        height: 3.5vh;
+        max-width: 18vw;
+    }
 }
