@@ -988,14 +988,17 @@ if (isDiscord) try {
     // Auto-enter matchmaking queue — no button press needed in Discord Activity
     setConnectingBtn('btn-discord-play');
     initSocket('discord-error', () => {
+        // clearConnectingBtn ran just before this callback and reset the button to "Play",
+        // so we immediately re-apply the waiting state here
+        const btn = document.getElementById('btn-discord-play');
+        if (btn) { btn.querySelector('span').textContent = 'Finding opponent…'; btn.disabled = true; }
+        document.getElementById('btn-discord-cancel')?.classList.remove('hidden');
         socket.emit('join-activity', { instanceId: discordInstanceId, name: getMyName(), avatarUrl: myAvatar });
-        socket.once('activity-waiting', () => {
-            const btn = document.getElementById('btn-discord-play');
-            if (btn) { btn.querySelector('span').textContent = 'Waiting for opponent…'; btn.disabled = true; }
-            document.getElementById('btn-discord-cancel')?.classList.remove('hidden');
-        });
     });
-} catch { /* not in Discord, or SDK unavailable */ }
+} catch (e) {
+    const errEl = document.getElementById('discord-error');
+    if (errEl) { errEl.textContent = `Discord setup failed: ${e?.message || e}`; errEl.classList.remove('hidden'); }
+}
 
 // ─── Init ─────────────────────────────────────────────────────────────────
 
