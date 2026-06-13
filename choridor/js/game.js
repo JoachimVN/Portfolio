@@ -60,9 +60,17 @@ let hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow:
 
 // ─── Online state ─────────────────────────────────────────────────────────
 
-let socket     = null;
-let onlineRole = null;   // 'p1' | 'p2' | null
-let onlineMode = false;
+let socket         = null;
+let onlineRole     = null;   // 'p1' | 'p2' | null
+let onlineMode     = false;
+let opponentName   = '';
+let opponentAvatar = '';
+let myAvatar       = '';
+let rematchState   = 'idle'; // 'idle' | 'waiting' | 'incoming'
+
+const isDiscord       = location.hostname.endsWith('.discordsays.com');
+let discordInstanceId = null;
+if (isDiscord) document.body.classList.add('discord-activity');
 
 function isMyTurn() {
     return !onlineMode || gameState.currentPlayer === onlineRole;
@@ -498,6 +506,11 @@ function showWinScreen(winner, playerClass) {
     card.getBoundingClientRect();
     card.style.animation = '';
 
+    document.getElementById('play-again-btn').classList.toggle('hidden', onlineMode);
+    document.getElementById('btn-rematch').classList.toggle('hidden', !onlineMode);
+    document.getElementById('btn-leave').classList.toggle('hidden', !onlineMode);
+    if (onlineMode) updateRematchBtn('idle');
+
     document.getElementById('win-overlay').classList.remove('hidden');
 }
 
@@ -566,7 +579,10 @@ function initSocket(errorElId, callback) {
 
     socket.on('room-joined', () => { onlineRole = 'p2'; });
 
-    socket.on('game-start', () => {
+    socket.on('game-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, role } = {}) => {
+        if (role) onlineRole = role;
+        opponentName   = onlineRole === 'p1' ? (p2Name   || '') : (p1Name   || '');
+        opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
         onlineMode = true;
         hideLobby();
         applyPlayerNames();
@@ -578,11 +594,25 @@ function initSocket(errorElId, callback) {
     socket.on('room-error', msg => showLobbyError(errorElId, msg));
 
     socket.on('opponent-left', () => {
-        onlineMode  = false;
+        onlineMode     = false;
+        opponentName   = '';
+        opponentAvatar = '';
         gameState.gameOver = true;
         const s = document.getElementById('status');
         s.textContent = 'Opponent disconnected';
         s.className   = 'status-label';
+    });
+
+    socket.on('rematch-requested', () => updateRematchBtn('incoming'));
+    socket.on('rematch-cancelled', () => updateRematchBtn('idle'));
+
+    socket.on('rematch-start', ({ p1Name, p2Name, p1Avatar, p2Avatar } = {}) => {
+        onlineRole     = onlineRole === 'p1' ? 'p2' : 'p1';
+        opponentName   = onlineRole === 'p1' ? (p2Name   || '') : (p1Name   || '');
+        opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
+        document.getElementById('win-overlay').classList.add('hidden');
+        applyPlayerNames();
+        resetGame();
     });
 }
 
@@ -679,19 +709,51 @@ function getMyName() {
     return localStorage.getItem('choridor_player_name')?.trim() || '';
 }
 
+function updateRematchBtn(state) {
+    rematchState = state;
+    const btn = document.getElementById('btn-rematch');
+    if (!btn) return;
+    let modifier = '';
+    let label    = 'Rematch';
+    if (state === 'waiting')  { modifier = ' waiting';  label = 'Waiting…'; }
+    if (state === 'incoming') { modifier = ' incoming'; label = 'Accept Rematch!'; }
+    btn.className   = 'win-btn' + modifier;
+    btn.textContent = label;
+    btn.disabled    = false;
+}
+
+function setPlayerAvatar(slot, url) {
+    const img  = document.getElementById(`${slot}-avatar-img`);
+    if (!img || !url) return;
+    img.src = url;
+    img.classList.remove('hidden');
+}
+
+function clearPlayerAvatars() {
+    ['p1', 'p2'].forEach(slot => {
+        const img = document.getElementById(`${slot}-avatar-img`);
+        if (img) { img.src = ''; img.classList.add('hidden'); }
+    });
+}
+
 function applyPlayerNames() {
     const name = getMyName();
     if (onlineMode) {
         if (onlineRole === 'p1') {
             document.getElementById('p1-name').textContent = name || 'Player 1';
-            document.getElementById('p2-name').textContent = 'Opponent';
+            document.getElementById('p2-name').textContent = opponentName || 'Opponent';
+            setPlayerAvatar('p1', myAvatar);
+            setPlayerAvatar('p2', opponentAvatar);
         } else {
-            document.getElementById('p1-name').textContent = 'Opponent';
+            document.getElementById('p1-name').textContent = opponentName || 'Opponent';
             document.getElementById('p2-name').textContent = name || 'Player 2';
+            setPlayerAvatar('p1', opponentAvatar);
+            setPlayerAvatar('p2', myAvatar);
         }
     } else {
         document.getElementById('p1-name').textContent = name || 'Player 1';
         document.getElementById('p2-name').textContent = 'Player 2';
+        clearPlayerAvatars();
     }
 }
 
@@ -714,6 +776,18 @@ if (joinNameInput) {
 }
 
 applyPlayerNames();
+if (isDiscord) showLobbyView('lview-discord');
+
+const discordNameInput = document.getElementById('discord-name-input');
+if (discordNameInput) {
+    discordNameInput.value = savedName;
+    discordNameInput.addEventListener('input', () => {
+        const val = discordNameInput.value.trim();
+        if (val) localStorage.setItem('choridor_player_name', val);
+        else localStorage.removeItem('choridor_player_name');
+        if (nameInput) nameInput.value = discordNameInput.value;
+    });
+}
 
 document.getElementById('btn-local').addEventListener('click', () => { playSound('Select'); applyPlayerNames(); hideLobby(); });
 
@@ -723,7 +797,7 @@ document.getElementById('btn-online-back').addEventListener('click', () => { pla
 document.getElementById('btn-create').addEventListener('click', () => {
     playSound('Select');
     setConnectingBtn('btn-create');
-    initSocket('create-error', () => socket.emit('create-room'));
+    initSocket('create-error', () => socket.emit('create-room', { name: getMyName() }));
 });
 
 document.getElementById('btn-join').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-join'); });
@@ -746,13 +820,57 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
     });
 });
 
+document.getElementById('btn-discord-play')?.addEventListener('click', () => {
+    playSound('Select');
+    setConnectingBtn('btn-discord-play');
+    initSocket('discord-error', () => {
+        socket.emit('join-activity', { instanceId: discordInstanceId, name: getMyName(), avatarUrl: myAvatar });
+        socket.once('activity-waiting', () => {
+            const btn = document.getElementById('btn-discord-play');
+            if (btn) { btn.querySelector('span').textContent = 'Waiting for opponent…'; btn.disabled = true; }
+            document.getElementById('btn-discord-cancel')?.classList.remove('hidden');
+        });
+    });
+});
+
+document.getElementById('btn-discord-cancel')?.addEventListener('click', () => {
+    playSound('Select');
+    socket?.disconnect(); socket = null;
+    const btn = document.getElementById('btn-discord-play');
+    if (btn) { btn.querySelector('span').textContent = 'Play'; btn.disabled = false; }
+    document.getElementById('btn-discord-cancel')?.classList.add('hidden');
+    document.getElementById('discord-error')?.classList.add('hidden');
+});
+
+document.getElementById('btn-rematch')?.addEventListener('click', () => {
+    playSound('Select');
+    if (rematchState === 'idle' || rematchState === 'incoming') {
+        socket?.emit('rematch-request');
+        updateRematchBtn('waiting');
+    } else if (rematchState === 'waiting') {
+        socket?.emit('rematch-cancel');
+        updateRematchBtn('idle');
+    }
+});
+
+document.getElementById('btn-leave')?.addEventListener('click', () => {
+    playSound('Select');
+    onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
+    socket?.disconnect(); socket = null;
+    document.getElementById('win-overlay').classList.add('hidden');
+    document.getElementById('lobby-overlay').classList.remove('hidden');
+    showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
+    applyPlayerNames();
+    resetGame();
+});
+
 document.getElementById('btn-join-confirm').addEventListener('click', () => {
     const code = document.getElementById('room-code-input').value.trim().toUpperCase();
     if (!code) return;
     playSound('Select');
     document.getElementById('join-error').classList.add('hidden');
     setConnectingBtn('btn-join-confirm');
-    initSocket('join-error', () => socket.emit('join-room', code));
+    initSocket('join-error', () => socket.emit('join-room', { code, name: getMyName() }));
 });
 
 document.getElementById('room-code-input').addEventListener('keydown', e => {
@@ -781,11 +899,11 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
     playSound('Select');
     if (onlineMode) {
         // In online mode, go back to lobby for a new game
-        onlineMode = false; onlineRole = null;
+        onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
         socket?.disconnect(); socket = null;
         document.getElementById('win-overlay').classList.add('hidden');
         document.getElementById('lobby-overlay').classList.remove('hidden');
-        showLobbyView('lview-mode');
+        showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
         resetGame();
     } else {
         resetGame();
@@ -795,11 +913,11 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
 document.getElementById('new-game-btn').addEventListener('click', () => {
     playSound('Select');
     if (onlineMode) {
-        onlineMode = false; onlineRole = null;
+        onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
         socket?.disconnect(); socket = null;
         document.getElementById('win-overlay').classList.add('hidden');
         document.getElementById('lobby-overlay').classList.remove('hidden');
-        showLobbyView('lview-mode');
+        showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
     }
     resetGame();
 });
@@ -822,27 +940,51 @@ document.getElementById('mute-btn').addEventListener('click', () => {
 
 document.getElementById('change-mode-btn').addEventListener('click', () => {
     playSound('Select');
-    onlineMode = false; onlineRole = null;
+    onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
     socket?.disconnect(); socket = null;
     document.getElementById('win-overlay').classList.add('hidden');
     document.getElementById('lobby-overlay').classList.remove('hidden');
-    showLobbyView('lview-mode');
+    showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
     applyPlayerNames();
     resetGame();
 });
 
 // ─── Discord Activity ─────────────────────────────────────────────────────
 
-try {
+if (isDiscord) try {
     const { DiscordSDK } = await import('https://esm.sh/@discord/embedded-app-sdk@1');
     const sdk = new DiscordSDK('1515199692793843712');
     await sdk.ready();
+    discordInstanceId = sdk.instanceId;
     sdk.patchUrlMappings([{
         prefix: '/api',
         target: 'choridor-web-production.up.railway.app',
         sandboxed: false,
         targetApplicationId: null
     }]);
+    try {
+        const { code } = await sdk.commands.authorize({ scope: ['identify'], response_type: 'code' });
+        const res  = await fetch('/api/auth/discord', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+        });
+        const data = await res.json();
+        if (data.username) {
+            myAvatar = data.avatarUrl || '';
+            if (!localStorage.getItem('choridor_player_name')) {
+                const safeName = String(data.username).replace(/[^a-zA-Z0-9 _.\-#]/g, '').trim().slice(0, 20);
+                const dni = document.getElementById('discord-name-input');
+                if (dni) {
+                    dni.value = safeName;
+                    dni.dispatchEvent(new Event('input'));
+                } else if (nameInput) {
+                    nameInput.value = safeName;
+                    nameInput.dispatchEvent(new Event('input'));
+                }
+            }
+        }
+    } catch { /* OAuth declined or unavailable */ }
 } catch { /* not in Discord, or SDK unavailable */ }
 
 // ─── Init ─────────────────────────────────────────────────────────────────

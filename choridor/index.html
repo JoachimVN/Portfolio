@@ -56,7 +56,7 @@
                     <a href="tos.html" id="btn-tos">Terms</a>
                     <span>·</span>
                     <a href="privacy.html" id="btn-privacy">Privacy</a>
-                    <span class="lobby-version">v1.0.3</span>
+                    <span class="lobby-version">v1.1.0</span>
                 </div>
             </div>
 
@@ -103,6 +103,21 @@
                 <button class="win-btn" id="btn-join-confirm">Join Game</button>
                 <button class="lobby-back" id="btn-join-back">← Back</button>
             </div>
+
+            <div id="lview-discord" class="lobby-view hidden">
+                <p class="lobby-subtitle">Play with a friend</p>
+                <div class="lobby-name-wrap">
+                    <input type="text" id="discord-name-input" class="lobby-name-input" placeholder="Your name" maxlength="20" autocomplete="off" spellcheck="false">
+                </div>
+                <button class="win-action-btn" id="btn-discord-play">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    <span>Play</span>
+                </button>
+                <p class="lobby-error hidden" id="discord-error"></p>
+                <button class="lobby-back hidden" id="btn-discord-cancel">← Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -128,13 +143,15 @@
                 </svg>
                 Play Again
             </button>
+            <button id="btn-rematch" class="win-btn hidden">Rematch</button>
+            <button id="btn-leave"   class="win-btn hidden">Leave</button>
         </div>
     </div>
 
     <div class="app">
         <div class="top-bar">
             <div class="player-section p1-section">
-                <div class="player-dot p1-dot"></div>
+                <div class="player-avatar p1-avatar" id="p1-avatar"><img id="p1-avatar-img" src="" alt="" class="hidden"></div>
                 <div class="player-name" id="p1-name">Player 1</div>
                 <div class="wall-boxes" id="p1-walls"></div>
             </div>
@@ -144,7 +161,7 @@
             <div class="player-section p2-section">
                 <div class="wall-boxes" id="p2-walls"></div>
                 <div class="player-name" id="p2-name">Player 2</div>
-                <div class="player-dot p2-dot"></div>
+                <div class="player-avatar p2-avatar" id="p2-avatar"><img id="p2-avatar-img" src="" alt="" class="hidden"></div>
             </div>
         </div>
 
