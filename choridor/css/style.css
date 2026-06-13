@@ -448,18 +448,3 @@ button:hover .icon-btn svg {
     background: none;
     border: none;
 }
-
-@media (max-width: 520px) {
-    .top-bar {
-        padding: 1.5vh 10px;
-        gap: 8px;
-    }
-
-    .player-section {
-        gap: 6px;
-    }
-
-    .player-name {
-        display: none;
-    }
-}
