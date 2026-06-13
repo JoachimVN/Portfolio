@@ -15,7 +15,7 @@ const P2_STRIP       = 'rgba(62, 104, 168, 0.7)';
 
 const BACKEND_URL = ['localhost', '127.0.0.1'].includes(location.hostname)
     ? 'http://localhost:3001'
-    : 'https://choridor-web-production.up.railway.app';
+    : window.location.origin;
 
 // ─── Audio ────────────────────────────────────────────────────────────────
 
@@ -754,6 +754,18 @@ document.getElementById('change-mode-btn').addEventListener('click', () => {
     applyPlayerNames();
     resetGame();
 });
+
+// ─── Discord Activity ─────────────────────────────────────────────────────
+
+async function initDiscord() {
+    try {
+        const { DiscordSDK } = await import('https://esm.sh/@discord/embedded-app-sdk@1');
+        const sdk = new DiscordSDK('1515199692793843712');
+        await sdk.ready();
+    } catch { /* not in Discord, or SDK unavailable */ }
+}
+
+initDiscord();
 
 // ─── Init ─────────────────────────────────────────────────────────────────
 
