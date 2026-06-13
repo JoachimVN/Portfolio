@@ -954,12 +954,23 @@ a.card {
 ::view-transition-old(root) { animation-name: vt-slide-out; }
 ::view-transition-new(root) { animation-name: vt-slide-in; }
 
+.vt-back::view-transition-old(root) { animation-name: vt-slide-out-back; }
+.vt-back::view-transition-new(root) { animation-name: vt-slide-in-back; }
+
 @keyframes vt-slide-out {
   to { transform: translateX(-100%); }
 }
 
 @keyframes vt-slide-in {
   from { transform: translateX(100%); }
+}
+
+@keyframes vt-slide-out-back {
+  to { transform: translateX(100%); }
+}
+
+@keyframes vt-slide-in-back {
+  from { transform: translateX(-100%); }
 }
 
 .scroll-progress {
