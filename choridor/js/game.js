@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.5.1';
+const APP_VERSION = 'v1.5.2';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1092,6 +1092,11 @@ function initSocket(errorElId, callback) {
         render();
     });
 
+    socket.on('game-surrendered', ({ winnerRole, winnerName } = {}) => {
+        if (gameState.gameOver) return;
+        showWinScreen(winnerName || (winnerRole === 'p1' ? 'Player 1' : 'Player 2'), winnerRole);
+    });
+
     socket.on('opponent-rejoined', ({ name, avatar } = {}) => {
         opponentName   = name || '';
         opponentAvatar = avatar || '';
@@ -1481,32 +1486,13 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
 });
 
 document.getElementById('new-game-btn').addEventListener('click', () => {
-    if (spectatorMode) return;
+    if (spectatorMode || gameState.gameOver) return;
     playSound('Select');
-    if (animEnabled) {
-        newGameIconDeg += 360;
-        const ngIcon = document.querySelector('#new-game-btn svg');
-        if (ngIcon) ngIcon.style.transform = `rotate(${newGameIconDeg}deg)`;
-    }
     if (onlineMode) {
-        onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
-        socket?.disconnect(); socket = null;
-        document.getElementById('win-overlay').classList.add('hidden');
-        if (isDiscord) {
-            document.getElementById('lobby-overlay').classList.remove('hidden');
-            showLobbyView('lview-discord');
-            initSocket('discord-error', () => {
-                const statusText = document.getElementById('discord-status-text');
-                if (statusText) statusText.textContent = 'Finding opponent...';
-                setDiscordPresence({ state: 'Finding a match...', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' }, party: { size: [1, 2] } });
-                socket.emit('join-activity', { instanceId: discordInstanceId, name: getMyName(), avatarUrl: myAvatar });
-            });
-            return;
-        }
-        document.getElementById('lobby-overlay').classList.remove('hidden');
-        showLobbyView('lview-mode');
+        socket?.emit('surrender');
+    } else {
+        resetGame();
     }
-    resetGame();
 });
 
 document.getElementById('flip-btn').addEventListener('click', () => {
