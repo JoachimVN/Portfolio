@@ -160,6 +160,7 @@
             </button>
             <button id="btn-rematch"     class="win-btn hidden">Rematch</button>
             <button id="btn-change-mode" class="win-btn hidden">Change Mode</button>
+            <button id="btn-step-aside"  class="win-btn hidden">Step aside</button>
         </div>
     </div>
 
@@ -203,8 +204,27 @@
         <!-- Shown when win overlay is dismissed in online mode -->
         <div id="win-footer" class="win-footer hidden">
             <span class="win-footer-label">Game over</span>
-            <button id="win-footer-rematch"     class="win-footer-btn">Rematch</button>
-            <button id="win-footer-change-mode" class="win-footer-btn win-footer-muted">Change Mode</button>
+            <button id="win-footer-rematch" class="win-footer-btn">Rematch</button>
+        </div>
+
+        <!-- Shown in Discord mode when opponent disconnects and no spectators -->
+        <div id="discord-rejoin-bar" class="win-footer hidden">
+            <span class="win-footer-label">Opponent left</span>
+            <button id="discord-find-match-btn" class="win-footer-btn">Play with waiting player</button>
+        </div>
+
+        <!-- Shown to a player when offered to play with a queued spectator -->
+        <div id="spectator-offer-bar" class="win-footer hidden">
+            <span class="win-footer-label">Play with <span id="spectator-offer-name"></span>?</span>
+            <button id="spectator-offer-accept" class="win-footer-btn">Accept</button>
+            <button id="spectator-offer-decline" class="win-footer-btn win-footer-muted">Decline</button>
+        </div>
+
+        <!-- Shown to a spectator when offered a player slot -->
+        <div id="spectator-slot-bar" class="win-footer hidden">
+            <span class="win-footer-label">Play vs <span id="spectator-slot-opponent"></span>?</span>
+            <button id="spectator-slot-accept" class="win-footer-btn">Play</button>
+            <button id="spectator-slot-decline" class="win-footer-btn win-footer-muted">Skip</button>
         </div>
 
         <div class="bottom-bar">
