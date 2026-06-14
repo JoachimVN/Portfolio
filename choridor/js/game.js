@@ -51,7 +51,9 @@ let gameState = {
     currentPlayer: 'p1',
     legalMoves:    [],
     flipped:       false,
-    gameOver:      false
+    gameOver:      false,
+    movesP1:       0,
+    movesP2:       0,
 };
 
 // ─── Hover state ──────────────────────────────────────────────────────────
@@ -79,13 +81,15 @@ let newGameIconDeg = 0;
 
 // ─── Online state ─────────────────────────────────────────────────────────
 
-let socket         = null;
-let onlineRole     = null;   // 'p1' | 'p2' | null
-let onlineMode     = false;
-let opponentName   = '';
-let opponentAvatar = '';
-let myAvatar       = '';
-let rematchState   = 'idle'; // 'idle' | 'waiting' | 'incoming'
+let socket              = null;
+let onlineRole          = null;   // 'p1' | 'p2' | null
+let onlineMode          = false;
+let opponentName        = '';
+let opponentAvatar      = '';
+let myAvatar            = '';
+let rematchState           = 'idle'; // 'idle' | 'waiting' | 'incoming'
+let softLobby              = false;  // lobby open but game still alive behind it
+let softLobbyRestoreWin    = false;  // win overlay was showing when lobby opened
 
 const isDiscord       = location.hostname.endsWith('.discordsays.com');
 let discordInstanceId = null;
@@ -621,8 +625,8 @@ function movePawn(row, col) {
     const from   = mover === 'p1' ? { ...gameState.p1Pawn } : { ...gameState.p2Pawn };
     const isJump = Math.abs(row - from.row) + Math.abs(col - from.col) > 1;
 
-    if (mover === 'p1') gameState.p1Pawn = { row, col };
-    else                gameState.p2Pawn = { row, col };
+    if (mover === 'p1') { gameState.p1Pawn = { row, col }; gameState.movesP1++; }
+    else                { gameState.p2Pawn = { row, col }; gameState.movesP2++; }
 
     playSound(isJump ? 'Jump' : 'Move');
     if (socket && onlineMode) socket.emit('move', { type: 'pawn', row, col });
@@ -647,8 +651,8 @@ function placeWall(row, col, orientation, animateBoardWall = true) {
     if (!bothPlayersHavePath()) { gameState.walls.delete(wallKey); return; }
 
     gameState.wallOwners.set(wallKey, mover);
-    if (mover === 'p1') gameState.wallCounts.p1--;
-    else                gameState.wallCounts.p2--;
+    if (mover === 'p1') { gameState.wallCounts.p1--; gameState.movesP1++; }
+    else                { gameState.wallCounts.p2--; gameState.movesP2++; }
 
     playSound('Wall');
     if (socket && onlineMode) socket.emit('move', { type: 'wall', row, col, orientation });
@@ -664,8 +668,8 @@ function applyOpponentPawnMove(data) {
     const mover  = gameState.currentPlayer;
     const from   = mover === 'p1' ? { ...gameState.p1Pawn } : { ...gameState.p2Pawn };
     const isJump = Math.abs(data.row - from.row) + Math.abs(data.col - from.col) > 1;
-    if (mover === 'p1') gameState.p1Pawn = { row: data.row, col: data.col };
-    else                gameState.p2Pawn = { row: data.row, col: data.col };
+    if (mover === 'p1') { gameState.p1Pawn = { row: data.row, col: data.col }; gameState.movesP1++; }
+    else                { gameState.p2Pawn = { row: data.row, col: data.col }; gameState.movesP2++; }
     playSound(isJump ? 'Jump' : 'Move');
     startPawnAnim(mover, from, { row: data.row, col: data.col }, isJump);
     if (checkWin(winDelay(isJump))) return;
@@ -679,8 +683,8 @@ function applyOpponentWallMove(data) {
     const wallKey = JSON.stringify({ row: data.row, col: data.col, orientation: data.orientation });
     gameState.walls.add(wallKey);
     gameState.wallOwners.set(wallKey, mover);
-    if (mover === 'p1') gameState.wallCounts.p1--;
-    else                gameState.wallCounts.p2--;
+    if (mover === 'p1') { gameState.wallCounts.p1--; gameState.movesP1++; }
+    else                { gameState.wallCounts.p2--; gameState.movesP2++; }
     playSound('Wall');
     startWallAnim(wallKey);
     animateWallSpend(mover);
@@ -789,6 +793,27 @@ function checkWin(delay = 0) {
     return false;
 }
 
+function populateWinStats() {
+    document.getElementById('win-stat-p1-name').textContent = document.getElementById('p1-name').textContent;
+    document.getElementById('win-stat-p2-name').textContent = document.getElementById('p2-name').textContent;
+
+    ['p1', 'p2'].forEach(p => {
+        const m = gameState[p === 'p1' ? 'movesP1' : 'movesP2'];
+        const el = document.getElementById(`win-stat-${p}-moves`);
+        el.innerHTML = `<strong>${m}</strong>move${m === 1 ? '' : 's'}`;
+
+        const container = document.getElementById(`win-stat-${p}-walls`);
+        container.innerHTML = '';
+        const remaining = gameState.wallCounts[p];
+        for (let i = 0; i < WALLS_PER_PLAYER; i++) {
+            const box = document.createElement('div');
+            box.className = `win-wall-mini ${i < remaining ? 'active' : 'used'}`;
+            if (i < remaining) box.style.background = p === 'p1' ? P1_COLOR : P2_COLOR;
+            container.appendChild(box);
+        }
+    });
+}
+
 function showWinScreen(winner, playerClass, delay = 0) {
     clearTapPreview();
     gameState.gameOver = true;   // lock input now; reveal the card after the move lands
@@ -800,11 +825,13 @@ function showWinScreen(winner, playerClass, delay = 0) {
 
     document.getElementById('play-again-btn').classList.toggle('hidden', onlineMode);
     document.getElementById('btn-rematch').classList.toggle('hidden', !onlineMode);
-    document.getElementById('btn-leave').classList.toggle('hidden', !onlineMode);
+    document.getElementById('btn-change-mode').classList.toggle('hidden', !onlineMode);
     if (onlineMode) updateRematchBtn('idle');
+    populateWinStats();
 
     const reveal = () => {
         playSound('Win');
+        document.getElementById('win-footer').classList.add('hidden');
         const card = document.getElementById('win-card');
         card.style.animation = 'none';
         card.getBoundingClientRect();
@@ -828,9 +855,12 @@ function resetGame() {
         currentPlayer: 'p1',
         legalMoves:    [],
         flipped:       onlineMode ? onlineRole === 'p2' : gameState.flipped,
-        gameOver:      false
+        gameOver:      false,
+        movesP1:       0,
+        movesP2:       0,
     };
     document.getElementById('win-overlay').classList.add('hidden');
+    document.getElementById('win-footer').classList.add('hidden');
     updateWallCounts();
     updateStatus();
     updateLegalMoves();
@@ -898,23 +928,33 @@ function initSocket(errorElId, callback) {
     socket.on('room-error', msg => showLobbyError(errorElId, msg));
 
     socket.on('opponent-left', () => {
-        onlineMode     = false;
+        // Keep onlineMode=true so New Game/Change Mode still route to the lobby
         opponentName   = '';
         opponentAvatar = '';
         gameState.gameOver = true;
+        hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
+        clearTapPreview();
+        render();
         const s = document.getElementById('status');
         s.textContent = 'Opponent disconnected';
         s.className   = 'status-label';
     });
 
-    socket.on('rematch-requested', () => updateRematchBtn('incoming'));
+    socket.on('rematch-requested', () => {
+        updateRematchBtn('incoming');
+        if (softLobby) showToast('Opponent wants a rematch!');
+    });
     socket.on('rematch-cancelled', () => updateRematchBtn('idle'));
 
     socket.on('rematch-start', ({ p1Name, p2Name, p1Avatar, p2Avatar } = {}) => {
         onlineRole     = onlineRole === 'p1' ? 'p2' : 'p1';
         opponentName   = onlineRole === 'p1' ? (p2Name   || '') : (p1Name   || '');
         opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
-        document.getElementById('win-overlay').classList.add('hidden');
+        if (softLobby) {
+            softLobby = false; softLobbyRestoreWin = false;
+            document.getElementById('lobby-overlay').classList.add('hidden');
+            document.getElementById('btn-lobby-back').classList.add('hidden');
+        }
         applyPlayerNames();
         resetGame();
     });
@@ -1015,15 +1055,16 @@ function getMyName() {
 
 function updateRematchBtn(state) {
     rematchState = state;
-    const btn = document.getElementById('btn-rematch');
-    if (!btn) return;
     let modifier = '';
     let label    = 'Rematch';
     if (state === 'waiting')  { modifier = ' waiting';  label = 'Waiting…'; }
     if (state === 'incoming') { modifier = ' incoming'; label = 'Accept Rematch!'; }
-    btn.className   = 'win-btn' + modifier;
-    btn.textContent = label;
-    btn.disabled    = false;
+
+    const btn = document.getElementById('btn-rematch');
+    if (btn) { btn.className = 'win-btn' + modifier; btn.textContent = label; btn.disabled = false; }
+
+    const footer = document.getElementById('win-footer-rematch');
+    if (footer) { footer.className = 'win-footer-btn' + modifier; footer.textContent = label; }
 }
 
 function setPlayerAvatar(slot, url) {
@@ -1093,13 +1134,47 @@ if (discordNameInput) {
     });
 }
 
-document.getElementById('btn-local').addEventListener('click', () => { playSound('Select'); applyPlayerNames(); hideLobby(); });
+document.getElementById('btn-local').addEventListener('click', () => {
+    playSound('Select');
+    if (softLobby) {
+        onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
+        socket?.disconnect(); socket = null;
+        softLobby = false; softLobbyRestoreWin = false;
+        resetGame();
+    }
+    applyPlayerNames();
+    hideLobby();
+});
 
-document.getElementById('btn-online').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-online'); });
-document.getElementById('btn-online-back').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-mode'); });
+document.getElementById('btn-online').addEventListener('click', () => {
+    playSound('Select');
+    showLobbyView('lview-online');
+});
+document.getElementById('btn-online-back').addEventListener('click', () => {
+    playSound('Select');
+    showLobbyView('lview-mode');
+    if (softLobby) document.getElementById('btn-lobby-back').classList.remove('hidden');
+});
+
+document.getElementById('btn-lobby-back').addEventListener('click', () => {
+    if (!softLobby) return;
+    playSound('Select');
+    const restoreWin = softLobbyRestoreWin;
+    softLobby = false; softLobbyRestoreWin = false;
+    document.getElementById('btn-lobby-back').classList.add('hidden');
+    document.getElementById('lobby-overlay').classList.add('hidden');
+    if (restoreWin) document.getElementById('win-overlay').classList.remove('hidden');
+    // else: game board is already visible behind the lobby
+});
 
 document.getElementById('btn-create').addEventListener('click', () => {
     playSound('Select');
+    if (softLobby) {
+        onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
+        socket?.disconnect(); socket = null;
+        softLobby = false; softLobbyRestoreWin = false;
+        resetGame();
+    }
     setConnectingBtn('btn-create');
     initSocket('create-error', () => socket.emit('create-room', { name: getMyName() }));
 });
@@ -1146,6 +1221,22 @@ document.getElementById('btn-discord-cancel')?.addEventListener('click', () => {
     document.getElementById('discord-error')?.classList.add('hidden');
 });
 
+document.getElementById('win-card-close').addEventListener('click', () => {
+    document.getElementById('win-overlay').classList.add('hidden');
+    if (onlineMode) document.getElementById('win-footer').classList.remove('hidden');
+});
+
+document.getElementById('win-footer-rematch').addEventListener('click', () => {
+    playSound('Select');
+    if (rematchState === 'idle' || rematchState === 'incoming') {
+        socket?.emit('rematch-request');
+        updateRematchBtn('waiting');
+    } else if (rematchState === 'waiting') {
+        socket?.emit('rematch-cancel');
+        updateRematchBtn('idle');
+    }
+});
+
 document.getElementById('btn-rematch')?.addEventListener('click', () => {
     playSound('Select');
     if (rematchState === 'idle' || rematchState === 'incoming') {
@@ -1157,21 +1248,38 @@ document.getElementById('btn-rematch')?.addEventListener('click', () => {
     }
 });
 
-document.getElementById('btn-leave')?.addEventListener('click', () => {
-    playSound('Select');
-    onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
-    socket?.disconnect(); socket = null;
+function openSoftLobby(fromWin = false) {
+    softLobby           = true;
+    softLobbyRestoreWin = fromWin;
     document.getElementById('win-overlay').classList.add('hidden');
+    document.getElementById('win-footer').classList.add('hidden');
     document.getElementById('lobby-overlay').classList.remove('hidden');
+    document.getElementById('btn-lobby-back').classList.remove('hidden');
     showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
     applyPlayerNames();
-    resetGame();
+    // Socket and game state stay intact until user picks a new mode
+}
+
+document.getElementById('btn-change-mode').addEventListener('click', () => {
+    playSound('Select');
+    openSoftLobby(true);
+});
+
+document.getElementById('win-footer-change-mode').addEventListener('click', () => {
+    playSound('Select');
+    openSoftLobby(true);
 });
 
 document.getElementById('btn-join-confirm').addEventListener('click', () => {
     const code = document.getElementById('room-code-input').value.trim().toUpperCase();
     if (!code) return;
     playSound('Select');
+    if (softLobby) {
+        onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
+        socket?.disconnect(); socket = null;
+        softLobby = false; softLobbyRestoreWin = false;
+        resetGame();
+    }
     document.getElementById('join-error').classList.add('hidden');
     setConnectingBtn('btn-join-confirm');
     initSocket('join-error', () => socket.emit('join-room', { code, name: getMyName() }));
@@ -1300,6 +1408,7 @@ document.getElementById('mute-btn').addEventListener('click', () => {
         icon.getBoundingClientRect();
         icon.style.animation = 'mute-pop 0.32s ease';
     }
+    showToast(muted ? 'Sound effects: OFF' : 'Sound effects: ON');
 });
 
 document.getElementById('change-mode-btn').addEventListener('click', () => {
@@ -1310,19 +1419,13 @@ document.getElementById('change-mode-btn').addEventListener('click', () => {
         cmIcon.getBoundingClientRect();
         cmIcon.style.animation = 'ctrl-icon-pop 0.34s ease';
     }
-    onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
-    socket?.disconnect(); socket = null;
-    document.getElementById('win-overlay').classList.add('hidden');
-    document.getElementById('lobby-overlay').classList.remove('hidden');
-    showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
-    applyPlayerNames();
-    resetGame();
+    openSoftLobby(gameState.gameOver);
 });
 
 // ─── Discord Activity ─────────────────────────────────────────────────────
 
 if (isDiscord) try {
-    const { DiscordSDK } = await import('https://esm.sh/@discord/embedded-app-sdk@1');
+    const { DiscordSDK } = await import('https://esm.sh/@discord/embedded-app-sdk@1.9.0');
     const sdk = new DiscordSDK('1515199692793843712');
     await sdk.ready();
     discordInstanceId = sdk.instanceId;

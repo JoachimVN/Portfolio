@@ -11,6 +11,7 @@
     <!-- Lobby -->
     <div id="lobby-overlay" class="lobby-overlay">
         <div class="lobby-card">
+            <button class="lobby-card-close hidden" id="btn-lobby-back" aria-label="Back to game">✕</button>
             <img src="images/logos/logo.png" alt="CHORIDOR" class="lobby-logo">
 
             <div id="lview-mode" class="lobby-view">
@@ -56,7 +57,7 @@
                     <a href="tos.html" id="btn-tos">Terms</a>
                     <span>·</span>
                     <a href="privacy.html" id="btn-privacy">Privacy</a>
-                    <span class="lobby-version">v1.1.2</span>
+                    <span class="lobby-version">v1.2.1</span>
                 </div>
             </div>
 
@@ -133,9 +134,25 @@
     <!-- Win screen -->
     <div id="win-overlay" class="win-overlay hidden">
         <div class="win-card" id="win-card">
+            <button class="win-card-close" id="win-card-close" aria-label="Close">✕</button>
             <div class="win-pawn" id="win-pawn"></div>
             <div class="win-title" id="win-message"></div>
             <div class="win-divider"></div>
+
+            <div class="win-stats" id="win-stats">
+                <div class="win-stat-col">
+                    <div class="win-stat-name" id="win-stat-p1-name">Player 1</div>
+                    <div class="win-stat-walls" id="win-stat-p1-walls"></div>
+                    <div class="win-stat-moves" id="win-stat-p1-moves">0</div>
+                </div>
+                <div class="win-stat-sep"></div>
+                <div class="win-stat-col">
+                    <div class="win-stat-name" id="win-stat-p2-name">Player 2</div>
+                    <div class="win-stat-walls" id="win-stat-p2-walls"></div>
+                    <div class="win-stat-moves" id="win-stat-p2-moves">0</div>
+                </div>
+            </div>
+
             <button id="play-again-btn" class="win-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -143,9 +160,16 @@
                 </svg>
                 Play Again
             </button>
-            <button id="btn-rematch" class="win-btn hidden">Rematch</button>
-            <button id="btn-leave"   class="win-btn hidden">Leave</button>
+            <button id="btn-rematch"     class="win-btn hidden">Rematch</button>
+            <button id="btn-change-mode" class="win-btn hidden">Change Mode</button>
         </div>
+    </div>
+
+    <!-- Shown when win overlay is dismissed in online mode -->
+    <div id="win-footer" class="win-footer hidden">
+        <span class="win-footer-label">Game over</span>
+        <button id="win-footer-rematch"     class="win-footer-btn">Rematch</button>
+        <button id="win-footer-change-mode" class="win-footer-btn win-footer-muted">Change Mode</button>
     </div>
 
     <div class="app">
@@ -189,34 +213,34 @@
             </div>
             <div class="status-label" id="status">Player 1's Turn</div>
             <div class="controls">
-                <button id="anim-btn" class="icon-btn anim-off" type="button" aria-pressed="false" aria-label="Turn animations on" title="Toggle animations">
+                <button id="anim-btn" class="icon-btn anim-off" type="button" aria-pressed="false" aria-label="Turn animations on">
                     <svg id="anim-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 3.2l1.7 4.9 4.9 1.7-4.9 1.7L12 16.4l-1.7-4.9L5.4 9.8l4.9-1.7L12 3.2z"/>
                         <path d="M18.5 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2z"/>
                         <line x1="3" y1="3" x2="21" y2="21"/>
                     </svg>
                 </button>
-                <button id="mute-btn" class="icon-btn" type="button" title="Sound effects" aria-label="Toggle sound effects">
+                <button id="mute-btn" class="icon-btn" type="button" aria-label="Toggle sound effects">
                     <svg id="mute-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 5 6 9H2v6h4l5 4V5z"/>
                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
                     </svg>
                 </button>
-                <button id="flip-btn" class="icon-btn" type="button" title="Flip board" aria-label="Flip board">
+                <button id="flip-btn" class="icon-btn" type="button" aria-label="Flip board">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 4v6h6M23 20v-6h-6"></path>
                         <path d="M20.49 9A9 9 0 0 0 5.64 5.64M3.51 15A9 9 0 0 0 18.36 18.36"></path>
                     </svg>
                 </button>
-                <button id="tap-mode-btn" class="icon-btn" type="button" aria-pressed="false" aria-label="Toggle confirm walls" title="Confirm walls: pick a slot, then confirm before it's placed (works with mouse too)">
+                <button id="tap-mode-btn" class="icon-btn" type="button" aria-pressed="false" aria-label="Toggle confirm walls">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M10 9.5V4a2 2 0 0 1 4 0v8"/>
                         <path d="M14 8.5a2 2 0 0 1 4 0V12"/>
                         <path d="M18 10.5a2 2 0 0 1 4 0V15a7 7 0 0 1-7 7h-1.5a6 6 0 0 1-4.24-1.76l-4.6-4.6a2 2 0 0 1 2.83-2.83L10 14.5"/>
                     </svg>
                 </button>
-                <button id="change-mode-btn" type="button" title="Change mode" aria-label="Change mode">
+                <button id="change-mode-btn" type="button" aria-label="Change mode">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7" rx="1.5"/>
                         <rect x="14" y="3" width="7" height="7" rx="1.5"/>
@@ -225,7 +249,7 @@
                     </svg>
                     <span>Change Mode</span>
                 </button>
-                <button id="new-game-btn" type="button" title="New game" aria-label="New game">
+                <button id="new-game-btn" type="button" aria-label="New game">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                         <path d="M3 3v5h5"/>

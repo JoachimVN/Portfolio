@@ -319,13 +319,14 @@ button:active {
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
 }
 
-/* Animations off: dimmed with a slashed icon, brightening on hover */
-.icon-btn.anim-off {
-    opacity: 0.5;
+/* Animations off: a normal clickable button; the slashed icon conveys the
+   off state, so it isn't dimmed (which would read as disabled) */
+.icon-btn.anim-off svg {
+    color: #9AA2BE;
 }
 
-.icon-btn.anim-off:hover {
-    opacity: 0.85;
+.icon-btn.anim-off:hover svg {
+    color: #EAEDF6;
 }
 
 /* Mute, red tint while muted, with a brighter hover (solid colours for the
@@ -381,6 +382,7 @@ button:active {
 }
 
 .win-card {
+    position: relative;
     background: #13151F;
     border: 1px solid #2A2E48;
     border-radius: 16px;
@@ -391,6 +393,24 @@ button:active {
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
     animation: win-card-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+.win-card-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #4A5272;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 6px 8px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.win-card-close:hover  { color: #9BA3C3; background: none; }
+.win-card-close:active { background: none; }
 
 .win-card.p1 {
     border-color: rgba(158, 74, 64, 0.4);
@@ -438,6 +458,129 @@ button:active {
 
 .win-card.p1 .win-divider { background: rgba(158, 74, 64, 0.5); }
 .win-card.p2 .win-divider { background: rgba(62, 104, 168, 0.5); }
+
+/* Win stats — integrated into card, no box */
+.win-stats {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    margin-bottom: 28px;
+}
+
+.win-stat-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    padding: 0 12px;
+}
+
+.win-stat-sep {
+    width: 1px;
+    background: #1C2038;
+    flex-shrink: 0;
+    margin: 2px 0;
+}
+
+.win-stat-name {
+    font-size: 10px;
+    font-weight: 700;
+    color: #454C6A;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.win-stat-walls {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 88px;
+}
+
+.win-wall-mini {
+    width: 5px;
+    height: 13px;
+    border-radius: 1.5px;
+}
+
+.win-wall-mini.used { background: #1C2038; }
+
+.win-stat-moves {
+    font-size: 11px;
+    color: #50577A;
+    font-variant-numeric: tabular-nums;
+}
+
+.win-stat-moves strong {
+    display: block;
+    color: #9BA3C3;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+/* Win footer — shown when win card is dismissed (online only) */
+.win-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(10, 12, 20, 0.96);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #1A1E32;
+}
+
+.win-footer.hidden { display: none; }
+
+.win-footer-label {
+    font-size: 11px;
+    color: #383D55;
+    margin-right: 4px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.win-footer-btn {
+    padding: 7px 18px;
+    background: #1A1E2E;
+    border: 1px solid #272D48;
+    border-radius: 6px;
+    color: #9098B2;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.win-footer-btn:hover {
+    background: #20253A;
+    color: #C8CCDC;
+    border-color: #3E4470;
+}
+
+.win-footer-btn.win-footer-muted { opacity: 0.5; }
+
+.win-footer-btn.incoming {
+    color: #C8CCDC;
+    border-color: #9E4A40;
+    animation: rematch-pulse 1.2s ease-in-out infinite;
+}
+
+.win-footer-btn.waiting { opacity: 0.55; }
 
 .win-btn {
     display: flex;
@@ -540,6 +683,25 @@ button:active {
 
 .lobby-overlay.hidden { display: none; }
 
+.lobby-card-close {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: #4A5272;
+    font-size: 17px;
+    cursor: pointer;
+    padding: 6px 8px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: color 0.15s;
+}
+
+.lobby-card-close:hover  { color: #9BA3C3; background: none; }
+.lobby-card-close:active { background: none; }
+.lobby-card-close.hidden { display: none; }
+
 @keyframes lobby-card-in {
     from { opacity: 0; transform: translateY(20px) scale(0.97); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -555,6 +717,7 @@ button:active {
 }
 
 .lobby-card {
+    position: relative;
     background: #13151F;
     border: 1px solid #1E2234;
     border-radius: 20px;
