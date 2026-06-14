@@ -1,14 +1,10 @@
 const PROJECTS = [
   {
-    github:      'JoachimVN/After-Hours',
-    screenshots: [
-      'resources/images/screenshots/After_Hours_Screenshot1.png',
-      'resources/images/screenshots/After_Hours_Screenshot2.png',
-      'resources/images/screenshots/After_Hours_Screenshot3.png',
-    ],
-    positions:   ['right top', 'center', 'left center'],
-    logo:        'resources/images/logos/After_Hours_Logo.png',
-    brandColor:  '#E7AB14',
+    github:         'JoachimVN/After-Hours',
+    screenshotsDir: 'src/main/resources/images/screenshots',
+    positions:      ['right top', 'center', 'left center'],
+    logo:           'resources/images/logos/After_Hours_Logo.png',
+    brandColor:     '#E7AB14',
   },
   {
     isVariant:  true,
@@ -17,21 +13,17 @@ const PROJECTS = [
     brandColor: '#3e67a7',
     variants: [
       {
-        label:       'Desktop',
-        github:      'JoachimVN/CHORIDOR',
-        screenshots: [
-          'resources/images/screenshots/CHORIDOR_Screenshot1.png',
-          'resources/images/screenshots/CHORIDOR_Screenshot2.png',
-          'resources/images/screenshots/CHORIDOR_Screenshot3.png',
-        ],
-        positions:   ['center', 'center', 'right center'],
+        label:          'Desktop',
+        github:         'JoachimVN/CHORIDOR',
+        screenshotsDir: 'docs/images/screenshots',
+        positions:      ['center', 'center', 'right center'],
       },
       {
-        label:       'Web',
-        github:      'JoachimVN/CHORIDOR-web',
-        playUrl:     '/choridor/',
-        screenshots: ['resources/images/screenshots/CHORIDOR-Web_Screenshot.png'],
-        positions:   ['center'],
+        label:          'Web',
+        github:         'JoachimVN/CHORIDOR-web',
+        playUrl:        '/choridor/',
+        screenshotsDir: 'docs/screenshots',
+        positions:      ['center', 'center', 'center'],
       },
     ],
   },
@@ -93,7 +85,7 @@ function starSVG() {
 function renderVariantCard({ variants, logo, logoLarge, brandColor }, index = 0) {
   const v = variants[0];
   const color    = LANG_COLORS[v.language] || '#888';
-  const multiShot = v.screenshots.length > 1;
+  const multiShot = (v.screenshots?.length ?? 0) > 1;
 
   const dotButtons = multiShot
     ? v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')
@@ -139,7 +131,7 @@ function renderVariantCard({ variants, logo, logoLarge, brandColor }, index = 0)
   return `<div class="card" style="${delay}" ${data}>${inner}</div>`;
 }
 
-function renderCard({ name, description, language, stars, url, pageUrl, playUrl, screenshots, positions, logo, logoLarge, isProduct, brandColor, isVariant, variants }, index = 0) {
+function renderCard({ name, description, language, stars, url, pageUrl, playUrl, screenshots = [], positions, logo, logoLarge, isProduct, brandColor, isVariant, variants }, index = 0) {
   if (isVariant) return renderVariantCard({ variants, logo, logoLarge, brandColor }, index);
   const color    = LANG_COLORS[language] || '#888';
   const mainShot = screenshots[0];
@@ -251,6 +243,32 @@ function initNavigation() {
   document.querySelectorAll('.card').forEach(card => startSlideshow(card));
 }
 
+async function fetchScreenshots(slug, dir) {
+  const key = `gh_shots_${slug}`;
+  const cached = sessionStorage.getItem(key);
+  if (cached) return JSON.parse(cached);
+  const res = await fetch(`https://api.github.com/repos/${slug}/contents/${dir}`);
+  if (!res.ok) throw new Error(res.status);
+  const files = await res.json();
+  const urls = files
+    .filter(f => f.type === 'file' && /\.(png|jpe?g|gif|webp)$/i.test(f.name))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(f => f.download_url);
+  sessionStorage.setItem(key, JSON.stringify(urls));
+  return urls;
+}
+
+async function resolveScreenshots(entry) {
+  if (!entry.screenshotsDir || !entry.github) return {};
+  try {
+    const screenshots = await fetchScreenshots(entry.github, entry.screenshotsDir);
+    const positions = screenshots.map((_, i) => (entry.positions?.[i] ?? 'center'));
+    return { screenshots, positions };
+  } catch {
+    return { screenshots: [], positions: [] };
+  }
+}
+
 async function loadProjects() {
   const grid = document.getElementById('projects-grid');
 
@@ -259,35 +277,45 @@ async function loadProjects() {
       if (project.isVariant) {
         const fetchedVariants = await Promise.all(
           project.variants.map(async v => {
-            try {
-              const data = await fetchRepo(v.github);
-              return { ...v, name: data.name.replaceAll('-', ' '), description: data.description, language: data.language, stars: data.stargazers_count, url: data.html_url };
-            } catch {
-              return { ...v, name: v.github.split('/')[1], description: 'Could not load project data.', url: `https://github.com/${v.github}` };
+            const [repoResult, shotsResult] = await Promise.allSettled([
+              fetchRepo(v.github),
+              resolveScreenshots(v),
+            ]);
+            const shots = shotsResult.status === 'fulfilled' ? shotsResult.value : {};
+            if (repoResult.status === 'fulfilled') {
+              const data = repoResult.value;
+              return { ...v, ...shots, name: data.name.replaceAll('-', ' '), description: data.description, language: data.language, stars: data.stargazers_count, url: data.html_url };
             }
+            return { ...v, ...shots, name: v.github.split('/')[1], description: 'Could not load project data.', url: `https://github.com/${v.github}` };
           })
         );
         return { ...project, variants: fetchedVariants };
       }
       if (!project.github) return project;
-      try {
-        const data = await fetchRepo(project.github);
+      const [repoResult, shotsResult] = await Promise.allSettled([
+        fetchRepo(project.github),
+        resolveScreenshots(project),
+      ]);
+      const shots = shotsResult.status === 'fulfilled' ? shotsResult.value : {};
+      if (repoResult.status === 'fulfilled') {
+        const data = repoResult.value;
         return {
           ...project,
+          ...shots,
           name:        project.name ?? data.name.replaceAll('-', ' '),
           description: data.description,
           language:    data.language,
           stars:       data.stargazers_count,
           url:         data.html_url,
         };
-      } catch {
-        return {
-          ...project,
-          name:        project.github.split('/')[1],
-          description: 'Could not load project data.',
-          url:         `https://github.com/${project.github}`,
-        };
       }
+      return {
+        ...project,
+        ...shots,
+        name:        project.github.split('/')[1],
+        description: 'Could not load project data.',
+        url:         `https://github.com/${project.github}`,
+      };
     })
   );
 
@@ -707,15 +735,6 @@ function initVariantToggles() {
   });
 }
 
-function preloadScreenshots() {
-  PROJECTS.forEach(p => {
-    if (p.isVariant) {
-      p.variants.forEach(v => v.screenshots.forEach(url => { const img = new Image(); img.src = url; }));
-    } else {
-      p.screenshots?.forEach(url => { const img = new Image(); img.src = url; });
-    }
-  });
-}
 
 function initTypewriter() {
   const el = document.querySelector('.hero-label');
@@ -837,7 +856,6 @@ function initCardTilt() {
 }());
 
 document.addEventListener('DOMContentLoaded', () => {
-  preloadScreenshots();
   loadProjects();
   initParallax();
   initScrollFadeIn();
