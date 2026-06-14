@@ -944,8 +944,6 @@ button:active {
 /* Lobby footer */
 .lobby-footer {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
     align-items: center;
     justify-content: center;
     width: 100%;
@@ -962,8 +960,32 @@ button:active {
 
 .lobby-footer a:hover { color: #7880B0; }
 
+.lobby-footer-legal {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.lobby-footer-icons {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.lobby-icon-link {
+    display: flex;
+    align-items: center;
+    color: #4A5080;
+    transition: color 0.15s;
+}
+
+.lobby-icon-link:hover { color: #7880B0; }
+
 .lobby-version {
-    width: 100%;
+    flex: 1;
     text-align: center;
     color: #6870A0;
 }
