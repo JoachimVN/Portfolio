@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.4.2';
+const APP_VERSION = 'v1.4.3';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1596,7 +1596,7 @@ if (isDiscord) try {
         target: 'choridor-web-production.up.railway.app',
     }]);
     try {
-        const { code } = await sdk.commands.authorize({ client_id: '1515199692793843712', scope: ['identify'], response_type: 'code' });
+        const { code } = await sdk.commands.authorize({ client_id: '1515199692793843712', scope: ['identify', 'rpc.activities.write'], response_type: 'code' });
         const res  = await fetch('/api/auth/discord', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
