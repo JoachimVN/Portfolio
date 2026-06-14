@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.4.1';
+const APP_VERSION = 'v1.4.2';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1603,6 +1603,7 @@ if (isDiscord) try {
             body: JSON.stringify({ code }),
         });
         const data = await res.json();
+        if (data.access_token) await sdk.commands.authenticate({ access_token: data.access_token });
         if (data.username) {
             myAvatar = data.avatarUrl || '';
             const rawDisplay = String(data.username || '');
