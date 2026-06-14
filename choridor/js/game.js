@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.4.8';
+const APP_VERSION = 'v1.4.9';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1608,6 +1608,7 @@ if (isDiscord) try {
         const data = await res.json();
         if (data.access_token) await sdk.commands.authenticate({ access_token: data.access_token });
         discordSdk = sdk;
+        { const _d = document.getElementById('discord-error'); if (_d) { _d.textContent = 'SDK OK'; _d.classList.remove('hidden'); } }
         setDiscordPresence({ state: 'In lobby', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' } });
         if (data.username) {
             myAvatar = data.avatarUrl || '';
