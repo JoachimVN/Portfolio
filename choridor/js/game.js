@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.4.6';
+const APP_VERSION = 'v1.4.7';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -111,8 +111,8 @@ function setDiscordPresence(activity) {
     clearTimeout(_presenceTimer);
     _presenceTimer = setTimeout(() => {
         discordSdk.commands.setActivity(activity)
-            .then(() => alert('RP ok'))
-            .catch(err => alert('RP err: ' + (err?.message || err?.code || JSON.stringify(err))));
+            .then(() => { const el = document.getElementById('discord-error'); if (el) { el.textContent = 'RP ok'; el.classList.remove('hidden'); } })
+            .catch(err => { const el = document.getElementById('discord-error'); if (el) { el.textContent = 'RP err: ' + (err?.message || err?.code || JSON.stringify(err)); el.classList.remove('hidden'); } });
     }, 500);
 }
 
