@@ -1,0 +1,15 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" width="2048" height="2048">
+	<style>
+		.s0 { fill: #3e68a8 } 
+		.s1 { fill: #191c2a } 
+		.s2 { fill: #9e4a40 } 
+	</style>
+	<path id="Shape 3 copy 4" fill-rule="evenodd" class="s0" d="m1792 2048v-1792h256v1792z"/>
+	<rect width="2048" height="2048" id="Color Fill 1" style="fill: #0f1117"/>
+	<path id="Shape 1" fill-rule="evenodd" class="s1" d="m1792 256v1536h-1536v-1536z"/>
+	<path id="Shape 2" fill-rule="evenodd" class="s2" d="m1024 1536c-283.14 0-512-228.86-512-512 0-283.14 228.86-512 512-512 283.14 0 512 228.86 512 512 0 283.14-228.86 512-512 512z"/>
+	<path id="Shape 3" fill-rule="evenodd" class="s0" d="m256 0v1792h-256v-1792z"/>
+	<path id="Shape 3 copy" fill-rule="evenodd" class="s2" d="m0 1792h1792v256h-1792z"/>
+	<path id="Shape 3 copy 2" fill-rule="evenodd" class="s0" d="m1792 2048v-1792h256v1792z"/>
+	<path id="Shape 3 copy 3" fill-rule="evenodd" class="s2" d="m2048 256h-1792v-256h1792z"/>
+</svg>

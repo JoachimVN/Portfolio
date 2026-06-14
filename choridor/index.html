@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHORIDOR - Online Multiplayer</title>
+    <link rel="icon" href="images/logos/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="images/logos/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="images/logos/favicon.png">
     <link rel="stylesheet" href="css/style.css">
     <script defer src="https://cdn.vercel-insights.com/v1/script.js" integrity="sha256-eb9jjdSs3rm4DFpACaPhmGlo1hXpVX3PI9kbXorRWNg=" crossorigin="anonymous"></script>
 </head>
@@ -57,7 +60,7 @@
                     <a href="tos.html" id="btn-tos">Terms</a>
                     <span>·</span>
                     <a href="privacy.html" id="btn-privacy">Privacy</a>
-                    <span class="lobby-version">v1.2.4</span>
+                    <span class="lobby-version"></span>
                 </div>
             </div>
 
@@ -106,18 +109,13 @@
             </div>
 
             <div id="lview-discord" class="lobby-view hidden">
-                <p class="lobby-subtitle">Play with a friend</p>
-                <div class="lobby-name-wrap">
-                    <input type="text" id="discord-name-input" class="lobby-name-input" placeholder="Your name" maxlength="20" autocomplete="off" spellcheck="false">
+                <div class="discord-queue-status">
+                    <div class="discord-queue-spinner"></div>
+                    <span id="discord-status-text" class="discord-status-text">Connecting...</span>
                 </div>
-                <button class="win-action-btn" id="btn-discord-play">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
-                    <span>Play</span>
-                </button>
+                <p class="lobby-subtitle">Invite a friend to play</p>
                 <p class="lobby-error hidden" id="discord-error"></p>
-                <button class="lobby-back hidden" id="btn-discord-cancel">← Cancel</button>
+                <span class="lobby-version"></span>
             </div>
         </div>
     </div>
@@ -165,13 +163,6 @@
         </div>
     </div>
 
-    <!-- Shown when win overlay is dismissed in online mode -->
-    <div id="win-footer" class="win-footer hidden">
-        <span class="win-footer-label">Game over</span>
-        <button id="win-footer-rematch"     class="win-footer-btn">Rematch</button>
-        <button id="win-footer-change-mode" class="win-footer-btn win-footer-muted">Change Mode</button>
-    </div>
-
     <div class="app">
         <div class="top-bar">
             <div class="player-section p1-section">
@@ -192,6 +183,21 @@
         <div class="board-wrapper">
             <canvas id="gameBoard"></canvas>
             <output id="tap-toast" class="tap-toast" aria-live="polite" aria-hidden="true"></output>
+            <div id="spectator-banner" class="spectator-banner hidden">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span>Spectating</span>
+                <span id="spectator-queue-pos" class="spectator-queue-pos"></span>
+            </div>
+        </div>
+
+        <!-- Shown when win overlay is dismissed in online mode -->
+        <div id="win-footer" class="win-footer hidden">
+            <span class="win-footer-label">Game over</span>
+            <button id="win-footer-rematch"     class="win-footer-btn">Rematch</button>
+            <button id="win-footer-change-mode" class="win-footer-btn win-footer-muted">Change Mode</button>
         </div>
 
         <div class="bottom-bar">
@@ -212,6 +218,13 @@
                 </div>
             </div>
             <div class="status-label" id="status">Player 1's Turn</div>
+            <div id="spectator-count" class="spectator-count-chip hidden" aria-live="polite">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span id="spectator-count-num">0</span>
+            </div>
             <div class="controls">
                 <button id="anim-btn" class="icon-btn anim-off" type="button" aria-pressed="false" aria-label="Turn animations on">
                     <svg id="anim-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -233,7 +246,7 @@
                         <path d="M20.49 9A9 9 0 0 0 5.64 5.64M3.51 15A9 9 0 0 0 18.36 18.36"></path>
                     </svg>
                 </button>
-                <button id="tap-mode-btn" class="icon-btn" type="button" aria-pressed="false" aria-label="Toggle confirm walls">
+                <button id="tap-mode-btn" class="icon-btn" type="button" aria-pressed="false" aria-label="Toggle confirm mode">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M10 9.5V4a2 2 0 0 1 4 0v8"/>
                         <path d="M14 8.5a2 2 0 0 1 4 0V12"/>

@@ -528,11 +528,6 @@ button:active {
 
 /* Win footer — shown when win card is dismissed (online only) */
 .win-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -541,11 +536,7 @@ button:active {
     background: rgba(10, 12, 20, 0.96);
     backdrop-filter: blur(10px);
     border-top: 1px solid #1A1E32;
-}
-
-/* Push the bottom bar up so the footer doesn't cover it */
-.win-footer:not(.hidden) ~ .app {
-    padding-bottom: 43px;
+    flex-shrink: 0;
 }
 
 .win-footer.hidden { display: none; }
@@ -956,6 +947,75 @@ button:active {
     width: 100%;
     text-align: center;
     color: #6870A0;
+}
+
+/* Discord activity waiting UI */
+.discord-queue-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0 8px;
+}
+
+.discord-queue-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(62, 104, 168, 0.3);
+    border-top-color: #3E68A8;
+    border-radius: 50%;
+    animation: discord-spin 0.9s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes discord-spin { to { transform: rotate(360deg); } }
+
+.discord-status-text {
+    color: #8890A8;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+/* Spectator banner (overlaid at bottom of board-wrapper) */
+.spectator-banner {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 16px;
+    background: rgba(10, 12, 20, 0.88);
+    border-top: 1px solid #1A1E32;
+    font-size: 12px;
+    font-weight: bold;
+    color: #9098B2;
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+    z-index: 5;
+}
+
+.spectator-queue-pos {
+    color: #6870A0;
+    font-weight: normal;
+    font-size: 11px;
+}
+
+/* Spectator count chip in bottom bar */
+.spectator-count-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #191C2A;
+    border: 1px solid #2A2E48;
+    color: #8890A8;
+    font-size: 11px;
+    font-weight: bold;
+    flex-shrink: 0;
 }
 
 /* Legal modal */

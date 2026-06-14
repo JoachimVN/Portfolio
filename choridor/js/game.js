@@ -1,3 +1,6 @@
+const APP_VERSION = 'v1.3.0';
+document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
+
 const BOARD_SIZE = 9;
 const CELL_SIZE  = 54;
 const GAP        = 10;
@@ -63,7 +66,8 @@ let hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow:
 // ─── Tap-to-preview state ─────────────────────────────────────────────────
 
 let tapMode    = false;
-let tapPreview = null;  // { row, col, orientation } | null while awaiting confirm
+let tapPreview     = null;  // { row, col, orientation } | null — wall pending confirm
+let tapMovePreview = null;  // { row, col } | null — move pending confirm
 let pawnAnims  = [];    // active pawn slide / jump animations
 let wallAnims  = [];    // active wall grow-in animations
 let _animId    = null;  // shared rAF id driving all board animations
@@ -93,9 +97,25 @@ let softLobbyRestoreWin    = false;  // win overlay was showing when lobby opene
 
 const isDiscord       = location.hostname.endsWith('.discordsays.com');
 let discordInstanceId = null;
+let discordSdk        = null;
+let matchStartTime    = 0;
+let matchRoomCode     = '';
+let _presenceTimer    = null;
 if (isDiscord) document.body.classList.add('discord-activity');
 
+let spectatorMode  = false;
+let spectatorCount = 0;
+
+function setDiscordPresence(activity) {
+    if (!discordSdk) return;
+    clearTimeout(_presenceTimer);
+    _presenceTimer = setTimeout(() => {
+        discordSdk.commands.setActivity(activity).catch(() => {});
+    }, 500);
+}
+
 function isMyTurn() {
+    if (spectatorMode) return false;
     return !onlineMode || gameState.currentPlayer === onlineRole;
 }
 
@@ -187,10 +207,18 @@ function drawLegalMoves() {
     gameState.legalMoves.forEach(move => {
         const bx = move.col * STEP, by = move.row * STEP;
         const cx = bx + CELL_SIZE / 2, cy = by + CELL_SIZE / 2;
-        const isHovered = hoverState.moveRow === move.row && hoverState.moveCol === move.col;
+        const isHovered  = hoverState.moveRow === move.row && hoverState.moveCol === move.col;
+        const isSelected = tapMovePreview && tapMovePreview.row === move.row && tapMovePreview.col === move.col;
 
         ctx.fillStyle = color;
-        if (isHovered) {
+        if (isSelected) {
+            ctx.globalAlpha = 0.2;
+            ctx.fillRect(bx, by, CELL_SIZE, CELL_SIZE);
+            ctx.globalAlpha = 1;
+            ctx.beginPath();
+            ctx.arc(cx, cy, CELL_SIZE * 0.21, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (isHovered) {
             ctx.globalAlpha = 0.12;
             ctx.fillRect(bx, by, CELL_SIZE, CELL_SIZE);
             ctx.globalAlpha = 0.85;
@@ -378,6 +406,10 @@ function updateLegalMoves() {
             });
         }
     });
+    if (tapMovePreview && !gameState.legalMoves.some(m => m.row === tapMovePreview.row && m.col === tapMovePreview.col)) {
+        tapMovePreview = null;
+        updateTapHint();
+    }
     render();
 }
 
@@ -413,8 +445,12 @@ canvas.addEventListener('click', e => {
     const inVGap = offX >= CELL_SIZE && cellX < BOARD_SIZE - 1;
 
     if (!inHGap && !inVGap) {
-        clearTapPreview();
-        movePawn(cellY, cellX);
+        if (tapMode) {
+            handleTapMove(cellY, cellX);
+        } else {
+            clearTapPreview();
+            movePawn(cellY, cellX);
+        }
     } else if (tapMode) {
         handleTapWall(cellY, cellX, inHGap ? 'H' : 'V');
     } else {
@@ -427,21 +463,26 @@ function handleTapWall(row, col, orientation) {
     if (cp === 'p1' && gameState.wallCounts.p1 === 0) return;
     if (cp === 'p2' && gameState.wallCounts.p2 === 0) return;
 
-    if (tapPreview && tapPreview.row === row && tapPreview.col === col && tapPreview.orientation === orientation) {
-        // Second tap on same spot: confirm. The preview already grew in,
-        // so skip the board grow animation to avoid playing it twice.
-        clearTapPreview();
-        placeWall(row, col, orientation, false);
-    } else {
-        // First tap or different spot → lock preview
-        const wallKey = JSON.stringify({ row, col, orientation });
-        if (gameState.walls.has(wallKey) || hasWallOverlap(row, col, orientation)) return;
-        if (!wallKeepsPathsOpen(wallKey)) return;
-        tapPreview = { row, col, orientation, t0: performance.now() };
-        playSound('Select');
-        if (animEnabled) ensureAnimLoop(); else render();
-        updateTapHint();
+    const wallKey = JSON.stringify({ row, col, orientation });
+    if (gameState.walls.has(wallKey) || hasWallOverlap(row, col, orientation)) return;
+    if (!wallKeepsPathsOpen(wallKey)) return;
+    tapMovePreview = null;
+    tapPreview = { row, col, orientation, t0: performance.now() };
+    playSound('Select');
+    if (animEnabled) ensureAnimLoop(); else render();
+    updateTapHint();
+}
+
+function handleTapMove(row, col) {
+    if (!gameState.legalMoves.some(m => m.row === row && m.col === col)) {
+        if (tapMovePreview || tapPreview) clearTapPreview();
+        return;
     }
+    tapPreview = null;
+    tapMovePreview = { row, col };
+    playSound('Select');
+    updateTapHint();
+    render();
 }
 
 function computeHoverState(cellX, cellY, inHGap, inVGap) {
@@ -534,6 +575,7 @@ function startWallAnim(wallKey) {
 
 function clearTapPreview() {
     tapPreview = null;
+    tapMovePreview = null;
     updateTapHint();
     render();
 }
@@ -541,10 +583,12 @@ function clearTapPreview() {
 function updateTapHint() {
     const hint = document.getElementById('tap-confirm-hint');
     if (!hint) return;
-    const show = tapPreview && tapMode && !gameState.gameOver && isMyTurn();
+    const show = (tapPreview || tapMovePreview) && tapMode && !gameState.gameOver && isMyTurn();
     if (show) {
         hint.className = `tap-confirm-hint ${gameState.currentPlayer} visible`;
         hint.removeAttribute('aria-hidden');
+        const label = hint.querySelector('.tap-confirm-label');
+        if (label) label.textContent = tapMovePreview ? 'Move here' : 'Place wall';
     } else {
         hint.className = 'tap-confirm-hint';
         hint.setAttribute('aria-hidden', 'true');
@@ -574,7 +618,7 @@ function setTapMode(enabled) {
         btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
     }
     if (!enabled) clearTapPreview();
-    showToast(enabled ? 'Confirm walls: ON, pick a slot then confirm' : 'Confirm walls: OFF');
+    showToast(enabled ? 'Confirm mode: ON — tap a move or wall, then confirm' : 'Confirm mode: OFF');
     render();
 }
 
@@ -765,6 +809,19 @@ function animateWallSpend(player) {
     }, { once: true });
 }
 
+function updateInMatchPresence(myTurn) {
+    if (!isDiscord || gameState.gameOver) return;
+    const oppLabel = opponentName || 'Opponent';
+    setDiscordPresence({
+        details: `vs. ${oppLabel}`,
+        state: myTurn ? 'Your turn' : `${oppLabel}'s turn`,
+        timestamps: { start: matchStartTime },
+        assets: { large_image: 'embedded_background', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' },
+        party: { id: matchRoomCode, size: [2, 2] },
+        instance: true,
+    });
+}
+
 function updateStatus() {
     const status = document.getElementById('status');
     if (onlineMode) {
@@ -774,6 +831,7 @@ function updateStatus() {
         const oppTurn = opp ? `${opp}${apostrophe} turn` : "Opponent's turn";
         status.textContent = myTurn ? 'Your turn' : oppTurn;
         status.className   = `status-label ${gameState.currentPlayer}`;
+        updateInMatchPresence(myTurn);
     } else {
         const name = gameState.currentPlayer === 'p1'
             ? document.getElementById('p1-name').textContent
@@ -820,15 +878,23 @@ function populateWinStats() {
 function showWinScreen(winner, playerClass, delay = 0) {
     clearTapPreview();
     gameState.gameOver = true;   // lock input now; reveal the card after the move lands
+    if (isDiscord && onlineMode) {
+        setDiscordPresence({
+            details: `vs. ${opponentName || 'Opponent'}`,
+            state: `${winner} wins!`,
+            assets: { large_image: 'embedded_background', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' },
+            party: { id: matchRoomCode, size: [2, 2] },
+        });
+    }
     document.getElementById('win-card').className  = `win-card ${playerClass}`;
     document.getElementById('win-pawn').className  = `win-pawn ${playerClass}`;
     const msg = document.getElementById('win-message');
     msg.textContent = `${winner} Wins!`;
     msg.className   = `win-title ${playerClass}`;
 
-    document.getElementById('play-again-btn').classList.toggle('hidden', onlineMode);
-    document.getElementById('btn-rematch').classList.toggle('hidden', !onlineMode);
-    document.getElementById('btn-change-mode').classList.toggle('hidden', !onlineMode);
+    document.getElementById('play-again-btn').classList.toggle('hidden', onlineMode || spectatorMode);
+    document.getElementById('btn-rematch').classList.toggle('hidden', !onlineMode || spectatorMode);
+    document.getElementById('btn-change-mode').classList.toggle('hidden', !onlineMode || spectatorMode);
     if (onlineMode) updateRematchBtn('idle');
     populateWinStats();
 
@@ -916,10 +982,12 @@ function initSocket(errorElId, callback) {
 
     socket.on('room-joined', () => { onlineRole = 'p2'; });
 
-    socket.on('game-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, role } = {}) => {
+    socket.on('game-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, role, code } = {}) => {
         if (role) onlineRole = role;
         opponentName   = onlineRole === 'p1' ? (p2Name   || '') : (p1Name   || '');
         opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
+        matchStartTime = Date.now();
+        matchRoomCode  = code || '';
         onlineMode = true;
         hideLobby();
         applyPlayerNames();
@@ -934,6 +1002,7 @@ function initSocket(errorElId, callback) {
         // Keep onlineMode=true so New Game/Change Mode still route to the lobby
         opponentName   = '';
         opponentAvatar = '';
+        if (isDiscord) setDiscordPresence({ state: 'In lobby', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' } });
         gameState.gameOver = true;
         hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
         clearTapPreview();
@@ -950,9 +1019,20 @@ function initSocket(errorElId, callback) {
     socket.on('rematch-cancelled', () => updateRematchBtn('idle'));
 
     socket.on('rematch-start', ({ p1Name, p2Name, p1Avatar, p2Avatar } = {}) => {
+        if (spectatorMode) {
+            document.getElementById('p1-name').textContent = p1Name || 'Player 1';
+            document.getElementById('p2-name').textContent = p2Name || 'Player 2';
+            setPlayerAvatar('p1', p1Avatar);
+            setPlayerAvatar('p2', p2Avatar);
+            resetGame();
+            updateStatus();
+            updateLegalMoves();
+            return;
+        }
         onlineRole     = onlineRole === 'p1' ? 'p2' : 'p1';
         opponentName   = onlineRole === 'p1' ? (p2Name   || '') : (p1Name   || '');
         opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
+        matchStartTime = Date.now();
         if (softLobby) {
             softLobby = false; softLobbyRestoreWin = false;
             document.getElementById('lobby-overlay').classList.add('hidden');
@@ -960,6 +1040,59 @@ function initSocket(errorElId, callback) {
         }
         applyPlayerNames();
         resetGame();
+    });
+
+    socket.on('spectate-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, snapshot, queuePosition, spectatorCount: sc } = {}) => {
+        spectatorMode  = true;
+        onlineMode     = false;
+        spectatorCount = sc || 1;
+        document.getElementById('p1-name').textContent = p1Name || 'Player 1';
+        document.getElementById('p2-name').textContent = p2Name || 'Player 2';
+        setPlayerAvatar('p1', p1Avatar || '');
+        setPlayerAvatar('p2', p2Avatar || '');
+        resetGame();
+        if (snapshot) { applyGameSnapshot(snapshot); updateWallCounts(); }
+        hideLobby();
+        updateSpectatorBanner(queuePosition || 1);
+        updateSpectatorCountUI(spectatorCount);
+        updateStatus();
+        updateLegalMoves();
+        render();
+    });
+
+    socket.on('spectator-count', count => {
+        spectatorCount = count;
+        updateSpectatorCountUI(count);
+        if (spectatorMode) updateSpectatorBanner(null);
+    });
+
+    socket.on('become-player', ({ role, p1Name, p2Name, p1Avatar, p2Avatar, snapshot } = {}) => {
+        spectatorMode  = false;
+        onlineRole     = role;
+        onlineMode     = true;
+        opponentName   = role === 'p1' ? (p2Name || '') : (p1Name || '');
+        opponentAvatar = role === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
+        matchStartTime = Date.now();
+        document.getElementById('p1-name').textContent = p1Name || 'Player 1';
+        document.getElementById('p2-name').textContent = p2Name || 'Player 2';
+        applyPlayerNames();
+        if (snapshot) {
+            applyGameSnapshot(snapshot);
+            gameState.flipped = role === 'p2';
+            updateWallCounts();
+        }
+        updateSpectatorBanner(0);
+        updateSpectatorCountUI(spectatorCount);
+        updateStatus();
+        updateLegalMoves();
+        render();
+    });
+
+    socket.on('opponent-rejoined', ({ name, avatar } = {}) => {
+        opponentName   = name || '';
+        opponentAvatar = avatar || '';
+        applyPlayerNames();
+        updateStatus();
     });
 }
 
@@ -1037,6 +1170,48 @@ function showLobbyView(id) {
 
 function hideLobby() {
     document.getElementById('lobby-overlay').classList.add('hidden');
+}
+
+function applyGameSnapshot(snapshot) {
+    if (!snapshot) return;
+    gameState.p1Pawn        = { ...snapshot.p1Pawn };
+    gameState.p2Pawn        = { ...snapshot.p2Pawn };
+    gameState.wallCounts    = { ...snapshot.wallCounts };
+    gameState.currentPlayer = snapshot.currentPlayer;
+    gameState.movesP1       = snapshot.movesP1 || 0;
+    gameState.movesP2       = snapshot.movesP2 || 0;
+    gameState.gameOver      = false;
+    gameState.walls      = new Set();
+    gameState.wallOwners = new Map();
+    for (const w of (snapshot.walls || [])) {
+        const key = JSON.stringify({ row: w.row, col: w.col, orientation: w.orientation });
+        gameState.walls.add(key);
+        gameState.wallOwners.set(key, w.owner);
+    }
+}
+
+function updateSpectatorCountUI(count) {
+    const chip = document.getElementById('spectator-count');
+    const num  = document.getElementById('spectator-count-num');
+    if (!chip || !num) return;
+    if (count > 0 && (onlineMode || spectatorMode)) {
+        chip.classList.remove('hidden');
+        num.textContent = count;
+    } else {
+        chip.classList.add('hidden');
+    }
+}
+
+function updateSpectatorBanner(queuePosition) {
+    const banner   = document.getElementById('spectator-banner');
+    const queuePos = document.getElementById('spectator-queue-pos');
+    if (!banner) return;
+    if (spectatorMode) {
+        banner.classList.remove('hidden');
+        if (queuePos) queuePos.textContent = queuePosition ? `(#${queuePosition} in queue)` : '';
+    } else {
+        banner.classList.add('hidden');
+    }
 }
 
 function showLobbyError(elId, msg) {
@@ -1126,17 +1301,6 @@ if (joinNameInput) {
 applyPlayerNames();
 if (isDiscord) showLobbyView('lview-discord');
 
-const discordNameInput = document.getElementById('discord-name-input');
-if (discordNameInput) {
-    discordNameInput.value = savedName;
-    discordNameInput.addEventListener('input', () => {
-        const val = discordNameInput.value.trim();
-        if (val) localStorage.setItem('choridor_player_name', val);
-        else localStorage.removeItem('choridor_player_name');
-        if (nameInput) nameInput.value = discordNameInput.value;
-    });
-}
-
 document.getElementById('btn-local').addEventListener('click', () => {
     playSound('Select');
     if (softLobby) {
@@ -1202,27 +1366,6 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
     });
 });
 
-document.getElementById('btn-discord-play')?.addEventListener('click', () => {
-    playSound('Select');
-    setConnectingBtn('btn-discord-play');
-    initSocket('discord-error', () => {
-        socket.emit('join-activity', { instanceId: discordInstanceId, name: getMyName(), avatarUrl: myAvatar });
-        socket.once('activity-waiting', () => {
-            const btn = document.getElementById('btn-discord-play');
-            if (btn) { btn.querySelector('span').textContent = 'Waiting for opponent…'; btn.disabled = true; }
-            document.getElementById('btn-discord-cancel')?.classList.remove('hidden');
-        });
-    });
-});
-
-document.getElementById('btn-discord-cancel')?.addEventListener('click', () => {
-    playSound('Select');
-    socket?.disconnect(); socket = null;
-    const btn = document.getElementById('btn-discord-play');
-    if (btn) { btn.querySelector('span').textContent = 'Play'; btn.disabled = false; }
-    document.getElementById('btn-discord-cancel')?.classList.add('hidden');
-    document.getElementById('discord-error')?.classList.add('hidden');
-});
 
 document.getElementById('win-card-close').addEventListener('click', () => {
     document.getElementById('win-overlay').classList.add('hidden');
@@ -1326,6 +1469,7 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
 });
 
 document.getElementById('new-game-btn').addEventListener('click', () => {
+    if (spectatorMode) return;
     playSound('Select');
     if (animEnabled) {
         newGameIconDeg += 360;
@@ -1432,6 +1576,8 @@ if (isDiscord) try {
     const sdk = new DiscordSDK('1515199692793843712');
     await sdk.ready();
     discordInstanceId = sdk.instanceId;
+    discordSdk = sdk;
+    setDiscordPresence({ state: 'In lobby', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' } });
     patchUrlMappings([{
         prefix: '/api',
         target: 'choridor-web-production.up.railway.app',
@@ -1446,30 +1592,21 @@ if (isDiscord) try {
         const data = await res.json();
         if (data.username) {
             myAvatar = data.avatarUrl || '';
-            if (!localStorage.getItem('choridor_player_name')) {
-                const safeName = String(data.username).replace(/[^a-zA-Z0-9 _.\-#]/g, '').trim().slice(0, 20);
-                const dni = document.getElementById('discord-name-input');
-                if (dni) {
-                    dni.value = safeName;
-                    dni.dispatchEvent(new Event('input'));
-                } else if (nameInput) {
-                    nameInput.value = safeName;
-                    nameInput.dispatchEvent(new Event('input'));
-                }
+            const safeName = String(data.username).replace(/[^a-zA-Z0-9 _.\-#]/g, '').trim().slice(0, 20);
+            if (safeName && /^[a-zA-Z0-9 _.\-#]{1,20}$/.test(safeName)) {
+                localStorage.setItem('choridor_player_name', safeName);
+                if (nameInput) nameInput.value = safeName;
             }
         }
     } catch (authErr) {
         const errEl = document.getElementById('discord-error');
         if (errEl) { errEl.textContent = `Auth failed: ${authErr?.message || authErr}`; errEl.classList.remove('hidden'); }
     }
-    // Auto-enter matchmaking queue — no button press needed in Discord Activity
-    setConnectingBtn('btn-discord-play');
+    // Auto-enter matchmaking queue
     initSocket('discord-error', () => {
-        // clearConnectingBtn ran just before this callback and reset the button to "Play",
-        // so we immediately re-apply the waiting state here
-        const btn = document.getElementById('btn-discord-play');
-        if (btn) { btn.querySelector('span').textContent = 'Finding opponent…'; btn.disabled = true; }
-        document.getElementById('btn-discord-cancel')?.classList.remove('hidden');
+        const statusText = document.getElementById('discord-status-text');
+        if (statusText) statusText.textContent = 'Finding opponent...';
+        setDiscordPresence({ state: 'Finding a match...', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' }, party: { size: [1, 2] } });
         socket.emit('join-activity', { instanceId: discordInstanceId, name: getMyName(), avatarUrl: myAvatar });
     });
 } catch (e) {
@@ -1481,10 +1618,15 @@ if (isDiscord) try {
 
 document.getElementById('tap-confirm-yes')?.addEventListener('click', e => {
     e.stopPropagation();
-    if (tapPreview && tapMode && isMyTurn() && !gameState.gameOver) {
+    if (!tapMode || !isMyTurn() || gameState.gameOver) return;
+    if (tapPreview) {
         const { row, col, orientation } = tapPreview;
         clearTapPreview();
         placeWall(row, col, orientation, false);
+    } else if (tapMovePreview) {
+        const { row, col } = tapMovePreview;
+        clearTapPreview();
+        movePawn(row, col);
     }
 });
 
