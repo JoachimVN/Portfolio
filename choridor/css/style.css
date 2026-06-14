@@ -264,7 +264,27 @@ button:active {
 
 .controls .icon-btn:hover svg { color: #EAEDF6; }
 
-/* Surrender: muted red to signal a destructive action */
+/* Change Mode: dark navy to distinguish from game actions */
+#change-mode-btn {
+    color: #FFFFFF;
+    background: #1E3050;
+    border-color: #2E4870;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+#change-mode-btn:hover {
+    background: #243860;
+    border-color: #3A5880;
+    box-shadow: 0 6px 16px rgba(30, 60, 100, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+#change-mode-btn:active {
+    background: #18263E;
+    border-color: #263A5E;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* Resign: muted red to signal a destructive action */
 #new-game-btn {
     color: #FFFFFF;
     background: #7A3535;
