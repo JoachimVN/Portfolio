@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.5.0a';
+const APP_VERSION = 'v1.5.1';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -101,7 +101,7 @@ let discordSdk        = null;
 let matchStartTime    = 0;
 let matchRoomCode     = '';
 let _presenceTimer    = null;
-if (isDiscord) document.body.classList.add('discord-activity');
+if (isDiscord) { document.body.classList.add('discord-activity'); document.getElementById('change-mode-btn')?.classList.add('hidden'); }
 
 let spectatorMode  = false;
 let spectatorCount = 0;
@@ -817,7 +817,7 @@ function updateInMatchPresence(myTurn) {
         state: myTurn ? 'Your turn' : `${oppLabel}'s turn`,
         timestamps: { start: matchStartTime },
         assets: { large_image: 'embedded_background', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' },
-        party: { id: matchRoomCode, size: [2, 2] },
+        party: { id: matchRoomCode || discordInstanceId, size: [2, 2] },
         instance: true,
     });
 }
@@ -883,7 +883,7 @@ function showWinScreen(winner, playerClass, delay = 0) {
             details: `vs. ${opponentName || 'Opponent'}`,
             state: `${winner} wins!`,
             assets: { large_image: 'embedded_background', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' },
-            party: { id: matchRoomCode, size: [2, 2] },
+            party: { id: matchRoomCode || discordInstanceId, size: [2, 2] },
         });
     }
     document.getElementById('win-card').className  = `win-card ${playerClass}`;
@@ -894,7 +894,7 @@ function showWinScreen(winner, playerClass, delay = 0) {
 
     document.getElementById('play-again-btn').classList.toggle('hidden', onlineMode || spectatorMode);
     document.getElementById('btn-rematch').classList.toggle('hidden', !onlineMode || spectatorMode);
-    document.getElementById('btn-change-mode').classList.toggle('hidden', !onlineMode || spectatorMode);
+    document.getElementById('btn-change-mode').classList.toggle('hidden', !onlineMode || spectatorMode || isDiscord);
     if (onlineMode) updateRematchBtn('idle');
     populateWinStats();
 
@@ -1054,6 +1054,7 @@ function initSocket(errorElId, callback) {
         if (snapshot) { applyGameSnapshot(snapshot); updateWallCounts(); }
         hideLobby();
         if (!isDiscord) showToast('Room is full - watching as spectator');
+        if (isDiscord) setDiscordPresence({ state: 'Spectating', details: `${p1Name || 'Player 1'} vs. ${p2Name || 'Player 2'}`, assets: { large_image: 'embedded_background', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' } });
         updateSpectatorBanner(queuePosition || 1);
         updateSpectatorCountUI(spectatorCount);
         updateStatus();
@@ -1491,8 +1492,19 @@ document.getElementById('new-game-btn').addEventListener('click', () => {
         onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
         socket?.disconnect(); socket = null;
         document.getElementById('win-overlay').classList.add('hidden');
+        if (isDiscord) {
+            document.getElementById('lobby-overlay').classList.remove('hidden');
+            showLobbyView('lview-discord');
+            initSocket('discord-error', () => {
+                const statusText = document.getElementById('discord-status-text');
+                if (statusText) statusText.textContent = 'Finding opponent...';
+                setDiscordPresence({ state: 'Finding a match...', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' }, party: { size: [1, 2] } });
+                socket.emit('join-activity', { instanceId: discordInstanceId, name: getMyName(), avatarUrl: myAvatar });
+            });
+            return;
+        }
         document.getElementById('lobby-overlay').classList.remove('hidden');
-        showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
+        showLobbyView('lview-mode');
     }
     resetGame();
 });
