@@ -1428,11 +1428,11 @@ document.getElementById('change-mode-btn').addEventListener('click', () => {
 // ─── Discord Activity ─────────────────────────────────────────────────────
 
 if (isDiscord) try {
-    const { DiscordSDK } = await import('./vendor/discord-sdk.mjs');
+    const { DiscordSDK, patchUrlMappings } = await import('./vendor/discord-sdk.mjs');
     const sdk = new DiscordSDK('1515199692793843712');
     await sdk.ready();
     discordInstanceId = sdk.instanceId;
-    sdk.patchUrlMappings([{
+    patchUrlMappings([{
         prefix: '/api',
         target: 'choridor-web-production.up.railway.app',
         sandboxed: false,
