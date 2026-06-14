@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.4.5';
+const APP_VERSION = 'v1.4.6';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -111,8 +111,8 @@ function setDiscordPresence(activity) {
     clearTimeout(_presenceTimer);
     _presenceTimer = setTimeout(() => {
         discordSdk.commands.setActivity(activity)
-            .then(() => { const el = document.getElementById('discord-status-text'); if (el) el.textContent = 'RP ok'; })
-            .catch(err => { const el = document.getElementById('discord-status-text'); if (el) el.textContent = 'RP err: ' + (err?.message || err?.code || JSON.stringify(err)); });
+            .then(() => alert('RP ok'))
+            .catch(err => alert('RP err: ' + (err?.message || err?.code || JSON.stringify(err))));
     }, 500);
 }
 
