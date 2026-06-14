@@ -945,7 +945,6 @@ button:active {
 .lobby-footer {
     display: flex;
     align-items: center;
-    justify-content: center;
     width: 100%;
     margin-top: 20px;
     font-size: 11px;
