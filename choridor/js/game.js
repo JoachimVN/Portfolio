@@ -1435,11 +1435,9 @@ if (isDiscord) try {
     patchUrlMappings([{
         prefix: '/api',
         target: 'choridor-web-production.up.railway.app',
-        sandboxed: false,
-        targetApplicationId: null
     }]);
     try {
-        const { code } = await sdk.commands.authorize({ scope: ['identify'], response_type: 'code' });
+        const { code } = await sdk.commands.authorize({ client_id: '1515199692793843712', scope: ['identify'], response_type: 'code' });
         const res  = await fetch('/api/auth/discord', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1460,7 +1458,10 @@ if (isDiscord) try {
                 }
             }
         }
-    } catch { /* OAuth declined or unavailable */ }
+    } catch (authErr) {
+        const errEl = document.getElementById('discord-error');
+        if (errEl) { errEl.textContent = `Auth failed: ${authErr?.message || authErr}`; errEl.classList.remove('hidden'); }
+    }
     // Auto-enter matchmaking queue — no button press needed in Discord Activity
     setConnectingBtn('btn-discord-play');
     initSocket('discord-error', () => {

@@ -608,6 +608,8 @@ button:active {
     border-color: #3E4470;
 }
 
+.win-btn + .win-btn { margin-top: 10px; }
+
 .win-btn:active {
     background: #3E68A8;
     color: #FFFFFF;
