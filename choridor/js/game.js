@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.3.0';
+const APP_VERSION = 'v1.4.0';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -110,7 +110,7 @@ function setDiscordPresence(activity) {
     if (!discordSdk) return;
     clearTimeout(_presenceTimer);
     _presenceTimer = setTimeout(() => {
-        discordSdk.commands.setActivity(activity).catch(() => {});
+        discordSdk.commands.setActivity(activity).catch(err => console.warn('setActivity failed:', err));
     }, 500);
 }
 
@@ -986,7 +986,7 @@ function initSocket(errorElId, callback) {
         if (role) onlineRole = role;
         opponentName   = onlineRole === 'p1' ? (p2Name   || '') : (p1Name   || '');
         opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
-        matchStartTime = Date.now();
+        matchStartTime = Math.floor(Date.now() / 1000);
         matchRoomCode  = code || '';
         onlineMode = true;
         hideLobby();
@@ -1032,7 +1032,7 @@ function initSocket(errorElId, callback) {
         onlineRole     = onlineRole === 'p1' ? 'p2' : 'p1';
         opponentName   = onlineRole === 'p1' ? (p2Name   || '') : (p1Name   || '');
         opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
-        matchStartTime = Date.now();
+        matchStartTime = Math.floor(Date.now() / 1000);
         if (softLobby) {
             softLobby = false; softLobbyRestoreWin = false;
             document.getElementById('lobby-overlay').classList.add('hidden');
@@ -1053,6 +1053,7 @@ function initSocket(errorElId, callback) {
         resetGame();
         if (snapshot) { applyGameSnapshot(snapshot); updateWallCounts(); }
         hideLobby();
+        if (!isDiscord) showToast('Room is full - watching as spectator');
         updateSpectatorBanner(queuePosition || 1);
         updateSpectatorCountUI(spectatorCount);
         updateStatus();
@@ -1066,21 +1067,23 @@ function initSocket(errorElId, callback) {
         if (spectatorMode) updateSpectatorBanner(null);
     });
 
-    socket.on('become-player', ({ role, p1Name, p2Name, p1Avatar, p2Avatar, snapshot } = {}) => {
+    socket.on('become-player', ({ role, p1Name, p2Name, p1Avatar, p2Avatar } = {}) => {
         spectatorMode  = false;
         onlineRole     = role;
         onlineMode     = true;
         opponentName   = role === 'p1' ? (p2Name || '') : (p1Name || '');
         opponentAvatar = role === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
-        matchStartTime = Date.now();
+        matchStartTime = Math.floor(Date.now() / 1000);
         document.getElementById('p1-name').textContent = p1Name || 'Player 1';
         document.getElementById('p2-name').textContent = p2Name || 'Player 2';
+        setPlayerAvatar('p1', p1Avatar || '');
+        setPlayerAvatar('p2', p2Avatar || '');
         applyPlayerNames();
-        if (snapshot) {
-            applyGameSnapshot(snapshot);
-            gameState.flipped = role === 'p2';
-            updateWallCounts();
-        }
+        gameState.flipped = role === 'p2';
+        document.getElementById('win-overlay').classList.add('hidden');
+        document.getElementById('win-footer').classList.add('hidden');
+        clearTapPreview();
+        resetGame();
         updateSpectatorBanner(0);
         updateSpectatorCountUI(spectatorCount);
         updateStatus();
@@ -1092,6 +1095,9 @@ function initSocket(errorElId, callback) {
         opponentName   = name || '';
         opponentAvatar = avatar || '';
         applyPlayerNames();
+        document.getElementById('win-overlay').classList.add('hidden');
+        document.getElementById('win-footer').classList.add('hidden');
+        resetGame();
         updateStatus();
     });
 }
@@ -1305,6 +1311,7 @@ document.getElementById('btn-local').addEventListener('click', () => {
     playSound('Select');
     if (softLobby) {
         onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
+        spectatorMode = false;
         socket?.disconnect(); socket = null;
         softLobby = false; softLobbyRestoreWin = false;
         resetGame();
@@ -1338,6 +1345,7 @@ document.getElementById('btn-create').addEventListener('click', () => {
     playSound('Select');
     if (softLobby) {
         onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
+        spectatorMode = false;
         socket?.disconnect(); socket = null;
         softLobby = false; softLobbyRestoreWin = false;
         resetGame();
@@ -1351,6 +1359,7 @@ document.getElementById('btn-join-back').addEventListener('click', () => { playS
 
 document.getElementById('btn-waiting-back').addEventListener('click', () => {
     playSound('Select');
+    spectatorMode = false;
     socket?.disconnect(); socket = null;
     showLobbyView('lview-mode');
 });
@@ -1369,11 +1378,12 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
 
 document.getElementById('win-card-close').addEventListener('click', () => {
     document.getElementById('win-overlay').classList.add('hidden');
-    if (onlineMode) document.getElementById('win-footer').classList.remove('hidden');
+    if (onlineMode && !spectatorMode) document.getElementById('win-footer').classList.remove('hidden');
 });
 
 document.getElementById('win-footer-rematch').addEventListener('click', () => {
     playSound('Select');
+    if (spectatorMode) return;
     if (rematchState === 'idle' || rematchState === 'incoming') {
         socket?.emit('rematch-request');
         updateRematchBtn('waiting');
@@ -1422,6 +1432,7 @@ document.getElementById('btn-join-confirm').addEventListener('click', () => {
     playSound('Select');
     if (softLobby) {
         onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
+        spectatorMode = false;
         socket?.disconnect(); socket = null;
         softLobby = false; softLobbyRestoreWin = false;
         resetGame();
@@ -1592,8 +1603,14 @@ if (isDiscord) try {
         const data = await res.json();
         if (data.username) {
             myAvatar = data.avatarUrl || '';
-            const safeName = String(data.username).replace(/[^a-zA-Z0-9 _.\-#]/g, '').trim().slice(0, 20);
-            if (safeName && /^[a-zA-Z0-9 _.\-#]{1,20}$/.test(safeName)) {
+            const rawDisplay = String(data.username || '');
+            const rawHandle  = String(data.handle   || '');
+            const sanitize   = s => s.replace(/[^a-zA-Z0-9 _.\-#]/g, '').trim().slice(0, 20);
+            const valid      = s => /^[a-zA-Z0-9 _.\-#]{1,20}$/.test(s);
+            const safeDisplay = sanitize(rawDisplay);
+            const safeHandle  = sanitize(rawHandle);
+            const safeName = valid(safeDisplay) ? safeDisplay : safeHandle;
+            if (valid(safeName)) {
                 localStorage.setItem('choridor_player_name', safeName);
                 if (nameInput) nameInput.value = safeName;
             }

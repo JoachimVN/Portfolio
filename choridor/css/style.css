@@ -1003,19 +1003,23 @@ button:active {
     font-size: 11px;
 }
 
-/* Spectator count chip in bottom bar */
+/* Spectator count chip - top-right corner of board */
 .spectator-count-chip {
+    position: absolute;
+    top: 12px;
+    right: 12px;
     display: flex;
     align-items: center;
     gap: 4px;
     padding: 4px 8px;
     border-radius: 6px;
-    background: #191C2A;
+    background: rgba(25, 28, 42, 0.88);
     border: 1px solid #2A2E48;
     color: #8890A8;
     font-size: 11px;
     font-weight: bold;
-    flex-shrink: 0;
+    backdrop-filter: blur(4px);
+    z-index: 4;
 }
 
 /* Legal modal */

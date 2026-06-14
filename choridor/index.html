@@ -183,6 +183,13 @@
         <div class="board-wrapper">
             <canvas id="gameBoard"></canvas>
             <output id="tap-toast" class="tap-toast" aria-live="polite" aria-hidden="true"></output>
+            <div id="spectator-count" class="spectator-count-chip hidden" aria-live="polite">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <span id="spectator-count-num">0</span>
+            </div>
             <div id="spectator-banner" class="spectator-banner hidden">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -218,13 +225,6 @@
                 </div>
             </div>
             <div class="status-label" id="status">Player 1's Turn</div>
-            <div id="spectator-count" class="spectator-count-chip hidden" aria-live="polite">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <span id="spectator-count-num">0</span>
-            </div>
             <div class="controls">
                 <button id="anim-btn" class="icon-btn anim-off" type="button" aria-pressed="false" aria-label="Turn animations on">
                     <svg id="anim-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
