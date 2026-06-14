@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.5.2';
+const APP_VERSION = 'v1.5.3';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -814,7 +814,7 @@ function updateInMatchPresence(myTurn) {
     const oppLabel = opponentName || 'Opponent';
     setDiscordPresence({
         details: `vs. ${oppLabel}`,
-        state: myTurn ? 'Your turn' : `${oppLabel}'s turn`,
+        state: myTurn ? `${getMyName()}'s turn` : `${oppLabel}'s turn`,
         timestamps: { start: matchStartTime },
         assets: { large_image: 'embedded_background', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' },
         party: { id: matchRoomCode || discordInstanceId, size: [2, 2] },
