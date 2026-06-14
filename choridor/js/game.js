@@ -201,7 +201,7 @@ function drawWalls() {
 }
 
 function drawLegalMoves() {
-    if (!isMyTurn()) return;
+    if (!isMyTurn() || gameState.gameOver) return;
     const color = gameState.currentPlayer === 'p1' ? P1_COLOR : P2_COLOR;
 
     gameState.legalMoves.forEach(move => {
