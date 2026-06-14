@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.4.9a';
+const APP_VERSION = 'v1.5.0';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -109,15 +109,8 @@ let spectatorCount = 0;
 function setDiscordPresence(activity) {
     if (!discordSdk) return;
     clearTimeout(_presenceTimer);
-    _presenceTimer = setTimeout(async () => {
-        const dbg = el => { const e = document.getElementById('discord-error'); if (e) { e.textContent = el; e.classList.remove('hidden'); } };
-        try {
-            if (typeof discordSdk.commands?.setActivity !== 'function') { dbg('RP err: setActivity not a function'); return; }
-            const result = await discordSdk.commands.setActivity(activity);
-            dbg('RP ok: ' + JSON.stringify(result));
-        } catch (err) {
-            dbg('RP err: ' + (err?.message || err?.code || JSON.stringify(err)));
-        }
+    _presenceTimer = setTimeout(() => {
+        discordSdk.commands.setActivity({ activity }).catch(err => console.warn('setActivity failed:', err));
     }, 500);
 }
 
@@ -1608,7 +1601,6 @@ if (isDiscord) try {
         const data = await res.json();
         if (data.access_token) await sdk.commands.authenticate({ access_token: data.access_token });
         discordSdk = sdk;
-        { const _d = document.getElementById('discord-error'); if (_d) { _d.textContent = 'SDK OK'; _d.classList.remove('hidden'); } }
         setDiscordPresence({ state: 'In lobby', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' } });
         if (data.username) {
             myAvatar = data.avatarUrl || '';
