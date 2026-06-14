@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.4.7';
+const APP_VERSION = 'v1.4.8';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -109,10 +109,15 @@ let spectatorCount = 0;
 function setDiscordPresence(activity) {
     if (!discordSdk) return;
     clearTimeout(_presenceTimer);
-    _presenceTimer = setTimeout(() => {
-        discordSdk.commands.setActivity(activity)
-            .then(() => { const el = document.getElementById('discord-error'); if (el) { el.textContent = 'RP ok'; el.classList.remove('hidden'); } })
-            .catch(err => { const el = document.getElementById('discord-error'); if (el) { el.textContent = 'RP err: ' + (err?.message || err?.code || JSON.stringify(err)); el.classList.remove('hidden'); } });
+    _presenceTimer = setTimeout(async () => {
+        const dbg = el => { const e = document.getElementById('discord-error'); if (e) { e.textContent = el; e.classList.remove('hidden'); } };
+        try {
+            if (typeof discordSdk.commands?.setActivity !== 'function') { dbg('RP err: setActivity not a function'); return; }
+            const result = await discordSdk.commands.setActivity(activity);
+            dbg('RP ok: ' + JSON.stringify(result));
+        } catch (err) {
+            dbg('RP err: ' + (err?.message || err?.code || JSON.stringify(err)));
+        }
     }, 500);
 }
 
