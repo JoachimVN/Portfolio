@@ -769,7 +769,10 @@ function updateStatus() {
     const status = document.getElementById('status');
     if (onlineMode) {
         const myTurn = isMyTurn();
-        status.textContent = myTurn ? 'Your turn' : "Opponent's turn";
+        const opp = opponentName;
+        const apostrophe = opp.endsWith('s') ? "'" : "'s";
+        const oppTurn = opp ? `${opp}${apostrophe} turn` : "Opponent's turn";
+        status.textContent = myTurn ? 'Your turn' : oppTurn;
         status.className   = `status-label ${gameState.currentPlayer}`;
     } else {
         const name = gameState.currentPlayer === 'p1'
@@ -1425,7 +1428,7 @@ document.getElementById('change-mode-btn').addEventListener('click', () => {
 // ─── Discord Activity ─────────────────────────────────────────────────────
 
 if (isDiscord) try {
-    const { DiscordSDK } = await import('https://esm.sh/@discord/embedded-app-sdk@1.9.0');
+    const { DiscordSDK } = await import('./vendor/discord-sdk.mjs');
     const sdk = new DiscordSDK('1515199692793843712');
     await sdk.ready();
     discordInstanceId = sdk.instanceId;

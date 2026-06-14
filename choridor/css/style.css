@@ -543,6 +543,11 @@ button:active {
     border-top: 1px solid #1A1E32;
 }
 
+/* Push the bottom bar up so the footer doesn't cover it */
+.win-footer:not(.hidden) ~ .app {
+    padding-bottom: 43px;
+}
+
 .win-footer.hidden { display: none; }
 
 .win-footer-label {

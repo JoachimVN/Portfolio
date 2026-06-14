@@ -1,0 +1,11 @@
+{
+    "name": "choridor-frontend",
+    "private": true,
+    "scripts": {
+        "build": "esbuild node_modules/@discord/embedded-app-sdk/output/index.mjs --bundle --format=esm --outfile=js/vendor/discord-sdk.mjs"
+    },
+    "devDependencies": {
+        "@discord/embedded-app-sdk": "1.9.0",
+        "esbuild": "^0.28.0"
+    }
+}
