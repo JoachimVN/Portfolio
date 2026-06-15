@@ -15,7 +15,7 @@
     <div id="lobby-overlay" class="lobby-overlay">
         <div class="lobby-card">
             <button class="lobby-card-close hidden" id="btn-lobby-back" aria-label="Back to game">✕</button>
-            <img src="images/logos/logo.png" alt="CHORIDOR" class="lobby-logo">
+            <img src="images/logos/logo.svg" alt="CHORIDOR" class="lobby-logo">
 
             <div id="lview-mode" class="lobby-view">
                 <div class="lobby-name-wrap">
@@ -55,6 +55,8 @@
                         <span class="mode-sub">Coming soon</span>
                     </div>
                 </button>
+
+                <button type="button" id="htp-lobby-btn" class="lobby-htp-link">How to Play</button>
 
                 <div class="lobby-footer">
                     <div class="lobby-footer-legal">
@@ -182,7 +184,10 @@
                 <div class="wall-boxes" id="p1-walls"></div>
             </div>
 
-            <img src="images/logos/logo.png" alt="CHORIDOR" class="logo">
+            <div class="logo-wrap">
+                <img src="images/logos/logo.svg" alt="CHORIDOR" class="logo">
+                <button id="htp-btn" class="htp-logo-q" type="button" aria-label="How to play">?</button>
+            </div>
 
             <div class="player-section p2-section">
                 <div class="wall-boxes" id="p2-walls"></div>
@@ -232,7 +237,7 @@
 
         <!-- Shown to a spectator when offered a player slot -->
         <div id="spectator-slot-bar" class="win-footer hidden">
-            <span class="win-footer-label">Play vs <span id="spectator-slot-opponent"></span>?</span>
+            <span class="win-footer-label">Your turn! Play vs <span id="spectator-slot-opponent"></span></span>
             <button id="spectator-slot-accept" class="win-footer-btn">Play</button>
             <button id="spectator-slot-decline" class="win-footer-btn win-footer-muted">Skip</button>
         </div>
@@ -299,6 +304,115 @@
                     </svg>
                     <span>Resign</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- How to Play modal -->
+    <div id="htp-overlay" class="htp-overlay hidden">
+        <div class="htp-card">
+            <button class="htp-close" id="htp-close" aria-label="Close">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="htp-dots" id="htp-dots">
+                <button class="htp-dot active" data-idx="0" aria-label="Slide 1"></button>
+                <button class="htp-dot" data-idx="1" aria-label="Slide 2"></button>
+                <button class="htp-dot" data-idx="2" aria-label="Slide 3"></button>
+                <button class="htp-dot" data-idx="3" aria-label="Slide 4"></button>
+            </div>
+            <div class="htp-slides">
+
+                <!-- Slide 0: Goal -->
+                <div class="htp-slide active">
+                    <div class="htp-illo">
+                        <div class="htp-board">
+                            <div class="htp-c htp-gp1"></div><div class="htp-c htp-gp1"></div><div class="htp-c htp-gp1"></div><div class="htp-c htp-gp1"></div><div class="htp-c htp-gp1"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c htp-gp2"></div><div class="htp-c htp-gp2"></div><div class="htp-c htp-gp2"></div><div class="htp-c htp-gp2"></div><div class="htp-c htp-gp2"></div>
+                            <div class="htp-pawn htp-p1 htp-pawn-bob" style="top:137px;left:75px"></div>
+                            <div class="htp-arr-line htp-arr-anim" style="top:18px;left:74px;height:108px"></div>
+                            <div class="htp-arr-head htp-arr-anim" style="top:8px;left:70px"></div>
+                        </div>
+                    </div>
+                    <h2 class="htp-title">Race to the other side</h2>
+                    <p class="htp-desc">Move your pawn to your opponent's starting row. First to cross wins.</p>
+                </div>
+
+                <!-- Slide 1: Move -->
+                <div class="htp-slide">
+                    <div class="htp-illo">
+                        <div class="htp-board">
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-pawn htp-p2" style="top:75px;left:75px"></div>
+                            <div class="htp-pawn htp-p1 htp-pawn-jump" style="top:106px;left:75px"></div>
+                            <div class="htp-mdot htp-mdot-a" style="top:44px;left:75px"></div>
+                            <div class="htp-mdot htp-mdot-a" style="top:106px;left:44px"></div>
+                            <div class="htp-mdot htp-mdot-a" style="top:106px;left:106px"></div>
+                            <div class="htp-mdot htp-mdot-a" style="top:137px;left:75px"></div>
+                        </div>
+                    </div>
+                    <h2 class="htp-title">Tap to move</h2>
+                    <p class="htp-desc">Tap a highlighted cell to step forward. You can jump over your opponent if they are in the way.</p>
+                </div>
+
+                <!-- Slide 2: Walls -->
+                <div class="htp-slide">
+                    <div class="htp-illo">
+                        <div class="htp-board">
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-pawn htp-p2" style="top:13px;left:75px"></div>
+                            <div class="htp-pawn htp-p1" style="top:137px;left:75px"></div>
+                            <div class="htp-gaphl-h" style="top:57px"></div>
+                            <div class="htp-gaphl-v" style="left:119px"></div>
+                            <div class="htp-wh htp-pw1 htp-wall-r" style="top:57px;left:31px"></div>
+                            <div class="htp-wv htp-pw2 htp-wall-b" style="top:31px;left:119px"></div>
+                            <div class="htp-finger htp-drag-anim" style="top:57px;left:31px"></div>
+                            <div class="htp-finger htp-drag-v" style="top:31px;left:119px"></div>
+                        </div>
+                    </div>
+                    <h2 class="htp-title">Tap gaps to place walls</h2>
+                    <p class="htp-desc">Tap or drag the thin lines between cells. Walls can be horizontal or vertical and each spans two squares.</p>
+                </div>
+
+                <!-- Slide 3: Rules and wall count -->
+                <div class="htp-slide">
+                    <div class="htp-illo">
+                        <div class="htp-board">
+                            <div class="htp-c htp-gp1"></div><div class="htp-c htp-gp1"></div><div class="htp-c htp-gp1"></div><div class="htp-c htp-gp1"></div><div class="htp-c htp-gp1"></div>
+                            <div class="htp-c htp-cpath"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c htp-cpath"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c htp-cpath"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div><div class="htp-c"></div>
+                            <div class="htp-c htp-gp2 htp-cpath"></div><div class="htp-c htp-gp2"></div><div class="htp-c htp-gp2"></div><div class="htp-c htp-gp2"></div><div class="htp-c htp-gp2"></div>
+                            <div class="htp-pawn htp-p2" style="top:13px;left:75px"></div>
+                            <div class="htp-pawn htp-p1" style="top:137px;left:75px"></div>
+                            <div class="htp-wh htp-pw1" style="top:57px;left:31px"></div>
+                            <div class="htp-wh htp-pw1" style="top:57px;left:93px"></div>
+                            <div class="htp-pdot htp-pd1" style="top:44px;left:13px"></div>
+                            <div class="htp-pdot htp-pd2" style="top:75px;left:13px"></div>
+                            <div class="htp-pdot htp-pd3" style="top:106px;left:13px"></div>
+                            <div class="htp-pdot htp-pd4" style="top:137px;left:13px"></div>
+                        </div>
+                    </div>
+                    <h2 class="htp-title">Walls can't seal paths</h2>
+                    <p class="htp-desc">You can never fully block your opponent. Each player starts with 10 walls.</p>
+                </div>
+
+            </div>
+            <div class="htp-nav">
+                <button class="htp-prev" id="htp-prev" aria-label="Previous slide">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button class="htp-next" id="htp-next">Next</button>
             </div>
         </div>
     </div>

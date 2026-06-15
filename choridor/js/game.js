@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.6.0';
+const APP_VERSION = 'v1.8.2';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -25,6 +25,9 @@ const BACKEND_URL = getBackendUrl();
 const SOCKET_PATH = location.hostname.endsWith('.discordsays.com') ? '/api/socket.io' : '/socket.io';
 
 // ─── Audio ────────────────────────────────────────────────────────────────
+
+// Request ambient audio session so SFX mix with background music (iOS 16.4+)
+if (navigator.audioSession) navigator.audioSession.type = 'ambient';
 
 const sounds = {};
 ['Move', 'Jump', 'Wall', 'Win', 'Loss', 'Select'].forEach(name => {
@@ -430,19 +433,32 @@ function hasWall(orientation, row, col) {
     return gameState.walls.has(JSON.stringify({ row, col, orientation }));
 }
 
+// ─── Coordinate helper ────────────────────────────────────────────────────
+
+function clientToCell(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    let x = (clientX - rect.left) / boardScale;
+    let y = (clientY - rect.top)  / boardScale;
+    if (gameState.flipped) { x = BOARD_TOTAL - x; y = BOARD_TOTAL - y; }
+    const cellX  = Math.floor(x / STEP), cellY  = Math.floor(y / STEP);
+    const offX   = x - cellX * STEP,     offY   = y - cellY * STEP;
+    const inHGap = offY >= CELL_SIZE && cellY < BOARD_SIZE - 1;
+    const inVGap = offX >= CELL_SIZE && cellX < BOARD_SIZE - 1;
+    return { x, y, cellX, cellY, inHGap, inVGap };
+}
+
+// ─── Click / drag shared state ────────────────────────────────────────────
+
+let _suppressNextClick = false;
+let dragState = null; // { fromTouch, isDragging, startX, startY } | null
+const DRAG_THRESHOLD = 12; // board-space px; below this a gesture is a tap, not a drag
+
 // ─── Click handling ───────────────────────────────────────────────────────
 
 canvas.addEventListener('click', e => {
+    if (_suppressNextClick) { _suppressNextClick = false; return; }
     if (gameState.gameOver || !isMyTurn() || flipAnimating) return;
-    const rect = canvas.getBoundingClientRect();
-    let x = (e.clientX - rect.left) / boardScale;
-    let y = (e.clientY - rect.top)  / boardScale;
-    if (gameState.flipped) { x = BOARD_TOTAL - x; y = BOARD_TOTAL - y; }
-
-    const cellX = Math.floor(x / STEP), cellY = Math.floor(y / STEP);
-    const offX  = x - cellX * STEP,     offY  = y - cellY * STEP;
-    const inHGap = offY >= CELL_SIZE && cellY < BOARD_SIZE - 1;
-    const inVGap = offX >= CELL_SIZE && cellX < BOARD_SIZE - 1;
+    const { x, y, cellX, cellY, inHGap, inVGap } = clientToCell(e.clientX, e.clientY);
 
     if (!inHGap && !inVGap) {
         if (tapMode) {
@@ -451,10 +467,11 @@ canvas.addEventListener('click', e => {
             clearTapPreview();
             movePawn(cellY, cellX);
         }
-    } else if (tapMode) {
-        handleTapWall(cellY, cellX, inHGap ? 'H' : 'V');
     } else {
-        placeWall(cellY, cellX, inHGap ? 'H' : 'V');
+        // Reuse computeHoverState so click always places exactly what hover shows
+        const { wallRow, wallCol, wallOrientation } = computeHoverState(x, y, cellX, cellY, inHGap, inVGap);
+        if (tapMode) handleTapWall(wallRow, wallCol, wallOrientation);
+        else         placeWall(wallRow, wallCol, wallOrientation);
     }
 });
 
@@ -485,50 +502,204 @@ function handleTapMove(row, col) {
     render();
 }
 
-function computeHoverState(cellX, cellY, inHGap, inVGap) {
+function computeHoverState(x, y, cellX, cellY, inHGap, inVGap) {
     const empty = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
     if (!isMyTurn() || gameState.gameOver) return empty;
     if (!inHGap && !inVGap) {
         const move = gameState.legalMoves.find(m => m.row === cellY && m.col === cellX);
         return { ...empty, moveRow: move?.row ?? null, moveCol: move?.col ?? null };
     }
-    return { ...empty, wallRow: cellY, wallCol: cellX, wallOrientation: inHGap ? 'H' : 'V' };
+    const halfGap = GAP / 2;
+    const snap = v => Math.max(0, Math.min(BOARD_SIZE - 2, Math.round((v - CELL_SIZE - halfGap) / STEP)));
+    // At intersections use perpendicular depth: pick the gap the cursor is deeper inside
+    let useH = inHGap;
+    if (inHGap && inVGap) {
+        const hDist = Math.abs(y - (cellY * STEP + CELL_SIZE + halfGap));
+        const vDist = Math.abs(x - (cellX * STEP + CELL_SIZE + halfGap));
+        useH = hDist <= vDist;
+    }
+    return { ...empty,
+        wallRow: useH ? cellY   : snap(y),
+        wallCol: useH ? snap(x) : cellX,
+        wallOrientation: useH ? 'H' : 'V' };
+}
+
+function isPointerHover() {
+    if (hoverState.moveRow !== null) return true;
+    if (hoverState.wallRow === null) return false;
+    const cp = gameState.currentPlayer;
+    const hasWalls = cp === 'p1' ? gameState.wallCounts.p1 > 0 : gameState.wallCounts.p2 > 0;
+    const { wallRow: wr, wallCol: wc, wallOrientation: wo } = hoverState;
+    const wk = JSON.stringify({ row: wr, col: wc, orientation: wo });
+    return hasWalls && !gameState.walls.has(wk) && !hasWallOverlap(wr, wc, wo) && wallKeepsPathsOpen(wk);
 }
 
 canvas.addEventListener('mousemove', e => {
-    const rect = canvas.getBoundingClientRect();
-    let x = (e.clientX - rect.left) / boardScale;
-    let y = (e.clientY - rect.top)  / boardScale;
-    if (gameState.flipped) { x = BOARD_TOTAL - x; y = BOARD_TOTAL - y; }
+    const { x, y, cellX, cellY, inHGap, inVGap } = clientToCell(e.clientX, e.clientY);
 
-    const cellX = Math.floor(x / STEP), cellY = Math.floor(y / STEP);
-    const offX  = x - cellX * STEP,     offY  = y - cellY * STEP;
-    const inHGap = offY >= CELL_SIZE && cellY < BOARD_SIZE - 1;
-    const inVGap = offX >= CELL_SIZE && cellX < BOARD_SIZE - 1;
+    if (dragState && !dragState.fromTouch) {
+        const dx = x - dragState.startX, dy = y - dragState.startY;
+        if (dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD) dragState.isDragging = true;
+    }
 
     const prev = JSON.stringify(hoverState);
-    hoverState = computeHoverState(cellX, cellY, inHGap, inVGap);
-
-    let pointer = false;
-    if (hoverState.moveRow !== null) {
-        pointer = true;
-    } else if (hoverState.wallRow !== null) {
-        const cp = gameState.currentPlayer;
-        const hasWalls = cp === 'p1' ? gameState.wallCounts.p1 > 0 : gameState.wallCounts.p2 > 0;
-        const { wallRow: wr, wallCol: wc, wallOrientation: wo } = hoverState;
-        const wk = JSON.stringify({ row: wr, col: wc, orientation: wo });
-        if (hasWalls && !gameState.walls.has(wk) && !hasWallOverlap(wr, wc, wo)) {
-            pointer = wallKeepsPathsOpen(wk);
-        }
+    if (dragState?.isDragging && !dragState.fromTouch && !gameState.gameOver && isMyTurn()) {
+        hoverState = nearestWallToPoint(x, y);
+    } else {
+        hoverState = computeHoverState(x, y, cellX, cellY, inHGap, inVGap);
     }
-    canvas.style.cursor = pointer ? 'pointer' : 'default';
+
+    canvas.style.cursor = isPointerHover() ? 'pointer' : 'default';
     if (JSON.stringify(hoverState) !== prev) render();
 });
 
 canvas.addEventListener('mouseleave', () => {
+    dragState = null;
     hoverState = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
     canvas.style.cursor = 'default';
     render();
+});
+
+// ─── Drag-to-place ────────────────────────────────────────────────────────
+// Drag across the board; the wall preview snaps to the nearest valid gap and
+// follows the finger/cursor. Release to place (or lock a confirm-mode preview).
+// Short taps fall through to the existing click handler unchanged.
+
+const EMPTY_HOVER = { wallRow: null, wallCol: null, wallOrientation: null, moveRow: null, moveCol: null };
+
+// Returns the nearest wall slot (H or V) to board-space point (x, y).
+function nearestWallToPoint(x, y) {
+    const halfGap = GAP / 2;
+    // Nearest H gap: horizontal wall between rows
+    // hCol uses centered snap: round to whichever 2-cell span center is nearest along x
+    const hRow  = Math.max(0, Math.min(BOARD_SIZE - 2, Math.round((y - CELL_SIZE - halfGap) / STEP)));
+    const hCol  = Math.max(0, Math.min(BOARD_SIZE - 2, Math.round((x - CELL_SIZE - halfGap) / STEP)));
+    const hDist = Math.abs(y - (hRow * STEP + CELL_SIZE + halfGap));
+    // Nearest V gap: vertical wall between columns
+    // vRow uses centered snap: round to whichever 2-cell span center is nearest along y
+    const vCol  = Math.max(0, Math.min(BOARD_SIZE - 2, Math.round((x - CELL_SIZE - halfGap) / STEP)));
+    const vRow  = Math.max(0, Math.min(BOARD_SIZE - 2, Math.round((y - CELL_SIZE - halfGap) / STEP)));
+    const vDist = Math.abs(x - (vCol * STEP + CELL_SIZE + halfGap));
+    return hDist < vDist
+        ? { wallRow: hRow, wallCol: hCol, wallOrientation: 'H', moveRow: null, moveCol: null }
+        : { wallRow: vRow, wallCol: vCol, wallOrientation: 'V', moveRow: null, moveCol: null };
+}
+
+function commitWallAtHover() {
+    const { wallRow, wallCol, wallOrientation } = hoverState;
+    if (wallRow === null) return false;
+    if (tapMode) handleTapWall(wallRow, wallCol, wallOrientation);
+    else         placeWall(wallRow, wallCol, wallOrientation);
+    return true;
+}
+
+// ── Touch ──
+canvas.addEventListener('touchstart', e => {
+    if (gameState.gameOver || !isMyTurn() || flipAnimating) return;
+    if (e.touches.length !== 1) { dragState = null; return; }
+    const t = e.touches[0];
+    const { x, y, inHGap, inVGap } = clientToCell(t.clientX, t.clientY);
+    dragState = { fromTouch: true, isDragging: false, startX: x, startY: y, startedOnGap: inHGap || inVGap };
+    if (inHGap || inVGap) {
+        // Show snap preview immediately on gap touches; prevents scroll and synthetic click
+        hoverState = nearestWallToPoint(x, y);
+        render();
+        e.preventDefault();
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+    if (!dragState?.fromTouch) return;
+    if (e.touches.length > 1) {
+        // Multi-touch cancels the drag and clears any preview
+        dragState = null;
+        hoverState = EMPTY_HOVER;
+        render();
+        return;
+    }
+    const t = e.touches[0];
+
+    // If the finger has left the board, hide the preview but keep the drag alive
+    // so it resumes naturally if the finger re-enters
+    const rect = canvas.getBoundingClientRect();
+    const inBounds = t.clientX >= rect.left && t.clientX <= rect.right &&
+                     t.clientY >= rect.top  && t.clientY <= rect.bottom;
+    if (!inBounds) {
+        if (hoverState.wallRow !== null) { hoverState = EMPTY_HOVER; render(); }
+        return;
+    }
+
+    const { x, y, inHGap, inVGap } = clientToCell(t.clientX, t.clientY);
+    const nowInGap = inHGap || inVGap;
+    const dx = x - dragState.startX, dy = y - dragState.startY;
+    const movedEnough = dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD;
+    // Only become a wall drag if the gesture started or entered a gap zone;
+    // finger tremor on a pawn move square must never trigger wall placement
+    if (movedEnough && (dragState.startedOnGap || nowInGap)) dragState.isDragging = true;
+    if (dragState.isDragging) e.preventDefault();
+    // Update wall preview only when near a gap or actively dragging
+    if (dragState.startedOnGap || nowInGap || dragState.isDragging) {
+        const next = nearestWallToPoint(x, y);
+        if (JSON.stringify(hoverState) !== JSON.stringify(next)) { hoverState = next; render(); }
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+    if (!dragState?.fromTouch) { dragState = null; return; }
+    const wasDragging = dragState.isDragging;
+    const startedOnGap = dragState.startedOnGap;
+    dragState = null;
+    if (!wasDragging) {
+        if (startedOnGap) {
+            // touchstart called preventDefault, which already suppresses the synthetic
+            // click — commit the wall here; do NOT set _suppressNextClick or it
+            // will bleed into the next tap and eat a pawn move
+            if (!commitWallAtHover()) { hoverState = EMPTY_HOVER; render(); }
+        } else {
+            // Cell tap: click will fire normally for pawn moves; clear wall ghost
+            hoverState = EMPTY_HOVER;
+            render();
+        }
+        return;
+    }
+    // If the finger lifted outside the board, cancel without placing
+    const t = e.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    const inBounds = t.clientX >= rect.left && t.clientX <= rect.right &&
+                     t.clientY >= rect.top  && t.clientY <= rect.bottom;
+    if (!inBounds) { hoverState = EMPTY_HOVER; render(); return; }
+    // touchstart already called preventDefault on gap-origin drags, suppressing
+    // click — only set _suppressNextClick for cell-origin drags where touchstart
+    // did not preventDefault, so the flag doesn't bleed into the next pawn tap
+    if (!startedOnGap) _suppressNextClick = true;
+    const { x, y } = clientToCell(t.clientX, t.clientY);
+    hoverState = nearestWallToPoint(x, y);
+    commitWallAtHover();
+    hoverState = EMPTY_HOVER;
+    render();
+});
+
+canvas.addEventListener('touchcancel', () => {
+    dragState = null;
+    hoverState = EMPTY_HOVER;
+    render();
+});
+
+// ── Mouse ──
+canvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    if (gameState.gameOver || !isMyTurn() || flipAnimating) return;
+    const { x, y } = clientToCell(e.clientX, e.clientY);
+    dragState = { fromTouch: false, isDragging: false, startX: x, startY: y };
+});
+
+canvas.addEventListener('mouseup', e => {
+    if (!dragState || dragState.fromTouch) return;
+    const wasDragging = dragState.isDragging;
+    dragState = null;
+    if (!wasDragging) return; // short click — let the click handler fire normally
+    _suppressNextClick = true;
+    if (!commitWallAtHover()) { hoverState = EMPTY_HOVER; render(); }
 });
 
 // ─── Tap-to-preview helpers ───────────────────────────────────────────────
@@ -576,6 +747,7 @@ function startWallAnim(wallKey) {
 function clearTapPreview() {
     tapPreview = null;
     tapMovePreview = null;
+    hoverState = EMPTY_HOVER;
     updateTapHint();
     render();
 }
@@ -1050,9 +1222,10 @@ function initSocket(errorElId, callback) {
         resetGame();
     });
 
-    socket.on('spectate-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, snapshot, queuePosition, spectatorCount: sc } = {}) => {
+    socket.on('spectate-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, snapshot, queuePosition, spectatorCount: sc, steppedAside } = {}) => {
         spectatorMode  = true;
         onlineMode     = false;
+        if (steppedAside) { onlineRole = null; opponentName = ''; opponentAvatar = ''; }
         spectatorCount = sc || 1;
         document.getElementById('p1-name').textContent = p1Name || 'Player 1';
         document.getElementById('p2-name').textContent = p2Name || 'Player 2';
@@ -1061,7 +1234,7 @@ function initSocket(errorElId, callback) {
         resetGame();
         if (snapshot) { applyGameSnapshot(snapshot); updateWallCounts(); }
         hideLobby();
-        if (!isDiscord) showToast('Room is full - watching as spectator');
+        if (!isDiscord) showToast(steppedAside ? 'You are now spectating' : 'Room is full - watching as spectator');
         if (isDiscord) setDiscordPresence({ state: 'Spectating', details: `${p1Name || 'Player 1'} vs. ${p2Name || 'Player 2'}`, assets: { large_image: 'embedded_background', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' } });
         updateSpectatorBanner(queuePosition || 1);
         updateSpectatorCountUI(spectatorCount);
@@ -1104,21 +1277,32 @@ function initSocket(errorElId, callback) {
     });
 
     // Shown to a player when offered to play with a queued spectator
-    socket.on('spectator-offer', ({ name, avatarUrl } = {}) => {
+    socket.on('spectator-offer', ({ name, avatarUrl, opponentSteppingAside } = {}) => {
         document.getElementById('spectator-offer-name').textContent = name || 'spectator';
+        if (!document.getElementById('win-overlay').classList.contains('hidden')) {
+            document.getElementById('win-overlay').classList.add('hidden');
+            document.getElementById('win-footer').classList.remove('hidden');
+        }
+        if (rematchState === 'waiting') { socket?.emit('rematch-cancel'); updateRematchBtn('idle'); }
+        if (opponentSteppingAside) showToast('Opponent is stepping aside');
         document.getElementById('spectator-offer-bar').classList.remove('hidden');
         document.getElementById('discord-rejoin-bar').classList.add('hidden');
     });
 
-    // Shown to the spectator when a slot opens up
+    // Shown to the spectator when a slot opens up (no accept needed - they're pre-accepted)
     socket.on('spectator-slot-offer', ({ opponentName } = {}) => {
         document.getElementById('spectator-slot-opponent').textContent = opponentName || 'opponent';
+        document.getElementById('spectator-slot-accept').classList.add('hidden');
+        if (!document.getElementById('win-overlay').classList.contains('hidden')) {
+            document.getElementById('win-overlay').classList.add('hidden');
+        }
         document.getElementById('spectator-slot-bar').classList.remove('hidden');
     });
 
     socket.on('spectator-offer-cancelled', () => {
         document.getElementById('spectator-offer-bar').classList.add('hidden');
         document.getElementById('spectator-slot-bar').classList.add('hidden');
+        document.getElementById('spectator-slot-accept').classList.remove('hidden');
         document.getElementById('btn-step-aside').classList.add('hidden');
     });
 
@@ -1134,19 +1318,6 @@ function initSocket(errorElId, callback) {
         const btn = document.getElementById('btn-step-aside');
         btn.textContent = 'Step aside';
         btn.disabled    = false;
-    });
-
-    // This player stepped aside and the spectator was promoted
-    socket.on('you-stepped-aside', () => {
-        onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
-        spectatorMode = false;
-        showToast('You stepped aside');
-        socket.disconnect(); socket = null;
-        resetGame();
-        document.getElementById('win-overlay').classList.add('hidden');
-        document.getElementById('lobby-overlay').classList.remove('hidden');
-        showLobbyView('lview-mode');
-        applyPlayerNames();
     });
 
     socket.on('game-surrendered', ({ winnerRole, winnerName } = {}) => {
@@ -1538,7 +1709,16 @@ if (urlRoom) {
 });
 document.getElementById('legal-modal-close').addEventListener('click', closeLegal);
 document.getElementById('legal-modal-x').addEventListener('click', closeLegal);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLegal(); });
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!document.getElementById('htp-overlay').classList.contains('hidden')) { closeHTP(); return; }
+    closeLegal();
+    if (tapPreview || tapMovePreview) { clearTapPreview(); return; }
+    if (hoverState.wallRow !== null || hoverState.moveRow !== null) {
+        hoverState = EMPTY_HOVER;
+        render();
+    }
+});
 
 // ─── Buttons ──────────────────────────────────────────────────────────────
 
@@ -1724,6 +1904,27 @@ document.getElementById('tap-confirm-no')?.addEventListener('click', e => {
     render();
 });
 
+document.addEventListener('keydown', e => {
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    if (!isMyTurn() || gameState.gameOver) return;
+    e.preventDefault();
+    if (tapMode) {
+        if (tapPreview) {
+            const { row, col, orientation } = tapPreview;
+            clearTapPreview();
+            placeWall(row, col, orientation, false);
+        } else if (tapMovePreview) {
+            const { row, col } = tapMovePreview;
+            clearTapPreview();
+            movePawn(row, col);
+        }
+    } else if (hoverState.wallRow !== null) {
+        placeWall(hoverState.wallRow, hoverState.wallCol, hoverState.wallOrientation);
+    } else if (hoverState.moveRow !== null) {
+        movePawn(hoverState.moveRow, hoverState.moveCol);
+    }
+});
+
 // ─── Init ─────────────────────────────────────────────────────────────────
 
 buildWallBoxes();
@@ -1749,6 +1950,54 @@ setAnimEnabled(localStorage.getItem('choridor_anim') === '1', true);
         }
     }
 }
+
+// ===== How to Play =====
+const HTP_KEY = 'choridor_htp_seen';
+let _htpIdx = 0;
+const HTP_TOTAL = 4;
+
+function showHTP() {
+    document.getElementById('htp-overlay').classList.remove('hidden');
+    _htpGoto(0);
+}
+function closeHTP() {
+    localStorage.setItem(HTP_KEY, '1');
+    document.getElementById('htp-overlay').classList.add('hidden');
+    _htpIdx = 0;
+}
+function _htpGoto(idx) {
+    _htpIdx = Math.max(0, Math.min(HTP_TOTAL - 1, idx));
+    document.querySelectorAll('.htp-slide').forEach((s, i) => s.classList.toggle('active', i === _htpIdx));
+    document.querySelectorAll('.htp-dot').forEach((d, i) => d.classList.toggle('active', i === _htpIdx));
+    const prev = document.getElementById('htp-prev');
+    prev.classList.toggle('htp-hidden', _htpIdx === 0);
+    const next = document.getElementById('htp-next');
+    next.textContent = _htpIdx === HTP_TOTAL - 1 ? 'Got it!' : 'Next';
+}
+
+document.getElementById('htp-close').addEventListener('click', closeHTP);
+document.getElementById('htp-prev').addEventListener('click', () => _htpGoto(_htpIdx - 1));
+document.getElementById('htp-next').addEventListener('click', () => {
+    if (_htpIdx === HTP_TOTAL - 1) closeHTP(); else _htpGoto(_htpIdx + 1);
+});
+document.querySelectorAll('.htp-dot').forEach(d => d.addEventListener('click', () => _htpGoto(+d.dataset.idx)));
+document.getElementById('htp-btn').addEventListener('click', showHTP);
+document.getElementById('htp-lobby-btn').addEventListener('click', showHTP);
+
+// Swipe-to-navigate on the HTP card
+{
+    let _htpTouchX = null;
+    const htpCard = document.querySelector('.htp-card');
+    htpCard.addEventListener('touchstart', e => { _htpTouchX = e.touches[0].clientX; }, { passive: true });
+    htpCard.addEventListener('touchend', e => {
+        if (_htpTouchX === null) return;
+        const dx = e.changedTouches[0].clientX - _htpTouchX;
+        _htpTouchX = null;
+        if (Math.abs(dx) > 40) _htpGoto(_htpIdx + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+}
+
+if (!localStorage.getItem(HTP_KEY)) requestAnimationFrame(showHTP);
 
 requestAnimationFrame(() => {
     resizeCanvas();
