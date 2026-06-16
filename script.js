@@ -13,17 +13,18 @@ const PROJECTS = [
     brandColor: '#3e67a7',
     variants: [
       {
-        label:          'Desktop',
-        github:         'JoachimVN/CHORIDOR',
-        screenshotsDir: 'docs/images/screenshots',
-        positions:      ['center', 'center', 'right center'],
-      },
-      {
         label:          'Web',
+        name:           'CHORIDOR',
         github:         'JoachimVN/CHORIDOR-web',
         playUrl:        '/choridor/',
         screenshotsDir: 'docs/screenshots',
         positions:      ['center', 'center', 'center'],
+      },
+      {
+        label:          'Desktop',
+        github:         'JoachimVN/CHORIDOR',
+        screenshotsDir: 'docs/images/screenshots',
+        positions:      ['center', 'center', 'right center'],
       },
     ],
   },
@@ -284,9 +285,9 @@ async function loadProjects() {
             const shots = shotsResult.status === 'fulfilled' ? shotsResult.value : {};
             if (repoResult.status === 'fulfilled') {
               const data = repoResult.value;
-              return { ...v, ...shots, name: data.name.replaceAll('-', ' '), description: data.description, language: data.language, stars: data.stargazers_count, url: data.html_url };
+              return { ...v, ...shots, name: v.name ?? data.name.replaceAll('-', ' '), description: data.description, language: data.language, stars: data.stargazers_count, url: data.html_url };
             }
-            return { ...v, ...shots, name: v.github.split('/')[1], description: 'Could not load project data.', url: `https://github.com/${v.github}` };
+            return { ...v, ...shots, name: v.name ?? v.github.split('/')[1], description: 'Could not load project data.', url: `https://github.com/${v.github}` };
           })
         );
         return { ...project, variants: fetchedVariants };
@@ -825,8 +826,11 @@ function initCardTilt() {
 
 
 // View-transition direction: lego → index should wipe the opposite way.
-// Strategy: set a sessionStorage flag on departure, read it synchronously
-// on arrival (before any paint), and clean up after the transition.
+// Strategy: set a sessionStorage flag on departure, read it on arrival via
+// pagereveal (NOT a one-off top-level check — pagereveal also fires when the
+// page is restored from the back-forward cache, where the rest of this
+// script doesn't re-run, which is exactly the case for the browser's back
+// button), and clean up after the transition.
 ;(function initViewTransitionDirection() {
   const isLego = location.pathname.startsWith('/lego');
 
@@ -838,21 +842,35 @@ function initCardTilt() {
         sessionStorage.setItem('vt-dir', 'back');
       }
     });
+
+    // "← JVN" link: a plain href navigation always lands at the top of "/".
+    // If we got here from the portfolio in this tab, do a real history
+    // back-traversal instead so the browser restores its scroll position
+    // (same as pressing the browser's own back button).
+    const cameFromPortfolio = history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin;
+    const backLink = document.querySelector('.nav-logo[href="/"]');
+    if (backLink && cameFromPortfolio) {
+      backLink.addEventListener('click', e => {
+        e.preventDefault();
+        history.back();
+      });
+    }
+
     // Browser back button — pageswap fires on the outgoing page
     globalThis.addEventListener('pageswap', e => {
       if (e.viewTransition) sessionStorage.setItem('vt-dir', 'back');
     });
-  } else if (sessionStorage.getItem('vt-dir') === 'back') {
-    // Synchronous check — runs before any paint, before pagereveal
+  }
+
+  globalThis.addEventListener('pagereveal', e => {
+    if (isLego || sessionStorage.getItem('vt-dir') !== 'back') return;
     sessionStorage.removeItem('vt-dir');
     document.documentElement.classList.add('vt-back');
     // Clean up after the transition so the next index → lego is still forward
-    globalThis.addEventListener('pagereveal', e => {
-      (e.viewTransition?.finished ?? Promise.resolve()).then(() => {
-        document.documentElement.classList.remove('vt-back');
-      });
-    }, { once: true });
-  }
+    (e.viewTransition?.finished ?? Promise.resolve()).then(() => {
+      document.documentElement.classList.remove('vt-back');
+    });
+  });
 }());
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1081,7 +1081,7 @@ a.card {
 
   .hero-photo-wrap { height: 72vw; }
 
-  .hero-name { font-size: clamp(1.5rem, 9vw, 3.5rem); }
+  .hero-name { font-size: clamp(1.3rem, 7.5vw, 3rem); }
 
   .projects-grid { gap: 0.75rem; }
 
