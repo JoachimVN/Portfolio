@@ -52,7 +52,8 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .p2-section {
@@ -84,6 +85,9 @@ body {
     font-size: max(12px, 1.85vh);
     font-weight: bold;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .wall-boxes {
@@ -1157,6 +1161,24 @@ button:active {
     }
 }
 
+/* Tall-narrow viewports: vh-based wall widths balloon in a width-constrained
+   layout. Two overlapping conditions cover the problem range:
+   1. ratio < 4/9 (height > ~2.25x width, <=600px wide): 500x1136, 522x1270...
+      threshold sits safely above regular phones (390x844=0.462, 430x932=0.461)
+   2. height >=900px at 500-700px wide: catches 600x1200 and the 534-599px band
+      where the ratio alone just misses; regular phones are all <900px tall or
+      <500px wide */
+@media ((max-aspect-ratio: 4/9) and (max-width: 600px)),
+       ((min-height: 900px) and (min-width: 500px) and (max-width: 700px)) {
+    .wall-box {
+        width: max(7px, 1.5vw);
+    }
+
+    .wall-boxes {
+        gap: max(3px, 0.8vw);
+    }
+}
+
 @media (max-width: 520px) {
     .top-bar {
         padding: 0 10px;
@@ -1165,6 +1187,10 @@ button:active {
 
     .player-section {
         gap: 6px;
+    }
+
+    .htp-logo-q {
+        right: 0;
     }
 
     .player-name {
@@ -1366,7 +1392,7 @@ button:active {
     align-items: center;
     justify-content: center;
     min-width: 0;
-    flex-shrink: 2;
+    flex-shrink: 1;
 }
 .htp-logo-q {
     position: absolute;

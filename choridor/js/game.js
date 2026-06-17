@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.8.2';
+const APP_VERSION = 'v1.9.0';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1107,6 +1107,8 @@ function resetGame() {
     document.getElementById('discord-rejoin-bar').classList.add('hidden');
     document.getElementById('spectator-offer-bar').classList.add('hidden');
     document.getElementById('spectator-slot-bar').classList.add('hidden');
+    const stepBtn = document.getElementById('btn-step-aside');
+    if (stepBtn) { stepBtn.textContent = 'Step aside'; stepBtn.disabled = false; }
     updateWallCounts();
     updateStatus();
     updateLegalMoves();
@@ -1179,6 +1181,7 @@ function initSocket(errorElId, callback) {
         // Keep onlineMode=true so New Game/Change Mode still route to the lobby
         opponentName   = '';
         opponentAvatar = '';
+        applyPlayerNames();
         if (isDiscord) {
             setDiscordPresence({ state: 'In lobby', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' } });
             document.getElementById('discord-rejoin-bar').classList.remove('hidden');
@@ -1246,19 +1249,23 @@ function initSocket(errorElId, callback) {
     socket.on('spectator-count', count => {
         spectatorCount = count;
         updateSpectatorCountUI(count);
-        if (spectatorMode) updateSpectatorBanner(null);
         if (gameState.gameOver && onlineMode && !spectatorMode) {
             document.getElementById('btn-step-aside').classList.toggle('hidden', count === 0);
         }
     });
 
-    socket.on('become-player', ({ role, p1Name, p2Name, p1Avatar, p2Avatar } = {}) => {
+    socket.on('queue-position', pos => {
+        if (spectatorMode) updateSpectatorBanner(pos);
+    });
+
+    socket.on('become-player', ({ role, p1Name, p2Name, p1Avatar, p2Avatar, code } = {}) => {
         spectatorMode  = false;
         onlineRole     = role;
         onlineMode     = true;
         opponentName   = role === 'p1' ? (p2Name || '') : (p1Name || '');
         opponentAvatar = role === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
         matchStartTime = Math.floor(Date.now() / 1000);
+        if (code != null) matchRoomCode = code;
         document.getElementById('p1-name').textContent = p1Name || 'Player 1';
         document.getElementById('p2-name').textContent = p2Name || 'Player 2';
         setPlayerAvatar('p1', p1Avatar || '');
@@ -1287,6 +1294,7 @@ function initSocket(errorElId, callback) {
         if (opponentSteppingAside) showToast('Opponent is stepping aside');
         document.getElementById('spectator-offer-bar').classList.remove('hidden');
         document.getElementById('discord-rejoin-bar').classList.add('hidden');
+        document.getElementById('btn-step-aside').classList.add('hidden');
     });
 
     // Shown to the spectator when a slot opens up (no accept needed - they're pre-accepted)
@@ -1303,7 +1311,8 @@ function initSocket(errorElId, callback) {
         document.getElementById('spectator-offer-bar').classList.add('hidden');
         document.getElementById('spectator-slot-bar').classList.add('hidden');
         document.getElementById('spectator-slot-accept').classList.remove('hidden');
-        document.getElementById('btn-step-aside').classList.add('hidden');
+        document.getElementById('btn-step-aside').classList.toggle('hidden',
+            !onlineMode || spectatorMode || spectatorCount === 0 || !gameState.gameOver);
     });
 
     // Step-aside accepted by server, waiting for the other parties
@@ -1488,7 +1497,8 @@ function updateRematchBtn(state) {
 
 function setPlayerAvatar(slot, url) {
     const img  = document.getElementById(`${slot}-avatar-img`);
-    if (!img || !url) return;
+    if (!img) return;
+    if (!url) { img.src = ''; img.classList.add('hidden'); return; }
     img.src = url;
     img.classList.remove('hidden');
 }
