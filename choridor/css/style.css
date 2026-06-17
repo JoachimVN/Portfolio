@@ -1470,8 +1470,8 @@ button:active {
     height: 28px;
     border-radius: 50%;
     border: none;
-    background: rgba(255,255,255,0.07);
-    color: rgba(255,255,255,0.55);
+    background: #161926;
+    color: rgba(255,255,255,0.6);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1479,7 +1479,7 @@ button:active {
     padding: 0;
     transition: background 0.15s, color 0.15s;
 }
-.htp-close:hover { background: rgba(255,255,255,0.13); color: #fff; }
+.htp-close:hover { background: #343742; color: #fff; }
 
 .htp-dots {
     display: flex;
@@ -1728,7 +1728,7 @@ button:active {
     padding: 0;
     transition: background 0.15s, color 0.15s;
 }
-.htp-prev:hover { background: rgba(255,255,255,0.09); color: #fff; }
+.htp-prev:hover { background: #2b2e3a; color: #fff; }
 .htp-prev.htp-hidden { visibility: hidden; }
 .htp-next {
     flex: 1;

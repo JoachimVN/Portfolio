@@ -19,7 +19,7 @@
 
             <div id="lview-mode" class="lobby-view">
                 <div class="lobby-name-wrap">
-                    <input type="text" id="player-name-input" class="lobby-name-input" placeholder="Your name" maxlength="20" autocomplete="off" spellcheck="false">
+                    <input type="text" id="player-name-input" class="lobby-name-input" placeholder="Your name" maxlength="20" autocomplete="off" spellcheck="false" aria-label="Your name">
                 </div>
 
                 <button class="lobby-mode-card" id="btn-local">
@@ -111,10 +111,10 @@
 
             <div id="lview-join" class="lobby-view hidden">
                 <div class="lobby-name-wrap">
-                    <input type="text" id="join-player-name-input" class="lobby-name-input" placeholder="Your name" maxlength="20" autocomplete="off" spellcheck="false">
+                    <input type="text" id="join-player-name-input" class="lobby-name-input" placeholder="Your name" maxlength="20" autocomplete="off" spellcheck="false" aria-label="Your name">
                 </div>
                 <p class="lobby-subtitle">Enter room code</p>
-                <input class="lobby-input" id="room-code-input" placeholder="ABC" maxlength="3" autocomplete="off" spellcheck="false">
+                <input class="lobby-input" id="room-code-input" placeholder="ABC" maxlength="3" autocomplete="off" spellcheck="false" aria-label="Room code">
                 <p class="lobby-error hidden" id="join-error"></p>
                 <button class="win-btn" id="btn-join-confirm">Join Game</button>
                 <button class="lobby-back" id="btn-join-back">← Back</button>
