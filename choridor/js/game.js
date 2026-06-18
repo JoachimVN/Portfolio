@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.9.3';
+const APP_VERSION = 'v1.9.4';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1237,6 +1237,7 @@ function initSocket(errorElId, callback) {
     });
 
     socket.on('rejoin-success', ({ role, snapshot, p1Name, p2Name, p1Avatar, p2Avatar, code } = {}) => {
+        spectatorMode        = false;
         onlineRole           = role;
         onlineMode           = true;
         opponentReconnecting = false;
