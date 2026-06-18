@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.9.2';
+const APP_VERSION = 'v1.9.3';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1246,13 +1246,19 @@ function initSocket(errorElId, callback) {
         matchRoomCode  = code || matchRoomCode;
         gameState.flipped = role === 'p2';
         applyPlayerNames();
+        hideLobby();
         if (snapshot) { applyGameSnapshot(snapshot); updateWallCounts(); }
         updateStatus();
         updateLegalMoves();
         render();
     });
 
-    socket.on('rejoin-failed', () => { handleOpponentDisconnected(); });
+    // If we were already in a game (same-tab reconnect), treat as opponent disconnect.
+    // If this is a fresh page load with a stale session, just clear quietly.
+    socket.on('rejoin-failed', () => {
+        if (onlineMode) handleOpponentDisconnected();
+        else clearSession();
+    });
 
     socket.on('opponent-reconnecting', ({ graceSecs } = {}) => {
         opponentReconnecting = true;
@@ -2072,6 +2078,13 @@ document.getElementById('htp-lobby-btn').addEventListener('click', showHTP);
 }
 
 if (!localStorage.getItem(HTP_KEY)) requestAnimationFrame(showHTP);
+
+// Auto-rejoin on page load / refresh if a session is stored from a live game.
+// Skipped on Discord: the SDK re-initialises the socket via join-activity anyway.
+{
+    const _pageSession = getStoredSession();
+    if (_pageSession && !isDiscord) initSocket('', () => socket.emit('rejoin-room', _pageSession));
+}
 
 requestAnimationFrame(() => {
     resizeCanvas();
