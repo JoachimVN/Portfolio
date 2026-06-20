@@ -935,20 +935,18 @@ button:active {
     box-shadow: 0 4px 32px rgba(62, 104, 168, 0.14);
 }
 
-/* vs AI — muted */
+/* vs AI — purple */
 #btn-ai {
-    background: rgba(100, 100, 130, 0.05);
-    border-color: rgba(100, 100, 130, 0.15);
-    opacity: 0.45;
-    cursor: not-allowed;
+    background: rgba(100, 80, 168, 0.08);
+    border-color: rgba(100, 80, 168, 0.2);
 }
-#btn-ai .mode-icon { color: #555870; }
-#btn-ai .mode-title { color: #6870A0; }
-#btn-ai .mode-sub { color: #353858; }
+#btn-ai .mode-icon { color: #8070C8; }
+#btn-ai .mode-title { color: #C8C4DA; }
+#btn-ai .mode-sub { color: rgba(100, 80, 168, 0.55); }
 #btn-ai:hover {
-    background: rgba(100, 100, 130, 0.05);
-    border-color: rgba(100, 100, 130, 0.15);
-    box-shadow: none;
+    background: rgba(100, 80, 168, 0.14);
+    border-color: rgba(100, 80, 168, 0.4);
+    box-shadow: 0 4px 32px rgba(100, 80, 168, 0.14);
 }
 
 .lobby-mode-disabled { cursor: not-allowed; }
