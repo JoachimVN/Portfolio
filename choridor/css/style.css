@@ -999,6 +999,14 @@ button:active {
     color: #6870A0;
 }
 
+/* Social links on the Discord invite screen */
+.discord-social-icons {
+    flex: none;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 18px;
+}
+
 /* Discord activity waiting UI */
 .discord-queue-status {
     display: flex;

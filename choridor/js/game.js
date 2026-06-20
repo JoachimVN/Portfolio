@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.10.3';
+const APP_VERSION = 'v1.11.0';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -124,6 +124,7 @@ function clearReconnectCountdown() {
 const isDiscord       = location.hostname.endsWith('.discordsays.com');
 let discordInstanceId = null;
 let discordSdk        = null;
+let discordRejoinPending = false; // true while a Discord boot rejoin is awaiting its result
 let matchStartTime    = 0;
 let matchRoomCode     = '';
 let _presenceTimer    = null;
@@ -136,6 +137,7 @@ let vsAI       = false;
 let aiPlayer   = 'p2'; // which slot the AI occupies; swaps on Play Again
 let aiWorker   = null;
 let aiThinking = false;
+let fillerAI   = false; // a throwaway AI game played while still waiting for a real opponent
 
 function setDiscordPresence(activity) {
     if (!discordSdk) return;
@@ -1205,6 +1207,37 @@ function resetGame() {
     updateLegalMoves();
 }
 
+function setFillerWaitingLabel() {
+    const label = document.getElementById('filler-waiting-label');
+    if (!label) return;
+    if (isDiscord) { label.textContent = 'Finding opponent…'; return; }
+    const code = document.getElementById('room-code-display').textContent;
+    label.textContent = code ? `Waiting for a friend · ${code}` : 'Waiting for a friend';
+}
+
+// Start a throwaway AI game while the socket stays in the room / matchmaking queue.
+// Does not touch onlineMode/onlineRole/socket; game-start swaps in the real match.
+function startFillerAI() {
+    playSound('Select');
+    vsAI = true;
+    aiPlayer = 'p2';
+    fillerAI = true;
+    clearPlayerAvatars();
+    setFillerWaitingLabel();
+    document.getElementById('filler-waiting-bar').classList.remove('hidden');
+    hideLobby();
+    resetGame();
+}
+
+function stopFillerAI() {
+    if (!fillerAI) return;
+    fillerAI = false;
+    vsAI = false;
+    aiThinking = false;
+    if (aiWorker) { aiWorker.terminate(); aiWorker = null; }
+    document.getElementById('filler-waiting-bar').classList.add('hidden');
+}
+
 // ─── Online: socket setup ─────────────────────────────────────────────────
 
 function handleOpponentDisconnected() {
@@ -1306,6 +1339,7 @@ function initSocket(errorElId, callback) {
     });
 
     socket.on('rejoin-success', ({ role, snapshot, p1Name, p2Name, p1Avatar, p2Avatar, code } = {}) => {
+        discordRejoinPending = false;
         spectatorMode        = false;
         onlineRole           = role;
         onlineMode           = true;
@@ -1314,6 +1348,7 @@ function initSocket(errorElId, callback) {
         opponentName   = role === 'p1' ? (p2Name   || '') : (p1Name   || '');
         opponentAvatar = role === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
         matchRoomCode  = code || matchRoomCode;
+        if (!matchStartTime) matchStartTime = Math.floor(Date.now() / 1000);
         gameState.flipped = role === 'p2';
         applyPlayerNames();
         hideLobby();
@@ -1326,6 +1361,16 @@ function initSocket(errorElId, callback) {
     // If we were already in a game (same-tab reconnect), treat as opponent disconnect.
     // If this is a fresh page load with a stale session, just clear quietly.
     socket.on('rejoin-failed', () => {
+        if (discordRejoinPending) {
+            // The activity game is gone (or grace expired): drop into matchmaking.
+            discordRejoinPending = false;
+            clearSession();
+            const statusText = document.getElementById('discord-status-text');
+            if (statusText) statusText.textContent = 'Finding opponent...';
+            setDiscordPresence({ state: 'Finding a match...', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' }, party: { size: [1, 2] } });
+            socket.emit('join-activity', { instanceId: discordInstanceId, name: getMyName(), avatarUrl: myAvatar });
+            return;
+        }
         if (onlineMode) handleOpponentDisconnected();
         else clearSession();
     });
@@ -1354,6 +1399,9 @@ function initSocket(errorElId, callback) {
     socket.on('room-joined', () => { onlineRole = 'p2'; });
 
     socket.on('game-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, role, code } = {}) => {
+        if (fillerAI) { playSound('Select'); showToast('Opponent found!'); }
+        fillerAI = false;
+        document.getElementById('filler-waiting-bar').classList.add('hidden');
         vsAI = false; aiThinking = false;
         if (aiWorker) { aiWorker.terminate(); aiWorker = null; }
         if (role) onlineRole = role;
@@ -1405,6 +1453,7 @@ function initSocket(errorElId, callback) {
     });
 
     socket.on('spectate-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, snapshot, queuePosition, spectatorCount: sc, steppedAside } = {}) => {
+        stopFillerAI();
         spectatorMode  = true;
         onlineMode     = false;
         if (steppedAside) { onlineRole = null; opponentName = ''; opponentAvatar = ''; }
@@ -1438,6 +1487,7 @@ function initSocket(errorElId, callback) {
     });
 
     socket.on('become-player', ({ role, p1Name, p2Name, p1Avatar, p2Avatar, code, token } = {}) => {
+        stopFillerAI();
         spectatorMode  = false;
         onlineRole     = role;
         onlineMode     = true;
@@ -1463,8 +1513,34 @@ function initSocket(errorElId, callback) {
         render();
     });
 
+    // First player in a fresh activity, or a lone spectator whose game emptied out:
+    // drop any game/spectator state and wait for an opponent in matchmaking.
+    socket.on('activity-waiting', () => {
+        stopFillerAI();
+        clearSession();
+        spectatorMode = false;
+        onlineMode    = false;
+        onlineRole    = null;
+        discordRejoinPending = false;
+        document.getElementById('win-overlay').classList.add('hidden');
+        document.getElementById('win-footer').classList.add('hidden');
+        document.getElementById('discord-rejoin-bar').classList.add('hidden');
+        updateSpectatorBanner(0);
+        updateSpectatorCountUI(0);
+        setDiscordPresence({ state: 'Finding a match...', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' }, party: { size: [1, 2] } });
+        const statusText = document.getElementById('discord-status-text');
+        if (statusText) statusText.textContent = 'Finding opponent...';
+        document.getElementById('lobby-overlay').classList.remove('hidden');
+        showLobbyView('lview-discord');
+    });
+
     // Shown to a player when offered to play with a queued spectator
     socket.on('spectator-offer', ({ name, avatarUrl, opponentSteppingAside } = {}) => {
+        // Grace period is over: stop the "Opponent reconnecting..." countdown so it
+        // does not stay stuck at "0s" while the promotion offer is shown.
+        opponentReconnecting = false;
+        clearReconnectCountdown();
+        updateStatus();
         document.getElementById('spectator-offer-name').textContent = name || 'spectator';
         if (!document.getElementById('win-overlay').classList.contains('hidden')) {
             document.getElementById('win-overlay').classList.add('hidden');
@@ -1797,6 +1873,17 @@ document.getElementById('btn-waiting-back').addEventListener('click', () => {
     showLobbyView('lview-mode');
 });
 
+document.getElementById('btn-waiting-ai').addEventListener('click', startFillerAI);
+document.getElementById('btn-discord-ai').addEventListener('click', startFillerAI);
+
+// Stop the filler game and return to the invite screen; stays in the room/queue.
+document.getElementById('filler-waiting-back').addEventListener('click', () => {
+    playSound('Select');
+    stopFillerAI();
+    document.getElementById('lobby-overlay').classList.remove('hidden');
+    showLobbyView(isDiscord ? 'lview-discord' : 'lview-waiting');
+});
+
 document.getElementById('btn-copy-link').addEventListener('click', () => {
     playSound('Jump');
     const code = document.getElementById('room-code-display').textContent;
@@ -1846,6 +1933,17 @@ document.getElementById('spectator-offer-accept') .addEventListener('click', spe
 document.getElementById('spectator-offer-decline').addEventListener('click', spectatorBarBtn('spectator-offer-bar', 'decline-spectator'));
 document.getElementById('spectator-slot-accept')  .addEventListener('click', spectatorBarBtn('spectator-slot-bar',  'accept-spectator'));
 document.getElementById('spectator-slot-decline') .addEventListener('click', spectatorBarBtn('spectator-slot-bar',  'decline-spectator'));
+
+// External links inside the Discord activity must go through the SDK; a plain
+// target="_blank" is blocked in the sandboxed iframe.
+document.querySelectorAll('#lview-discord .lobby-icon-link').forEach(a => {
+    a.addEventListener('click', e => {
+        if (isDiscord && discordSdk) {
+            e.preventDefault();
+            discordSdk.commands.openExternalLink({ url: a.href });
+        }
+    });
+});
 
 document.getElementById('discord-find-match-btn').addEventListener('click', () => {
     playSound('Select');
@@ -2046,8 +2144,14 @@ if (isDiscord) try {
         const errEl = document.getElementById('discord-error');
         if (errEl) { errEl.textContent = `Auth failed: ${authErr?.message || authErr}`; errEl.classList.remove('hidden'); }
     }
-    // Auto-enter matchmaking queue
+    // If we left the activity mid-game, try to rejoin first; otherwise enter matchmaking.
     initSocket('discord-error', () => {
+        const session = getStoredSession();
+        if (session) {
+            discordRejoinPending = true;
+            socket.emit('rejoin-room', session);
+            return;
+        }
         const statusText = document.getElementById('discord-status-text');
         if (statusText) statusText.textContent = 'Finding opponent...';
         setDiscordPresence({ state: 'Finding a match...', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' }, party: { size: [1, 2] } });
@@ -2189,7 +2293,7 @@ requestAnimationFrame(() => {
 });
 
 // Screenshot automation bridge -- exposes module internals to injected scripts
-window.__choridor = {
+globalThis.__choridor = {
     get gameState() { return gameState; },
     updateLegalMoves,
     updateWallCounts,
