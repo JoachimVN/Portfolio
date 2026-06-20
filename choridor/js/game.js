@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.10.0';
+const APP_VERSION = 'v1.10.1';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1061,7 +1061,7 @@ function updateStatusVsAI(status) {
         status.className   = `status-label ${aiPlayer}`;
     } else if (gameState.currentPlayer === humanPlayer) {
         const name = document.getElementById(`${humanPlayer}-name`).textContent;
-        status.textContent = `${name}'s Turn`;
+        status.textContent = name === 'You' ? 'Your Turn' : `${name}'s Turn`;
         status.className   = `status-label ${humanPlayer}`;
     } else {
         status.textContent = "AI's Turn";
@@ -1197,8 +1197,8 @@ function resetGame() {
     if (stepBtn) { stepBtn.textContent = 'Step aside'; stepBtn.disabled = false; }
     if (vsAI) {
         const humanPlayer = aiPlayer === 'p1' ? 'p2' : 'p1';
-        document.getElementById('p1-name').textContent = humanPlayer === 'p1' ? (getMyName() || 'Player 1') : 'AI';
-        document.getElementById('p2-name').textContent = humanPlayer === 'p2' ? (getMyName() || 'Player 2') : 'AI';
+        document.getElementById('p1-name').textContent = humanPlayer === 'p1' ? (getMyName() || 'You') : 'AI';
+        document.getElementById('p2-name').textContent = humanPlayer === 'p2' ? (getMyName() || 'You') : 'AI';
     }
     updateWallCounts();
     updateStatus();
@@ -1747,7 +1747,7 @@ document.getElementById('btn-ai').addEventListener('click', () => {
     onlineMode = false;
     onlineRole = null;
     if (softLobby) { softLobby = false; softLobbyRestoreWin = false; }
-    document.getElementById('p1-name').textContent = getMyName() || 'Player 1';
+    document.getElementById('p1-name').textContent = getMyName() || 'You';
     document.getElementById('p2-name').textContent = 'AI';
     clearPlayerAvatars();
     hideLobby();
