@@ -612,22 +612,23 @@ button:active {
 .win-btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    padding: 11px 28px;
-    background: #1E2130;
-    color: #8890A8;
-    border: 1px solid #2E3250;
-    border-radius: 6px;
+    padding: 12px 30px;
+    background: #181B29;
+    color: #C8CCDC;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 10px;
     font-size: 13px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.18s, border-color 0.18s, color 0.18s;
 }
 
 .win-btn:hover {
-    background: #252840;
-    color: #C8CCDC;
-    border-color: #3E4470;
+    background: #20243A;
+    color: #EAEDF6;
+    border-color: rgba(255, 255, 255, 0.18);
 }
 
 .win-btn + .win-btn { margin-top: 10px; }
@@ -635,7 +636,7 @@ button:active {
 .win-btn:active {
     background: #3E68A8;
     color: #FFFFFF;
-    border-color: #2E508A;
+    border-color: #5A84C4;
 }
 
 @keyframes rematch-pulse {
@@ -702,15 +703,25 @@ button:active {
 .lobby-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.88);
-    backdrop-filter: blur(4px);
+    background:
+        radial-gradient(120% 90% at 50% 38%, rgba(20, 24, 38, 0.42) 0%, rgba(6, 7, 12, 0.73) 72%),
+        rgba(6, 7, 12, 0.68);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
 }
 
 .lobby-overlay.hidden { display: none; }
+
+/* Clean fade between lobby and game */
+.lobby-overlay.lobby-fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
 
 .lobby-card-close {
     position: absolute;
@@ -747,22 +758,23 @@ button:active {
 
 .lobby-card {
     position: relative;
-    background: #13151F;
-    border: 1px solid #1E2234;
-    border-radius: 20px;
-    padding: 52px 44px 40px;
+    background: none;
+    border: none;
+    border-radius: 0;
+    padding: 40px 32px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65);
-    width: 520px;
+    box-shadow: none;
+    width: 380px;
+    max-width: calc(100vw - 48px);
     animation: lobby-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .lobby-logo {
-    height: 52px;
+    height: 69px;
     object-fit: contain;
-    margin-bottom: 40px;
+    margin-bottom: 52px;
 }
 
 .lobby-view {
@@ -770,12 +782,6 @@ button:active {
     flex-direction: column;
     align-items: center;
     width: 100%;
-}
-
-.lobby-buttons {
-    display: flex;
-    gap: 14px;
-    margin-bottom: 16px;
 }
 
 .lobby-subtitle {
@@ -786,6 +792,18 @@ button:active {
     text-transform: uppercase;
     margin-bottom: 22px;
 }
+
+/* Field label for form views (join) */
+.lobby-field-label {
+    color: #454A68;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.lobby-field-label + .lobby-name-wrap { margin-bottom: 26px; }
 
 .lobby-code {
     font-size: 2.2rem;
@@ -798,13 +816,14 @@ button:active {
 
 .lobby-input {
     width: 100%;
-    background: #0D0F1A;
-    border: 1px solid #2E3250;
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 1.4rem;
+    background: none;
+    border: none;
+    border-bottom: 1px solid transparent;
+    border-radius: 0;
+    padding: 8px 4px;
+    font-size: 1.6rem;
     font-weight: bold;
-    letter-spacing: 0.25em;
+    letter-spacing: 0.3em;
     color: #C8CCDC;
     text-align: center;
     text-transform: uppercase;
@@ -814,7 +833,8 @@ button:active {
     transition: border-color 0.2s;
 }
 
-.lobby-input:focus { border-color: #3E68A8; }
+.lobby-input::placeholder { color: #3A4060; }
+.lobby-input:focus { border-bottom-color: rgba(255, 255, 255, 0.16); }
 
 .lobby-error {
     color: #9E4A40;
@@ -850,11 +870,12 @@ button:active {
 
 .lobby-name-input {
     width: 100%;
-    background: #0D0F1A;
-    border: 1px solid #2E3250;
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 15px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid transparent;
+    border-radius: 0;
+    padding: 8px 4px;
+    font-size: 16px;
     font-weight: bold;
     color: #C8CCDC;
     text-align: center;
@@ -863,102 +884,87 @@ button:active {
     font-family: inherit;
 }
 
-.lobby-name-input:focus { border-color: #3E68A8; }
-.lobby-name-input::placeholder { color: #3A3F58; font-weight: normal; }
+.lobby-name-input::placeholder { color: #454A68; font-weight: bold; }
+.lobby-name-input:focus { border-bottom-color: rgba(255, 255, 255, 0.16); }
 
-/* Lobby mode cards */
-.lobby-mode-card {
+/* Lobby mode list */
+.lobby-mode-list {
     display: flex;
-    align-items: center;
-    gap: 20px;
+    flex-direction: column;
     width: 100%;
-    padding: 22px 24px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-    text-align: left;
-    margin-bottom: 12px;
-    border: 1px solid transparent;
 }
 
-.lobby-mode-card:last-of-type { margin-bottom: 0; }
+.lobby-mode-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 16px 14px;
+    border: none;
+    border-radius: 10px;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.16s ease;
+}
+
+.lobby-mode-row:active { filter: brightness(1.1); }
 
 .mode-icon {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    transition: opacity 0.18s ease;
+    width: 26px;
+    height: 26px;
+    transition: transform 0.16s ease;
 }
 
-.mode-text {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+.lobby-mode-row:hover .mode-icon { transform: scale(1.08); }
 
 .mode-title {
     font-size: 16px;
     font-weight: bold;
+    color: #D2D6E4;
 }
 
 .mode-sub {
+    margin-left: auto;
     font-size: 12px;
     font-weight: normal;
+    color: #4A5070;
 }
 
-/* Local — red */
-#btn-local {
-    background: rgba(158, 74, 64, 0.08);
-    border-color: rgba(158, 74, 64, 0.2);
-}
-#btn-local .mode-icon { color: #C05A4E; }
-#btn-local .mode-title { color: #D8CCCA; }
-#btn-local .mode-sub { color: rgba(158, 74, 64, 0.55); }
-#btn-local:hover {
-    background: rgba(158, 74, 64, 0.14);
-    border-color: rgba(158, 74, 64, 0.4);
-    box-shadow: 0 4px 32px rgba(158, 74, 64, 0.12);
+.mode-arrow {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: #2E3350;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
-/* Online — blue */
-#btn-online {
-    background: rgba(62, 104, 168, 0.08);
-    border-color: rgba(62, 104, 168, 0.2);
-}
+.lobby-mode-row:hover .mode-arrow { opacity: 1; transform: translateX(0); }
+
+#btn-local  .mode-icon { color: #C05A4E; }
 #btn-online .mode-icon { color: #5080C8; }
-#btn-online .mode-title { color: #C8CED8; }
-#btn-online .mode-sub { color: rgba(62, 104, 168, 0.55); }
-#btn-online:hover {
-    background: rgba(62, 104, 168, 0.14);
-    border-color: rgba(62, 104, 168, 0.4);
-    box-shadow: 0 4px 32px rgba(62, 104, 168, 0.14);
-}
+#btn-ai     .mode-icon { color: #8070C8; }
 
-/* vs AI — purple */
-#btn-ai {
-    background: rgba(100, 80, 168, 0.08);
-    border-color: rgba(100, 80, 168, 0.2);
-}
-#btn-ai .mode-icon { color: #8070C8; }
-#btn-ai .mode-title { color: #C8C4DA; }
-#btn-ai .mode-sub { color: rgba(100, 80, 168, 0.55); }
-#btn-ai:hover {
-    background: rgba(100, 80, 168, 0.14);
-    border-color: rgba(100, 80, 168, 0.4);
-    box-shadow: 0 4px 32px rgba(100, 80, 168, 0.14);
-}
+#btn-local:hover  { background: rgba(192, 90, 78, 0.14); }
+#btn-online:hover { background: rgba(80, 128, 200, 0.14); }
+#btn-ai:hover     { background: rgba(128, 112, 200, 0.14); }
+
+#btn-create .mode-icon, #btn-join .mode-icon { color: #5080C8; }
+#btn-create:hover, #btn-join:hover { background: rgba(80, 128, 200, 0.14); }
 
 .lobby-mode-disabled { cursor: not-allowed; }
 
-/* Lobby footer */
+/* Lobby footer (shared across all lobby views) */
 .lobby-footer {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    width: 100%;
-    margin-top: 20px;
+    gap: 14px;
+    margin-top: 48px;
     font-size: 11px;
-    color: #1E2234;
 }
 
 .lobby-footer a {
@@ -969,42 +975,56 @@ button:active {
 
 .lobby-footer a:hover { color: #7880B0; }
 
-.lobby-footer-legal {
-    flex: 1;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
 .lobby-footer-icons {
-    flex: 1;
     display: flex;
-    gap: 10px;
+    gap: 20px;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
 }
 
 .lobby-icon-link {
     display: flex;
     align-items: center;
-    color: #4A5080;
+    color: #3E4468;
     transition: color 0.15s;
 }
 
 .lobby-icon-link:hover { color: #7880B0; }
 
-.lobby-version {
-    flex: 1;
-    text-align: center;
-    color: #6870A0;
+/* The website link only makes sense inside the Discord activity; on the web you are already here. */
+.lobby-website-link { display: none; }
+.discord-activity .lobby-website-link { display: flex; }
+
+.lobby-footer-meta {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    color: #2A2F48;
+    letter-spacing: 0.04em;
 }
 
-/* Social links on the Discord invite screen */
-.discord-social-icons {
-    flex: none;
-    justify-content: center;
-    gap: 18px;
-    margin-top: 18px;
+.lobby-version { color: #3E4468; }
+
+/* "Play AI while you wait" — quiet secondary action on the invite screens */
+.lobby-ai-link {
+    display: inline-block;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.42);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 4px;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.16);
+    text-underline-offset: 3px;
+    transition: color 0.15s;
+}
+
+.lobby-ai-link:hover {
+    color: rgba(255, 255, 255, 0.7);
+    background: none;
+    border-color: transparent;
 }
 
 /* Discord activity waiting UI */
@@ -1465,22 +1485,24 @@ button:active {
 /* Lobby how-to-play link */
 .lobby-htp-link {
     display: block;
-    width: 100%;
-    text-align: center;
+    margin-top: 6px;
     border: none;
     background: none;
-    color: rgba(255,255,255,0.4);
-    font-size: 13px;
+    color: rgba(255, 255, 255, 0.32);
     font-family: inherit;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.08em;
     cursor: pointer;
-    padding: 6px 0 2px;
-    text-decoration: underline;
-    text-decoration-color: rgba(255,255,255,0.15);
-    text-underline-offset: 3px;
+    padding: 8px 14px;
+    border-radius: 8px;
     transition: color 0.15s;
-    margin-top: 4px;
 }
-.lobby-htp-link:hover { color: rgba(255,255,255,0.65); }
+.lobby-htp-link:hover {
+    color: rgba(255, 255, 255, 0.7);
+    background: none;
+    border-color: transparent;
+}
 
 /* ===== How to Play Modal ===== */
 .htp-overlay {

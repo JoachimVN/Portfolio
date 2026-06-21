@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.11.0';
+const APP_VERSION = 'v1.12.0';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1445,7 +1445,7 @@ function initSocket(errorElId, callback) {
         matchStartTime = Math.floor(Date.now() / 1000);
         if (softLobby) {
             softLobby = false; softLobbyRestoreWin = false;
-            document.getElementById('lobby-overlay').classList.add('hidden');
+            hideLobby();
             document.getElementById('btn-lobby-back').classList.add('hidden');
         }
         applyPlayerNames();
@@ -1530,7 +1530,7 @@ function initSocket(errorElId, callback) {
         setDiscordPresence({ state: 'Finding a match...', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' }, party: { size: [1, 2] } });
         const statusText = document.getElementById('discord-status-text');
         if (statusText) statusText.textContent = 'Finding opponent...';
-        document.getElementById('lobby-overlay').classList.remove('hidden');
+        showLobby();
         showLobbyView('lview-discord');
     });
 
@@ -1673,8 +1673,28 @@ function showLobbyView(id) {
     }
 }
 
+let _lobbyFadeTimer = null;
+
+// Fade the lobby overlay out, then remove it once the transition finishes.
 function hideLobby() {
-    document.getElementById('lobby-overlay').classList.add('hidden');
+    const overlay = document.getElementById('lobby-overlay');
+    if (overlay.classList.contains('hidden')) return;
+    clearTimeout(_lobbyFadeTimer);
+    overlay.classList.add('lobby-fade-out');
+    _lobbyFadeTimer = setTimeout(() => {
+        if (overlay.classList.contains('lobby-fade-out')) overlay.classList.add('hidden');
+        overlay.classList.remove('lobby-fade-out');
+    }, 300);
+}
+
+// Show the lobby overlay with a fade-in (counterpart to hideLobby).
+function showLobby() {
+    const overlay = document.getElementById('lobby-overlay');
+    clearTimeout(_lobbyFadeTimer);
+    overlay.classList.add('lobby-fade-out');
+    overlay.classList.remove('hidden');
+    overlay.getBoundingClientRect(); // force reflow so the fade-in transition runs
+    overlay.classList.remove('lobby-fade-out');
 }
 
 function applyGameSnapshot(snapshot) {
@@ -1796,6 +1816,7 @@ nameInput?.addEventListener('input', () => {
     const val = nameInput.value.trim();
     if (val) localStorage.setItem('choridor_player_name', val);
     else localStorage.removeItem('choridor_player_name');
+    if (joinNameInput) joinNameInput.value = nameInput.value;
     if (!onlineMode) applyPlayerNames();
 });
 
@@ -1851,7 +1872,7 @@ document.getElementById('btn-lobby-back').addEventListener('click', () => {
     const restoreWin = softLobbyRestoreWin;
     softLobby = false; softLobbyRestoreWin = false;
     document.getElementById('btn-lobby-back').classList.add('hidden');
-    document.getElementById('lobby-overlay').classList.add('hidden');
+    hideLobby();
     if (restoreWin) document.getElementById('win-overlay').classList.remove('hidden');
     // else: game board is already visible behind the lobby
 });
@@ -1863,7 +1884,7 @@ document.getElementById('btn-create').addEventListener('click', () => {
     initSocket('create-error', () => socket.emit('create-room', { name: getMyName() }));
 });
 
-document.getElementById('btn-join').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-join'); });
+document.getElementById('btn-join').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-join'); syncJoinBtn(); });
 document.getElementById('btn-join-back').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-online'); });
 
 document.getElementById('btn-waiting-back').addEventListener('click', () => {
@@ -1880,7 +1901,7 @@ document.getElementById('btn-discord-ai').addEventListener('click', startFillerA
 document.getElementById('filler-waiting-back').addEventListener('click', () => {
     playSound('Select');
     stopFillerAI();
-    document.getElementById('lobby-overlay').classList.remove('hidden');
+    showLobby();
     showLobbyView(isDiscord ? 'lview-discord' : 'lview-waiting');
 });
 
@@ -1909,7 +1930,7 @@ function openSoftLobby(fromWin = false) {
     softLobbyRestoreWin = fromWin;
     document.getElementById('win-overlay').classList.add('hidden');
     document.getElementById('win-footer').classList.add('hidden');
-    document.getElementById('lobby-overlay').classList.remove('hidden');
+    showLobby();
     document.getElementById('btn-lobby-back').classList.remove('hidden');
     showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
     applyPlayerNames();
@@ -1936,7 +1957,7 @@ document.getElementById('spectator-slot-decline') .addEventListener('click', spe
 
 // External links inside the Discord activity must go through the SDK; a plain
 // target="_blank" is blocked in the sandboxed iframe.
-document.querySelectorAll('#lview-discord .lobby-icon-link').forEach(a => {
+document.querySelectorAll('.lobby-footer .lobby-icon-link').forEach(a => {
     a.addEventListener('click', e => {
         if (isDiscord && discordSdk) {
             e.preventDefault();
@@ -1965,11 +1986,19 @@ document.getElementById('room-code-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btn-join-confirm').click();
 });
 
+// Only reveal "Join Game" once a code has been entered.
+function syncJoinBtn() {
+    const code = document.getElementById('room-code-input').value.trim();
+    document.getElementById('btn-join-confirm').classList.toggle('hidden', code.length === 0);
+}
+document.getElementById('room-code-input').addEventListener('input', syncJoinBtn);
+
 // Auto-join if URL contains ?room=CODE (skip in Discord — uses join-activity instead)
 const urlRoom = !isDiscord && new URLSearchParams(location.search).get('room');
 if (urlRoom) {
     showLobbyView('lview-join');
     document.getElementById('room-code-input').value = urlRoom.toUpperCase();
+    syncJoinBtn();
 }
 
 ['btn-tos', 'btn-privacy'].forEach(id => {
@@ -1999,7 +2028,7 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
         onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
         socket?.disconnect(); socket = null;
         document.getElementById('win-overlay').classList.add('hidden');
-        document.getElementById('lobby-overlay').classList.remove('hidden');
+        showLobby();
         showLobbyView(isDiscord ? 'lview-discord' : 'lview-mode');
         resetGame();
     } else if (vsAI) {
