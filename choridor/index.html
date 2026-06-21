@@ -14,7 +14,7 @@
     <!-- Lobby -->
     <div id="lobby-overlay" class="lobby-overlay">
         <div class="lobby-card">
-            <button class="lobby-card-close hidden" id="btn-lobby-back" aria-label="Back to game">✕</button>
+            <button class="lobby-card-close modal-close hidden" id="btn-lobby-back" aria-label="Back to game">✕</button>
             <img src="images/logos/logo.svg" alt="CHORIDOR" class="lobby-logo">
 
             <div id="lview-mode" class="lobby-view">
@@ -145,7 +145,7 @@
     <div id="legal-modal" class="legal-modal hidden">
         <div class="legal-modal-backdrop" id="legal-modal-close"></div>
         <div class="legal-modal-card">
-            <button class="legal-modal-x" id="legal-modal-x">✕</button>
+            <button class="legal-modal-x modal-close" id="legal-modal-x">✕</button>
             <div id="legal-modal-content"></div>
         </div>
     </div>
@@ -153,35 +153,59 @@
     <!-- Win screen -->
     <div id="win-overlay" class="win-overlay hidden">
         <div class="win-card" id="win-card">
-            <button class="win-card-close" id="win-card-close" aria-label="Close">✕</button>
+            <button class="win-card-close modal-close" id="win-card-close" aria-label="Close">✕</button>
             <div class="win-pawn" id="win-pawn"></div>
             <div class="win-title" id="win-message"></div>
-            <div class="win-divider"></div>
 
             <div class="win-stats" id="win-stats">
                 <div class="win-stat-col">
                     <div class="win-stat-name" id="win-stat-p1-name">Player 1</div>
-                    <div class="win-stat-walls" id="win-stat-p1-walls"></div>
                     <div class="win-stat-moves" id="win-stat-p1-moves">0</div>
+                    <div class="win-stat-walls" id="win-stat-p1-walls"></div>
                 </div>
                 <div class="win-stat-sep"></div>
                 <div class="win-stat-col">
                     <div class="win-stat-name" id="win-stat-p2-name">Player 2</div>
-                    <div class="win-stat-walls" id="win-stat-p2-walls"></div>
                     <div class="win-stat-moves" id="win-stat-p2-moves">0</div>
+                    <div class="win-stat-walls" id="win-stat-p2-walls"></div>
                 </div>
             </div>
 
-            <button id="play-again-btn" class="win-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                    <path d="M3 3v5h5"/>
-                </svg>
-                Play Again
-            </button>
-            <button id="btn-rematch"     class="win-btn hidden">Rematch</button>
-            <button id="btn-change-mode" class="win-btn hidden">Change Mode</button>
-            <button id="btn-step-aside"  class="win-btn hidden">Step aside</button>
+            <div class="win-actions">
+                <button id="play-again-btn" class="win-btn win-btn--primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                    </svg>
+                    Play Again
+                </button>
+                <button id="btn-rematch"     class="win-btn win-btn--primary hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 1l4 4-4 4"/>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                        <path d="M7 23l-4-4 4-4"/>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                    </svg>
+                    <span>Rematch</span>
+                </button>
+                <button id="btn-change-mode" class="win-btn hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    Change Mode
+                </button>
+                <button id="btn-step-aside"  class="win-btn hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h6v6"/>
+                        <path d="M10 14 21 3"/>
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    </svg>
+                    <span>Step aside</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -225,39 +249,40 @@
             </div>
         </div>
 
-        <!-- Shown when win overlay is dismissed in online mode -->
-        <div id="win-footer" class="win-footer hidden">
-            <span class="win-footer-label">Game over</span>
-            <button id="win-footer-rematch" class="win-footer-btn">Rematch</button>
-        </div>
-
-        <!-- Shown in Discord mode when opponent disconnects and no spectators -->
-        <div id="discord-rejoin-bar" class="win-footer hidden">
-            <span class="win-footer-label">Opponent left</span>
-            <button id="discord-find-match-btn" class="win-footer-btn">Play with waiting player</button>
-        </div>
-
-        <!-- Shown to a player when offered to play with a queued spectator -->
-        <div id="spectator-offer-bar" class="win-footer hidden">
-            <span class="win-footer-label">Play with <span id="spectator-offer-name"></span>?</span>
-            <button id="spectator-offer-accept" class="win-footer-btn">Accept</button>
-            <button id="spectator-offer-decline" class="win-footer-btn win-footer-muted">Decline</button>
-        </div>
-
-        <!-- Shown to a spectator when offered a player slot -->
-        <div id="spectator-slot-bar" class="win-footer hidden">
-            <span class="win-footer-label">Your turn! Play vs <span id="spectator-slot-opponent"></span></span>
-            <button id="spectator-slot-accept" class="win-footer-btn">Play</button>
-            <button id="spectator-slot-decline" class="win-footer-btn win-footer-muted">Skip</button>
-        </div>
-
-        <!-- Shown while playing a filler AI game and still waiting for a real opponent -->
-        <div id="filler-waiting-bar" class="win-footer hidden">
-            <span class="win-footer-label" id="filler-waiting-label">Waiting for a friend</span>
-            <button id="filler-waiting-back" class="win-footer-btn win-footer-muted">Back to invite</button>
-        </div>
-
         <div class="bottom-bar">
+            <div class="bar-slot">
+                <!-- Shown when win overlay is dismissed -->
+                <div id="win-footer" class="win-footer hidden">
+                    <button id="win-footer-play-again" class="win-footer-btn hidden">Play Again</button>
+                    <button id="win-footer-rematch" class="win-footer-btn hidden">Rematch</button>
+                </div>
+
+                <!-- Shown in Discord mode when opponent disconnects and no spectators -->
+                <div id="discord-rejoin-bar" class="win-footer hidden">
+                    <span class="win-footer-label">Opponent left</span>
+                    <button id="discord-find-match-btn" class="win-footer-btn">Find match</button>
+                </div>
+
+                <!-- Shown to a player when offered to play with a queued spectator -->
+                <div id="spectator-offer-bar" class="win-footer hidden">
+                    <span class="win-footer-label">Play with <span id="spectator-offer-name"></span>?</span>
+                    <button id="spectator-offer-accept" class="win-footer-btn">Accept</button>
+                    <button id="spectator-offer-decline" class="win-footer-btn win-footer-muted">Decline</button>
+                </div>
+
+                <!-- Shown to a spectator when offered a player slot -->
+                <div id="spectator-slot-bar" class="win-footer hidden">
+                    <span class="win-footer-label">Play vs <span id="spectator-slot-opponent"></span>?</span>
+                    <button id="spectator-slot-accept" class="win-footer-btn">Play</button>
+                    <button id="spectator-slot-decline" class="win-footer-btn win-footer-muted">Skip</button>
+                </div>
+
+                <!-- Shown while playing a filler AI game and still waiting for a real opponent -->
+                <div id="filler-waiting-bar" class="win-footer hidden">
+                    <span class="win-footer-label" id="filler-waiting-label">Waiting for a friend</span>
+                    <button id="filler-waiting-back" class="win-footer-btn win-footer-muted">Back to invite</button>
+                </div>
+            </div>
             <div id="tap-confirm-hint" class="tap-confirm-hint" aria-hidden="true">
                 <div class="tap-confirm-row">
                     <button type="button" class="tap-confirm-btn tap-confirm-cancel" id="tap-confirm-no" aria-label="Cancel wall preview" title="Cancel">
@@ -326,9 +351,7 @@
     <!-- How to Play modal -->
     <div id="htp-overlay" class="htp-overlay hidden">
         <div class="htp-card">
-            <button class="htp-close" id="htp-close" aria-label="Close">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+            <button class="htp-close modal-close" id="htp-close" aria-label="Close">✕</button>
             <div class="htp-dots" id="htp-dots">
                 <button class="htp-dot active" data-idx="0" aria-label="Slide 1"></button>
                 <button class="htp-dot" data-idx="1" aria-label="Slide 2"></button>

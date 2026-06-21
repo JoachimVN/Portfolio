@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.12.0';
+const APP_VERSION = 'v1.13.0';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -1196,7 +1196,7 @@ function resetGame() {
     document.getElementById('spectator-offer-bar').classList.add('hidden');
     document.getElementById('spectator-slot-bar').classList.add('hidden');
     const stepBtn = document.getElementById('btn-step-aside');
-    if (stepBtn) { stepBtn.textContent = 'Step aside'; stepBtn.disabled = false; }
+    if (stepBtn) { stepBtn.querySelector('span').textContent = 'Step aside'; stepBtn.disabled = false; }
     if (vsAI) {
         const humanPlayer = aiPlayer === 'p1' ? 'p2' : 'p1';
         document.getElementById('p1-name').textContent = humanPlayer === 'p1' ? (getMyName() || 'You') : 'AI';
@@ -1244,6 +1244,7 @@ function handleOpponentDisconnected() {
     clearSession();
     opponentReconnecting = false;
     clearReconnectCountdown();
+    if (rematchState !== 'idle') updateRematchBtn('idle');
     opponentName   = '';
     opponentAvatar = '';
     applyPlayerNames();
@@ -1548,6 +1549,7 @@ function initSocket(errorElId, callback) {
         }
         if (rematchState === 'waiting') { socket?.emit('rematch-cancel'); updateRematchBtn('idle'); }
         if (opponentSteppingAside) showToast('Opponent is stepping aside');
+        document.getElementById('win-footer').classList.add('hidden');
         document.getElementById('spectator-offer-bar').classList.remove('hidden');
         document.getElementById('discord-rejoin-bar').classList.add('hidden');
         document.getElementById('btn-step-aside').classList.add('hidden');
@@ -1560,6 +1562,7 @@ function initSocket(errorElId, callback) {
         if (!document.getElementById('win-overlay').classList.contains('hidden')) {
             document.getElementById('win-overlay').classList.add('hidden');
         }
+        document.getElementById('win-footer').classList.add('hidden');
         document.getElementById('spectator-slot-bar').classList.remove('hidden');
     });
 
@@ -1574,15 +1577,15 @@ function initSocket(errorElId, callback) {
     // Step-aside accepted by server, waiting for the other parties
     socket.on('step-aside-waiting', () => {
         const btn = document.getElementById('btn-step-aside');
-        btn.textContent = 'Waiting…';
-        btn.disabled    = true;
+        btn.querySelector('span').textContent = 'Waiting…';
+        btn.disabled = true;
     });
 
     // The other party declined - revert the step-aside button
     socket.on('step-aside-declined', () => {
         const btn = document.getElementById('btn-step-aside');
-        btn.textContent = 'Step aside';
-        btn.disabled    = false;
+        btn.querySelector('span').textContent = 'Step aside';
+        btn.disabled = false;
     });
 
     socket.on('game-surrendered', ({ winnerRole, winnerName } = {}) => {
@@ -1759,16 +1762,17 @@ function getMyName() {
 function updateRematchBtn(state) {
     rematchState = state;
     if (spectatorMode) return;
-    let modifier = '';
-    let label    = 'Rematch';
-    if (state === 'waiting')  { modifier = ' waiting';  label = 'Waiting…'; }
-    if (state === 'incoming') { modifier = ' incoming'; label = 'Accept Rematch!'; }
+    let cardMod   = ' win-btn--primary';
+    let footerMod = '';
+    let label     = 'Rematch';
+    if (state === 'waiting')  { cardMod = ' waiting';                  footerMod = ' waiting';  label = 'Waiting…'; }
+    if (state === 'incoming') { cardMod = ' win-btn--primary incoming'; footerMod = ' incoming'; label = 'Accept Rematch!'; }
 
     const btn = document.getElementById('btn-rematch');
-    if (btn) { btn.className = 'win-btn' + modifier; btn.textContent = label; btn.disabled = false; }
+    if (btn) { btn.className = 'win-btn' + cardMod; btn.querySelector('span').textContent = label; btn.disabled = false; }
 
     const footer = document.getElementById('win-footer-rematch');
-    if (footer) { footer.className = 'win-footer-btn' + modifier; footer.textContent = label; }
+    if (footer) { footer.className = 'win-footer-btn' + footerMod; footer.textContent = label; }
 }
 
 function setPlayerAvatar(slot, url) {
@@ -1919,7 +1923,15 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
 
 document.getElementById('win-card-close').addEventListener('click', () => {
     document.getElementById('win-overlay').classList.add('hidden');
-    if (onlineMode && !spectatorMode) document.getElementById('win-footer').classList.remove('hidden');
+    if (!spectatorMode) {
+        document.getElementById('win-footer-play-again').classList.toggle('hidden', onlineMode);
+        document.getElementById('win-footer-rematch').classList.toggle('hidden', !onlineMode);
+        document.getElementById('win-footer').classList.remove('hidden');
+    }
+});
+
+document.getElementById('win-footer-play-again').addEventListener('click', () => {
+    document.getElementById('play-again-btn').click();
 });
 
 document.getElementById('win-footer-rematch').addEventListener('click', handleRematchClick);
