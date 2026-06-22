@@ -1558,7 +1558,7 @@ button:active {
     padding: 0;
     transition: background 0.15s, color 0.15s;
 }
-.htp-close:hover { background: #343742; color: #fff; }
+.htp-close:hover { color: #fff; }
 
 .htp-dots {
     display: flex;

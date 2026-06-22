@@ -1,4 +1,4 @@
-const APP_VERSION = 'v1.13.0';
+const APP_VERSION = 'v1.13.1';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -30,7 +30,7 @@ const SOCKET_PATH = location.hostname.endsWith('.discordsays.com') ? '/api/socke
 if (navigator.audioSession) navigator.audioSession.type = 'ambient';
 
 const sounds = {};
-['Move', 'Jump', 'Wall', 'Win', 'Loss', 'Select'].forEach(name => {
+['Move', 'Jump', 'Wall', 'Win', 'Loss', 'Select', 'Close'].forEach(name => {
     const a = new Audio(`audio/sfx/${name}.wav`);
     a.preload = 'auto';
     sounds[name] = a;
@@ -105,13 +105,13 @@ function clearSession()     { try { localStorage.removeItem(SESSION_KEY); } catc
 function getStoredSession() { try { const r = localStorage.getItem(SESSION_KEY); return r ? JSON.parse(r) : null; } catch { return null; } }
 
 let _reconnectCountdownId = null;
-function startReconnectCountdown(secs) {
+function startReconnectCountdown(secs, who = 'Opponent') {
     clearReconnectCountdown();
     let remaining = secs;
     const tick = () => {
         if (!opponentReconnecting) return;
         const s = document.getElementById('status');
-        s.textContent = `Opponent reconnecting… ${remaining}s`;
+        s.textContent = `${who} reconnecting… ${remaining}s`;
         s.className   = 'status-label';
         if (remaining > 0) { remaining--; _reconnectCountdownId = setTimeout(tick, 1000); }
     };
@@ -119,6 +119,11 @@ function startReconnectCountdown(secs) {
 }
 function clearReconnectCountdown() {
     if (_reconnectCountdownId) { clearTimeout(_reconnectCountdownId); _reconnectCountdownId = null; }
+}
+// Reset the "reconnecting" state and stop its status-label countdown.
+function clearReconnectState() {
+    opponentReconnecting = false;
+    clearReconnectCountdown();
 }
 
 const isDiscord       = location.hostname.endsWith('.discordsays.com');
@@ -1098,14 +1103,23 @@ function updateStatus() {
 
 function checkWin(delay = 0) {
     if (gameState.p1Pawn.row === 0) {
+        reportWin('p1');
         showWinScreen(document.getElementById('p1-name').textContent, 'p1', delay);
         return true;
     }
     if (gameState.p2Pawn.row === BOARD_SIZE - 1) {
+        reportWin('p2');
         showWinScreen(document.getElementById('p2-name').textContent, 'p2', delay);
         return true;
     }
     return false;
+}
+
+// Tell the server who reached the goal so it can record the completed game for
+// analytics. Online players only (spectators and local/AI games are skipped).
+function reportWin(winnerRole) {
+    if (!onlineMode || spectatorMode || !socket) return;
+    socket.emit('report-win', { winnerRole });
 }
 
 function populateWinStats() {
@@ -1155,7 +1169,9 @@ function showWinScreen(winner, playerClass, delay = 0) {
     populateWinStats();
 
     const reveal = () => {
-        const lost = onlineMode && onlineRole && onlineRole !== playerClass;
+        const lost = vsAI
+            ? playerClass === aiPlayer
+            : (onlineMode && onlineRole && onlineRole !== playerClass);
         playSound(lost ? 'Loss' : 'Win');
         document.getElementById('win-footer').classList.add('hidden');
         const card = document.getElementById('win-card');
@@ -1268,6 +1284,9 @@ function leaveSoftLobby() {
     spectatorMode = false;
     socket?.disconnect(); socket = null;
     softLobby = false; softLobbyRestoreWin = false;
+    // The back X only works while softLobby is true; hide it so it does not
+    // linger as a dead button after leaving (e.g. creating an online room).
+    document.getElementById('btn-lobby-back').classList.add('hidden');
     resetGame();
 }
 
@@ -1284,7 +1303,9 @@ function handleRematchClick() {
 }
 
 function initSocket(errorElId, callback) {
-    if (socket?.connected) { callback(); return; }
+    // Already connected: the join/create fires immediately, so the button must
+    // not stay stuck on "Connecting…" (no fresh 'connect' event will clear it).
+    if (socket?.connected) { clearConnectingBtn(); callback(); return; }
     if (socket) { socket.disconnect(); socket = null; }
 
     try {
@@ -1391,6 +1412,19 @@ function initSocket(errorElId, callback) {
         render();
     });
 
+    // Spectators see a disconnect in the same status label players do.
+    socket.on('spectator-player-disconnected', ({ name, graceSecs } = {}) => {
+        if (!spectatorMode) return;
+        opponentReconnecting = true;
+        startReconnectCountdown(graceSecs ?? 12, name || 'A player');
+    });
+
+    socket.on('spectator-player-reconnected', () => {
+        if (!spectatorMode) return;
+        clearReconnectState();
+        updateStatus();
+    });
+
     socket.on('room-created', ({ code }) => {
         onlineRole = 'p1';
         document.getElementById('room-code-display').textContent = code;
@@ -1431,6 +1465,7 @@ function initSocket(errorElId, callback) {
 
     socket.on('rematch-start', ({ p1Name, p2Name, p1Avatar, p2Avatar } = {}) => {
         if (spectatorMode) {
+            clearReconnectState();
             document.getElementById('p1-name').textContent = p1Name || 'Player 1';
             document.getElementById('p2-name').textContent = p2Name || 'Player 2';
             setPlayerAvatar('p1', p1Avatar);
@@ -1455,6 +1490,7 @@ function initSocket(errorElId, callback) {
 
     socket.on('spectate-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, snapshot, queuePosition, spectatorCount: sc, steppedAside } = {}) => {
         stopFillerAI();
+        clearReconnectState();
         spectatorMode  = true;
         onlineMode     = false;
         if (steppedAside) { onlineRole = null; opponentName = ''; opponentAvatar = ''; }
@@ -1489,6 +1525,7 @@ function initSocket(errorElId, callback) {
 
     socket.on('become-player', ({ role, p1Name, p2Name, p1Avatar, p2Avatar, code, token } = {}) => {
         stopFillerAI();
+        clearReconnectState();
         spectatorMode  = false;
         onlineRole     = role;
         onlineMode     = true;
@@ -1557,6 +1594,7 @@ function initSocket(errorElId, callback) {
 
     // Shown to the spectator when a slot opens up (no accept needed - they're pre-accepted)
     socket.on('spectator-slot-offer', ({ opponentName } = {}) => {
+        clearReconnectState();
         document.getElementById('spectator-slot-opponent').textContent = opponentName || 'opponent';
         document.getElementById('spectator-slot-accept').classList.add('hidden');
         if (!document.getElementById('win-overlay').classList.contains('hidden')) {
@@ -1623,6 +1661,8 @@ async function openLegal(url) {
 }
 
 function closeLegal() {
+    if (document.getElementById('legal-modal').classList.contains('hidden')) return;
+    playSound('Close');
     document.getElementById('legal-modal').classList.add('hidden');
 }
 
@@ -1872,7 +1912,7 @@ document.getElementById('btn-online-back').addEventListener('click', () => {
 
 document.getElementById('btn-lobby-back').addEventListener('click', () => {
     if (!softLobby) return;
-    playSound('Select');
+    playSound('Close');
     const restoreWin = softLobbyRestoreWin;
     softLobby = false; softLobbyRestoreWin = false;
     document.getElementById('btn-lobby-back').classList.add('hidden');
@@ -1892,7 +1932,7 @@ document.getElementById('btn-join').addEventListener('click', () => { playSound(
 document.getElementById('btn-join-back').addEventListener('click', () => { playSound('Select'); showLobbyView('lview-online'); });
 
 document.getElementById('btn-waiting-back').addEventListener('click', () => {
-    playSound('Select');
+    playSound('Close');
     spectatorMode = false;
     socket?.disconnect(); socket = null;
     showLobbyView('lview-mode');
@@ -1922,6 +1962,7 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
 
 
 document.getElementById('win-card-close').addEventListener('click', () => {
+    playSound('Close');
     document.getElementById('win-overlay').classList.add('hidden');
     if (!spectatorMode) {
         document.getElementById('win-footer-play-again').classList.toggle('hidden', onlineMode);
@@ -2115,6 +2156,7 @@ document.getElementById('anim-btn').addEventListener('click', () => {
 
 document.getElementById('mute-btn').addEventListener('click', () => {
     muted = !muted;
+    playSound('Select'); // audible only when unmuting (the mute guard silences the other case)
     const btn  = document.getElementById('mute-btn');
     const icon = document.getElementById('mute-icon');
     btn.classList.toggle('muted', muted);
@@ -2221,6 +2263,7 @@ document.getElementById('tap-confirm-yes')?.addEventListener('click', e => {
 
 document.getElementById('tap-confirm-no')?.addEventListener('click', e => {
     e.stopPropagation();
+    playSound('Close');
     clearTapPreview();
     render();
 });
@@ -2282,6 +2325,8 @@ function showHTP() {
     _htpGoto(0);
 }
 function closeHTP() {
+    if (document.getElementById('htp-overlay').classList.contains('hidden')) return;
+    playSound('Close');
     localStorage.setItem(HTP_KEY, '1');
     document.getElementById('htp-overlay').classList.add('hidden');
     _htpIdx = 0;
@@ -2297,13 +2342,15 @@ function _htpGoto(idx) {
 }
 
 document.getElementById('htp-close').addEventListener('click', closeHTP);
-document.getElementById('htp-prev').addEventListener('click', () => _htpGoto(_htpIdx - 1));
+document.getElementById('htp-prev').addEventListener('click', () => { playSound('Select'); _htpGoto(_htpIdx - 1); });
 document.getElementById('htp-next').addEventListener('click', () => {
-    if (_htpIdx === HTP_TOTAL - 1) closeHTP(); else _htpGoto(_htpIdx + 1);
+    if (_htpIdx === HTP_TOTAL - 1) { closeHTP(); return; }
+    playSound('Select');
+    _htpGoto(_htpIdx + 1);
 });
-document.querySelectorAll('.htp-dot').forEach(d => d.addEventListener('click', () => _htpGoto(+d.dataset.idx)));
-document.getElementById('htp-btn').addEventListener('click', showHTP);
-document.getElementById('htp-lobby-btn').addEventListener('click', showHTP);
+document.querySelectorAll('.htp-dot').forEach(d => d.addEventListener('click', () => { playSound('Select'); _htpGoto(+d.dataset.idx); }));
+document.getElementById('htp-btn').addEventListener('click', () => { playSound('Select'); showHTP(); });
+document.getElementById('htp-lobby-btn').addEventListener('click', () => { playSound('Select'); showHTP(); });
 
 // Swipe-to-navigate on the HTP card
 {
