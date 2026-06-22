@@ -1,4 +1,5 @@
 import { APP_VERSION } from './version.js';
+import posthog from './vendor/posthog.mjs';
 document.querySelectorAll('.lobby-version').forEach(el => { el.textContent = APP_VERSION; });
 
 const BOARD_SIZE = 9;
@@ -23,6 +24,73 @@ function getBackendUrl() {
 }
 const BACKEND_URL = getBackendUrl();
 const SOCKET_PATH = location.hostname.endsWith('.discordsays.com') ? '/api/socket.io' : '/socket.io';
+
+// ─── Analytics (PostHog) ────────────────────────────────────────────────────
+// Client-side game telemetry. The server (analytics.js) stays the authoritative
+// source for online matches; these client events additionally cover local and
+// AI games the server never sees. Client events carry no $is_server flag, so
+// dashboards filter on it to avoid double-counting online games. Analytics must
+// never break gameplay, hence the swallows. `mode` is sent display-ready.
+//
+// posthog-js is bundled locally (js/vendor/posthog.mjs) rather than loaded from
+// PostHog's CDN, because the Discord Activity sandbox blocks that CDN. On the
+// web we hit PostHog directly; inside Discord we route ingestion through the
+// `/phog` URL mapping (see the Discord block below), so init is deferred until
+// after patchUrlMappings runs. advanced_disable_decide keeps us to ingestion
+// only (no flags/surveys/recording, none of which we use).
+let phReady = false;
+function initPosthog(apiHost) {
+    try {
+        posthog.init('phc_op7vj5oq9nrZVLx6r6UgLBHBaBxwUoH7KzkPtsq2CvGF', {
+            api_host: apiHost,
+            person_profiles: 'always',
+            autocapture: false,
+            capture_pageview: true,
+            capture_pageleave: true,
+            advanced_disable_decide: true,
+        });
+        phReady = true;
+    } catch { /* ignore */ }
+}
+function track(event, props = {}) {
+    if (!phReady) return;
+    try {
+        posthog.capture(event, {
+            source: location.hostname.endsWith('.discordsays.com') ? 'discord' : 'web',
+            ...props,
+        });
+    } catch { /* ignore */ }
+}
+// Web initialises immediately. Discord initialises after patchUrlMappings (see
+// the Discord Activity block), so its ingestion requests can leave the sandbox.
+if (!location.hostname.endsWith('.discordsays.com')) initPosthog('https://eu.i.posthog.com');
+function currentMode() {
+    if (onlineMode) return 'Online';
+    if (vsAI)       return 'AI';
+    return 'Local';
+}
+// Stamped when a game actually begins so completion can report a duration.
+let clientGameStartedAt = 0;
+function trackGameStarted(mode) {
+    clientGameStartedAt = Date.now();
+    track('game_started', { mode });
+}
+function trackGameCompleted(winnerRole, reason) {
+    // Filler ("play AI while you wait") and spectating are not real played games.
+    if (fillerAI || spectatorMode) return;
+    const movesP1 = gameState.movesP1;
+    const movesP2 = gameState.movesP2;
+    track('game_completed', {
+        mode:        currentMode(),
+        winner_role: winnerRole,
+        reason,
+        moves_p1:    movesP1,
+        moves_p2:    movesP2,
+        total_moves: movesP1 + movesP2,
+        walls_used:  gameState.walls.size,
+        duration_ms: clientGameStartedAt ? Date.now() - clientGameStartedAt : null,
+    });
+}
 
 // ─── Audio ────────────────────────────────────────────────────────────────
 
@@ -1143,9 +1211,10 @@ function populateWinStats() {
     });
 }
 
-function showWinScreen(winner, playerClass, delay = 0) {
+function showWinScreen(winner, playerClass, delay = 0, reason = 'reached-goal') {
     clearTapPreview();
     gameState.gameOver = true;   // lock input now; reveal the card after the move lands
+    trackGameCompleted(playerClass, reason);
     if (onlineMode) clearSession();
     if (isDiscord && onlineMode) {
         setDiscordPresence({
@@ -1235,6 +1304,7 @@ function setFillerWaitingLabel() {
 // Does not touch onlineMode/onlineRole/socket; game-start swaps in the real match.
 function startFillerAI() {
     playSound('Select');
+    track('ai_while_waiting_clicked');
     vsAI = true;
     aiPlayer = 'p2';
     fillerAI = true;
@@ -1294,6 +1364,7 @@ function handleRematchClick() {
     playSound('Select');
     if (spectatorMode) return;
     if (rematchState === 'idle' || rematchState === 'incoming') {
+        track('rematch_clicked', { mode: 'Online' });
         socket?.emit('rematch-request');
         updateRematchBtn('waiting');
     } else if (rematchState === 'waiting') {
@@ -1448,6 +1519,7 @@ function initSocket(errorElId, callback) {
         hideLobby();
         applyPlayerNames();
         resetGame();
+        trackGameStarted('Online');
     });
 
     socket.on('opponent-move', data => applyOpponentMove(data));
@@ -1486,6 +1558,7 @@ function initSocket(errorElId, callback) {
         }
         applyPlayerNames();
         resetGame();
+        trackGameStarted('Online');
     });
 
     socket.on('spectate-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, snapshot, queuePosition, spectatorCount: sc, steppedAside } = {}) => {
@@ -1628,7 +1701,7 @@ function initSocket(errorElId, callback) {
 
     socket.on('game-surrendered', ({ winnerRole, winnerName } = {}) => {
         if (gameState.gameOver) return;
-        showWinScreen(winnerName || (winnerRole === 'p1' ? 'Player 1' : 'Player 2'), winnerRole);
+        showWinScreen(winnerName || (winnerRole === 'p1' ? 'Player 1' : 'Player 2'), winnerRole, 0, 'surrender');
     });
 
     socket.on('opponent-rejoined', ({ name, avatar } = {}) => {
@@ -1888,14 +1961,17 @@ document.querySelectorAll('.lobby-mode-row').forEach(row => {
 
 document.getElementById('btn-local').addEventListener('click', () => {
     playSound('Select');
+    track('mode_selected', { mode: 'Local' });
     vsAI = false;
     if (softLobby) leaveSoftLobby();
     applyPlayerNames();
     hideLobby();
+    trackGameStarted('Local');
 });
 
 document.getElementById('btn-ai').addEventListener('click', () => {
     playSound('Select');
+    track('mode_selected', { mode: 'AI' });
     vsAI = true;
     aiPlayer = 'p2';
     onlineMode = false;
@@ -1906,10 +1982,12 @@ document.getElementById('btn-ai').addEventListener('click', () => {
     clearPlayerAvatars();
     hideLobby();
     resetGame();
+    trackGameStarted('AI');
 });
 
 document.getElementById('btn-online').addEventListener('click', () => {
     playSound('Select');
+    track('mode_selected', { mode: 'Online' });
     showLobbyView('lview-online');
 });
 document.getElementById('btn-online-back').addEventListener('click', () => {
@@ -1962,6 +2040,7 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
     const code = document.getElementById('room-code-display').textContent;
     const url  = `${location.origin}${location.pathname}?room=${code}`;
     navigator.clipboard.writeText(url).then(() => {
+        track('invite_link_copied');
         const label = document.getElementById('copy-btn-label');
         label.textContent = 'Copied!';
         setTimeout(() => { label.textContent = 'Copy Invite Link'; }, 2000);
@@ -2085,8 +2164,10 @@ document.addEventListener('keydown', e => {
 
 document.getElementById('play-again-btn').addEventListener('click', () => {
     playSound('Select');
+    track('play_again_clicked', { mode: currentMode() });
     if (onlineMode) {
-        // In online mode, go back to lobby for a new game
+        // In online mode, go back to lobby for a new game (a fresh game_started
+        // fires later via the 'game-start' socket event once re-matched).
         onlineMode = false; onlineRole = null; opponentName = ''; opponentAvatar = '';
         socket?.disconnect(); socket = null;
         document.getElementById('win-overlay').classList.add('hidden');
@@ -2097,8 +2178,10 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
         aiPlayer = aiPlayer === 'p1' ? 'p2' : 'p1';
         resetGame();
         triggerAI(); // fires only if AI now goes first (aiPlayer === 'p1')
+        trackGameStarted('AI');
     } else {
         resetGame();
+        trackGameStarted('Local');
     }
 });
 
@@ -2246,10 +2329,14 @@ if (isDiscord) try {
     const sdk = new DiscordSDK('1515199692793843712');
     await sdk.ready();
     discordInstanceId = sdk.instanceId;
-    patchUrlMappings([{
-        prefix: '/api',
-        target: 'choridor-web-production.up.railway.app',
-    }]);
+    patchUrlMappings([
+        { prefix: '/api',  target: 'choridor-web-production.up.railway.app' },
+        // PostHog ingestion. Requires a matching URL mapping in the Discord
+        // Developer Portal: /phog -> eu.i.posthog.com
+        { prefix: '/phog', target: 'eu.i.posthog.com' },
+    ]);
+    // Now that requests to /phog are proxied out of the sandbox, start analytics.
+    initPosthog(`${location.origin}/phog`);
     try {
         const { code } = await sdk.commands.authorize({ client_id: '1515199692793843712', scope: ['identify', 'rpc.activities.write'], response_type: 'code' });
         const res  = await fetch('/api/auth/discord', {
@@ -2372,7 +2459,9 @@ const HTP_KEY = 'choridor_htp_seen';
 let _htpIdx = 0;
 const HTP_TOTAL = 4;
 
-function showHTP() {
+function showHTP(trigger = 'lobby') {
+    // trigger: 'auto' (first-visit popup), 'lobby' (link), or 'in_game' (? button).
+    track('how_to_play_opened', { trigger });
     document.getElementById('htp-overlay').classList.remove('hidden');
     _htpGoto(0);
 }
@@ -2401,8 +2490,8 @@ document.getElementById('htp-next').addEventListener('click', () => {
     _htpGoto(_htpIdx + 1);
 });
 document.querySelectorAll('.htp-dot').forEach(d => d.addEventListener('click', () => { playSound('Select'); _htpGoto(+d.dataset.idx); }));
-document.getElementById('htp-btn').addEventListener('click', () => { playSound('Select'); showHTP(); });
-document.getElementById('htp-lobby-btn').addEventListener('click', () => { playSound('Select'); showHTP(); });
+document.getElementById('htp-btn').addEventListener('click', () => { playSound('Select'); showHTP('in_game'); });
+document.getElementById('htp-lobby-btn').addEventListener('click', () => { playSound('Select'); showHTP('lobby'); });
 
 // Swipe-to-navigate on the HTP card
 {
@@ -2417,7 +2506,7 @@ document.getElementById('htp-lobby-btn').addEventListener('click', () => { playS
     }, { passive: true });
 }
 
-if (!localStorage.getItem(HTP_KEY)) requestAnimationFrame(showHTP);
+if (!localStorage.getItem(HTP_KEY)) requestAnimationFrame(() => showHTP('auto'));
 
 // Auto-rejoin on page load / refresh if a session is stored from a live game.
 // Skipped on Discord: the SDK re-initialises the socket via join-activity anyway.

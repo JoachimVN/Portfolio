@@ -2,10 +2,13 @@
     "name": "choridor-frontend",
     "private": true,
     "scripts": {
-        "build": "esbuild node_modules/@discord/embedded-app-sdk/output/index.mjs --bundle --format=esm --outfile=js/vendor/discord-sdk.mjs"
+        "build": "npm run build:discord && npm run build:posthog",
+        "build:discord": "esbuild node_modules/@discord/embedded-app-sdk/output/index.mjs --bundle --format=esm --outfile=js/vendor/discord-sdk.mjs",
+        "build:posthog": "esbuild node_modules/posthog-js/dist/module.js --bundle --format=esm --minify --outfile=js/vendor/posthog.mjs"
     },
     "devDependencies": {
         "@discord/embedded-app-sdk": "1.9.0",
-        "esbuild": "^0.28.0"
+        "esbuild": "^0.28.0",
+        "posthog-js": "^1.391.9"
     }
 }

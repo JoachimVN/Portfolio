@@ -1588,51 +1588,42 @@ button:active {
 .htp-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.72);
+    background:
+        radial-gradient(120% 90% at 50% 38%, rgba(20, 24, 38, 0.42) 0%, rgba(6, 7, 12, 0.73) 72%),
+        rgba(6, 7, 12, 0.68);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 4000;
-    padding: 12px;
 }
 .htp-overlay.hidden { display: none; }
 
 .htp-card {
-    background: #161926;
-    border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 18px;
-    width: 100%;
-    max-width: 330px;
-    padding: 20px 18px 18px;
     position: relative;
+    background: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    width: 380px;
+    max-width: calc(100vw - 48px);
+    padding: 40px 32px 28px;
     max-height: calc(100dvh - 24px);
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: win-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.htp-close {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: #161926;
-    color: rgba(255,255,255,0.6);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    transition: background 0.15s, color 0.15s;
-}
-.htp-close:hover { color: #fff; }
+.htp-close { top: 10px; right: 8px; }
 
 .htp-dots {
     display: flex;
     gap: 7px;
     justify-content: center;
-    margin-bottom: 18px;
+    width: 100%;
+    margin-bottom: 24px;
 }
 .htp-dot {
     width: 7px;
@@ -1649,6 +1640,7 @@ button:active {
     transform: scale(1.2);
 }
 
+.htp-slides { width: 100%; }
 .htp-slide { display: none; }
 .htp-slide.active {
     display: block;
@@ -1697,9 +1689,6 @@ button:active {
     background: rgba(62,104,168,0.8);
     border-radius: 0 0 2px 2px;
 }
-.htp-chl   { background: #1e2a20; }
-.htp-chl-j { background: #1d2826; }
-.htp-cpath { background: #1c2228; }
 
 /* Pawns -- flat colors matching in-game, centered with transform */
 .htp-pawn {
@@ -1838,16 +1827,17 @@ button:active {
 
 /* Text */
 .htp-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #C8CCDC;
     text-align: center;
-    margin: 0 0 8px;
-    letter-spacing: -0.3px;
+    margin: 0 0 10px;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
 }
 .htp-desc {
     font-size: 14px;
-    color: rgba(255,255,255,0.55);
+    color: #5A6080;
     text-align: center;
     margin: 0;
     line-height: 1.55;
@@ -1857,41 +1847,54 @@ button:active {
 .htp-nav {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 18px;
+    width: 100%;
+    margin-top: 28px;
 }
 .htp-prev {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     flex-shrink: 0;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.15);
-    background: transparent;
-    color: rgba(255,255,255,0.7);
+    margin-right: 10px;
+    border-radius: 10px;
+    border: none;
+    background: none;
+    color: #5A6080;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-    transition: background 0.15s, color 0.15s;
+    overflow: hidden;
+    transition: width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                margin 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.28s ease,
+                transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                background 0.16s ease,
+                color 0.16s ease;
 }
-.htp-prev:hover { background: #2b2e3a; color: #fff; }
-.htp-prev.htp-hidden { visibility: hidden; }
+.htp-prev:hover { background: #1A1D2A; color: #C8CCDC; }
+.htp-prev.htp-hidden {
+    width: 0;
+    margin-right: 0;
+    opacity: 0;
+    transform: translateX(-8px);
+    pointer-events: none;
+}
 .htp-next {
     flex: 1;
-    padding: 10px 20px;
+    padding: 13px 16px;
     border-radius: 10px;
     border: none;
-    background: #4060a8;
-    color: #fff;
+    background: #162032;
+    color: #8FB4E8;
+    font-family: inherit;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    letter-spacing: 0.2px;
+    transition: background 0.16s ease, color 0.16s ease, transform 0.1s ease;
 }
-.htp-next:hover { background: #4e70bc; }
-.htp-next:active { transform: scale(0.97); }
+.htp-next:hover { background: #1D2B44; color: #A8C6F0; }
+.htp-next:active { transform: scale(0.98); }
 
 /* Animations */
 @keyframes htp-arr-pulse {
