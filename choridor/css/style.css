@@ -314,8 +314,11 @@ button:active {
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
 }
 
-/* Resign: muted red to signal a destructive action */
+/* Resign: muted red to signal a destructive action. position/overflow support
+   the two-step inline confirm (armed state + draining countdown bar). */
 #new-game-btn {
+    position: relative;
+    overflow: hidden;
     color: #FFFFFF;
     background: #7A3535;
     border-color: #9E4A4A;
@@ -931,7 +934,10 @@ button:active {
     transition: background 0.16s ease;
 }
 
-.lobby-mode-row:active { filter: brightness(1.1); }
+/* Chromium freezes :hover on a pressed element until the button is released,
+   so holding and dragging the cursor off would leave the highlight stuck on.
+   JS toggles .cursor-out on mouseleave to force the highlight off in that case. */
+.lobby-mode-row.cursor-out { background: none !important; }
 
 .mode-icon {
     flex-shrink: 0;
@@ -975,8 +981,13 @@ button:active {
 #btn-online:hover { background: rgba(80, 128, 200, 0.14); }
 #btn-ai:hover     { background: rgba(128, 112, 200, 0.14); }
 
+#btn-local:hover:active  { background: rgba(192, 90, 78, 0.24); }
+#btn-online:hover:active { background: rgba(80, 128, 200, 0.24); }
+#btn-ai:hover:active     { background: rgba(128, 112, 200, 0.24); }
+
 #btn-create .mode-icon, #btn-join .mode-icon { color: #5080C8; }
 #btn-create:hover, #btn-join:hover { background: rgba(80, 128, 200, 0.14); }
+#btn-create:hover:active, #btn-join:hover:active { background: rgba(80, 128, 200, 0.24); }
 
 .lobby-mode-disabled { cursor: not-allowed; }
 
@@ -1177,6 +1188,63 @@ button:active {
 .legal-modal-card a { color: #3E68A8; text-decoration: none; }
 .legal-modal-card a:hover { text-decoration: underline; }
 .legal-modal-card hr { border: none; border-top: 1px solid #1E2130; margin: 24px 0; }
+
+/* Resign: two-step inline confirm — first click arms, second confirms */
+#new-game-btn .resign-confirm-icon { display: none; }
+
+/* Reserve width for the longest label so swapping "Resign" -> "Sure?"
+   never reflows the button or the toolbar. */
+.resign-label {
+    display: inline-grid;
+    justify-items: center;
+    white-space: nowrap;
+}
+
+.resign-label::after {
+    content: 'Resign';
+    grid-area: 1 / 1;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+}
+
+.resign-label-text { grid-area: 1 / 1; }
+
+/* Armed state: button morphs in place, no popup, no layout shift */
+#new-game-btn.armed {
+    background: #9E4A4A;
+    border-color: #C86A6A;
+    box-shadow: 0 0 0 1px rgba(200, 106, 106, 0.4), 0 6px 18px rgba(158, 74, 64, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+#new-game-btn.armed .resign-icon { display: none; }
+#new-game-btn.armed .resign-confirm-icon { display: inline-block; }
+
+/* Thin countdown bar that drains over the arm window, then disarms */
+.resign-arm-bar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    transform: scaleX(0);
+    transform-origin: left center;
+    pointer-events: none;
+}
+
+@keyframes resign-arm-drain {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+}
+
+#new-game-btn.armed .resign-arm-bar {
+    animation: resign-arm-drain var(--resign-arm-ms, 3000ms) linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #new-game-btn.armed .resign-arm-bar { animation: none; transform: scaleX(0); }
+}
 
 /* Discord mobile — push content below Discord's voice overlay (~48px) */
 @media (max-width: 768px) {

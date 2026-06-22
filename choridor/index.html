@@ -338,11 +338,15 @@
                     <span>Change Mode</span>
                 </button>
                 <button id="new-game-btn" type="button" aria-label="Resign">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="resign-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="5" y1="22" x2="5" y2="2"/>
                         <path d="M5 4l14 4-14 4"/>
                     </svg>
-                    <span>Resign</span>
+                    <svg class="resign-confirm-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4,12.5 9.5,18 20,6"/>
+                    </svg>
+                    <span class="resign-label"><span class="resign-label-text">Resign</span></span>
+                    <span class="resign-arm-bar" aria-hidden="true"></span>
                 </button>
             </div>
         </div>
