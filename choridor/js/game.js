@@ -38,6 +38,24 @@ const SOCKET_PATH = location.hostname.endsWith('.discordsays.com') ? '/api/socke
 // `/phog` URL mapping (see the Discord block below), so init is deferred until
 // after patchUrlMappings runs. advanced_disable_decide keeps us to ingestion
 // only (no flags/surveys/recording, none of which we use).
+// Discord appends launch params (guild_id, channel_id, instance_id, referrer_id,
+// ...) to the activity URL. PostHog auto-captures the URL on pageviews and also
+// stamps it onto the person's $initial_* properties, so strip the query/hash off
+// every URL-bearing property before anything leaves the browser. This keeps
+// Discord server/channel IDs out of analytics and collapses otherwise unique
+// per-launch URLs into one clean entry.
+const PH_URL_PROPS = ['$current_url', '$referrer', '$initial_current_url', '$initial_referrer'];
+function stripUrlParams(value) {
+    if (typeof value !== 'string') return value;
+    const cut = value.search(/[?#]/);
+    return cut === -1 ? value : value.slice(0, cut);
+}
+function sanitizeUrlProps(props) {
+    if (!props || typeof props !== 'object') return;
+    for (const key of PH_URL_PROPS) {
+        if (key in props) props[key] = stripUrlParams(props[key]);
+    }
+}
 let phReady = false;
 function initPosthog(apiHost) {
     try {
@@ -48,6 +66,14 @@ function initPosthog(apiHost) {
             capture_pageview: true,
             capture_pageleave: true,
             advanced_disable_decide: true,
+            before_send: (event) => {
+                if (event) {
+                    sanitizeUrlProps(event.properties);
+                    sanitizeUrlProps(event.properties?.$set);
+                    sanitizeUrlProps(event.properties?.$set_once);
+                }
+                return event;
+            },
         });
         phReady = true;
     } catch { /* ignore */ }
@@ -80,9 +106,20 @@ function trackGameCompleted(winnerRole, reason) {
     if (fillerAI || spectatorMode) return;
     const movesP1 = gameState.movesP1;
     const movesP2 = gameState.movesP2;
+    // Outcome from this device's perspective, so a person's timeline reads as
+    // won/lost rather than just "p1 won". Online uses our seat; vs AI is the seat
+    // the human holds (aiPlayer is the computer). Local is two humans on one
+    // device, so there is no single player result: both stay null.
+    let playerRole = null;
+    if (onlineMode) playerRole = onlineRole;
+    else if (vsAI)  playerRole = aiPlayer === 'p1' ? 'p2' : 'p1';
+    let result = null;
+    if (playerRole) result = winnerRole === playerRole ? 'won' : 'lost';
     track('game_completed', {
         mode:        currentMode(),
         winner_role: winnerRole,
+        player_role: playerRole,
+        result,
         reason,
         moves_p1:    movesP1,
         moves_p2:    movesP2,
