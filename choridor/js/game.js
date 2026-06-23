@@ -1263,6 +1263,7 @@ function showWinScreen(winner, playerClass, delay = 0, reason = 'reached-goal') 
     }
     document.getElementById('win-card').className  = `win-card ${playerClass}`;
     document.getElementById('win-pawn').className  = `win-pawn ${playerClass}`;
+    setWinnerPawnAvatar(playerClass);
     const msg = document.getElementById('win-message');
     msg.textContent = winner === 'You' ? 'You win!' : `${winner} wins!`;
     msg.className   = `win-title ${playerClass}`;
@@ -1323,6 +1324,7 @@ function resetGame() {
         const humanPlayer = aiPlayer === 'p1' ? 'p2' : 'p1';
         document.getElementById('p1-name').textContent = humanPlayer === 'p1' ? (getMyName() || 'You') : 'AI';
         document.getElementById('p2-name').textContent = humanPlayer === 'p2' ? (getMyName() || 'You') : 'AI';
+        setAiAvatars();
     }
     updateWallCounts();
     updateStatus();
@@ -1940,6 +1942,34 @@ function clearPlayerAvatars() {
     });
 }
 
+// Local AI face. The human keeps their Discord avatar (empty on web -> hidden),
+// the AI seat gets the robot, so AI games show profile pictures like online does.
+const ROBOT_PFP = 'images/IRobot.jpg';
+// Separate, larger AI portrait shown only on the win screen when the AI wins.
+const ROBOT_WIN_PFP = 'images/IRobot2.jpg';
+function setAiAvatars() {
+    const humanPlayer = aiPlayer === 'p1' ? 'p2' : 'p1';
+    setPlayerAvatar(aiPlayer, ROBOT_PFP);
+    setPlayerAvatar(humanPlayer, myAvatar);
+}
+
+// Picture in the win-card pawn dot: the AI's win portrait when the AI wins,
+// otherwise the winner's board avatar (Discord pic), else the plain colored dot.
+function winnerPawnSrc(playerClass) {
+    if (vsAI && playerClass === aiPlayer) return ROBOT_WIN_PFP;
+    const board = document.getElementById(`${playerClass}-avatar-img`);
+    if (board && !board.classList.contains('hidden')) return board.getAttribute('src') || '';
+    return '';
+}
+
+function setWinnerPawnAvatar(playerClass) {
+    const img = document.getElementById('win-pawn-img');
+    if (!img) return;
+    const src = winnerPawnSrc(playerClass);
+    if (src) { img.src = src; img.classList.remove('hidden'); }
+    else     { img.removeAttribute('src'); img.classList.add('hidden'); }
+}
+
 function applyPlayerNames() {
     const name = getMyName();
     if (onlineMode) {
@@ -1958,7 +1988,7 @@ function applyPlayerNames() {
         const humanPlayer = aiPlayer === 'p1' ? 'p2' : 'p1';
         document.getElementById('p1-name').textContent = humanPlayer === 'p1' ? (name || 'You') : 'AI';
         document.getElementById('p2-name').textContent = humanPlayer === 'p2' ? (name || 'You') : 'AI';
-        clearPlayerAvatars();
+        setAiAvatars();
     } else {
         document.getElementById('p1-name').textContent = name || 'Player 1';
         document.getElementById('p2-name').textContent = 'Player 2';
@@ -2016,7 +2046,7 @@ document.getElementById('btn-ai').addEventListener('click', () => {
     if (softLobby) { softLobby = false; softLobbyRestoreWin = false; }
     document.getElementById('p1-name').textContent = getMyName() || 'You';
     document.getElementById('p2-name').textContent = 'AI';
-    clearPlayerAvatars();
+    setAiAvatars();
     hideLobby();
     resetGame();
     trackGameStarted('AI');
@@ -2384,6 +2414,15 @@ if (isDiscord) try {
         const data = await res.json();
         if (data.access_token) await sdk.commands.authenticate({ access_token: data.access_token });
         discordSdk = sdk;
+        // Discord proxies all Activity traffic through its own (US) servers, so
+        // PostHog GeoIP collapses every Discord player to one location. The user's
+        // Discord locale is the only region signal available inside the sandbox;
+        // stamp it on every event as a super property so analytics can break down
+        // by it. Swallowed so analytics never breaks gameplay.
+        try {
+            const { locale } = await sdk.commands.userSettingsGetLocale();
+            if (locale && phReady) posthog.register({ discord_locale: locale });
+        } catch { /* ignore */ }
         setDiscordPresence({ state: 'In lobby', assets: { large_image: 'embedded_cover', large_text: 'CHORIDOR', small_image: 'choridor_icon', small_text: 'CHORIDOR' } });
         if (data.username) {
             myAvatar = data.avatarUrl || '';
