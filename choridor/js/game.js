@@ -242,7 +242,22 @@ let discordRejoinPending = false; // true while a Discord boot rejoin is awaitin
 let matchStartTime    = 0;
 let matchRoomCode     = '';
 let _presenceTimer    = null;
-if (isDiscord) { document.body.classList.add('discord-activity'); document.getElementById('change-mode-btn')?.classList.add('hidden'); }
+// Discord (notably on mobile) hands the activity iframe a layout viewport that
+// can be far larger than the on-screen box, so 100dvh/vh lay the app out too
+// tall and the minimized pip just clips it. Drive height off visualViewport,
+// which reports the real visible size; the board re-fits via the ResizeObserver
+// on the board wrapper when --app-h changes.
+function syncDiscordViewport() {
+    const vv = window.visualViewport;
+    document.documentElement.style.setProperty('--app-h', (vv ? vv.height : window.innerHeight) + 'px');
+}
+if (isDiscord) {
+    document.body.classList.add('discord-activity');
+    document.getElementById('change-mode-btn')?.classList.add('hidden');
+    syncDiscordViewport();
+    window.visualViewport?.addEventListener('resize', syncDiscordViewport);
+    window.addEventListener('resize', syncDiscordViewport);
+}
 
 let spectatorMode  = false;
 let spectatorCount = 0;
@@ -2431,6 +2446,13 @@ if (isDiscord) try {
     const sdk = new DiscordSDK('1515199692793843712');
     await sdk.ready();
     discordInstanceId = sdk.instanceId;
+    // Toggle pip-compact chrome off Discord's own layout signal (PIP = 1) rather
+    // than a height media query, which the mobile webview never reports. Re-sync
+    // sizing on the transition too, since visualViewport may settle a beat later.
+    sdk.subscribe('ACTIVITY_LAYOUT_MODE_UPDATE', ({ layout_mode }) => {
+        document.body.classList.toggle('discord-pip', layout_mode === 1);
+        syncDiscordViewport();
+    }).catch(() => { /* layout updates unsupported; pip styling just won't apply */ });
     patchUrlMappings([
         { prefix: '/api',  target: 'choridor-web-production.up.railway.app' },
         // PostHog ingestion. Requires a matching URL mapping in the Discord

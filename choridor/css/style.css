@@ -1324,77 +1324,79 @@ button:active {
     }
 }
 
-/* Discord minimized pip (~320×180): strip card chrome, show only spinner + text */
-@media (max-height: 200px) {
-    .lobby-card {
-        background: transparent;
-        border-color: transparent;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 6px 16px;
-        width: 100%;
-        animation: none;
-    }
+/* In the Discord webview 100dvh can resolve to the device height rather than the
+   activity iframe's box, so the app lays out too tall and the minimized pip
+   clips it. --app-h is set from visualViewport (the real visible height) in JS;
+   outside Discord / before JS runs it falls back to 100dvh. */
+.discord-activity .app { height: var(--app-h, 100dvh); }
+.discord-activity .lobby-overlay { bottom: auto; height: var(--app-h, 100%); }
 
-    .lobby-logo,
-    .lobby-subtitle,
-    .lobby-htp-link,
-    .lobby-version {
-        display: none;
-    }
+/* Discord minimized pip: strip card chrome and compact the in-game bars so the
+   board keeps the room. Driven by the SDK's ACTIVITY_LAYOUT_MODE_UPDATE (PIP)
+   via the .discord-pip class on <body>; a max-height media query is unreliable
+   here because the mobile webview's layout viewport stays device-sized. */
+body.discord-pip .lobby-card {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 6px 16px;
+    width: 100%;
+    animation: none;
+}
 
-    .discord-queue-status {
-        padding: 2px 0;
-    }
+body.discord-pip .lobby-logo,
+body.discord-pip .lobby-subtitle,
+body.discord-pip .lobby-htp-link,
+body.discord-pip .lobby-version {
+    display: none;
+}
 
-    .discord-status-text {
-        font-size: 12px;
-    }
+body.discord-pip .discord-queue-status { padding: 2px 0; }
 
-    .discord-activity .app {
-        padding-top: 0;
-    }
+body.discord-pip .discord-status-text { font-size: 12px; }
 
-    /* In-game chrome: at pip size the top/bottom bars otherwise eat most of the
-       height and the controls crowd the bar. Strip them down so the board keeps
-       the room and nothing overflows. */
-    .top-bar {
-        height: 32px;
-        padding: 0 10px;
-        gap: 8px;
-    }
+body.discord-pip .app { padding-top: 0; }
 
-    .logo-wrap { display: none; }
+/* In-game chrome: at pip size the top/bottom bars otherwise eat most of the
+   height and the controls crowd the bar. Strip them down so the board keeps
+   the room and nothing overflows. */
+body.discord-pip .top-bar {
+    height: 32px;
+    padding: 0 10px;
+    gap: 8px;
+}
 
-    .player-name { font-size: 11px; }
+body.discord-pip .logo-wrap { display: none; }
 
-    .player-avatar {
-        width: 16px;
-        height: 16px;
-        min-width: 16px;
-        min-height: 16px;
-    }
+body.discord-pip .player-name { font-size: 11px; }
 
-    .wall-box { height: 12px; }
+body.discord-pip .player-avatar {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+}
 
-    .bottom-bar {
-        padding: 4px 10px;
-        gap: 8px;
-    }
+body.discord-pip .wall-box { height: 12px; }
 
-    .status-label { font-size: 12px; }
+body.discord-pip .bottom-bar {
+    padding: 4px 10px;
+    gap: 8px;
+}
 
-    .controls { gap: 6px; }
+body.discord-pip .status-label { font-size: 12px; }
 
-    .controls button {
-        padding: 6px;
-        min-width: 0;
-    }
+body.discord-pip .controls { gap: 6px; }
 
-    .controls button svg {
-        width: 14px;
-        height: 14px;
-    }
+body.discord-pip .controls button {
+    padding: 6px;
+    min-width: 0;
+}
+
+body.discord-pip .controls button svg {
+    width: 14px;
+    height: 14px;
 }
 
 /* Collapse text labels to icon-only before they can overflow the bottom bar */
