@@ -1278,6 +1278,7 @@ function showWinScreen(winner, playerClass, delay = 0, reason = 'reached-goal') 
     document.getElementById('btn-step-aside').classList.toggle('hidden', !onlineMode || spectatorMode || spectatorCount === 0);
     if (onlineMode) updateRematchBtn('idle');
     populateWinStats();
+    resetWinFeedback();
 
     const reveal = () => {
         const lost = vsAI
@@ -2120,6 +2121,31 @@ document.getElementById('btn-copy-link').addEventListener('click', () => {
 });
 
 
+// Win-screen feedback box. Shown after every game for now; the mode/result
+// context rides along so suggestions can be sliced by where they came from.
+function resetWinFeedback() {
+    const input  = document.getElementById('win-feedback-input');
+    const send   = document.getElementById('win-feedback-send');
+    if (input) input.value = '';
+    if (send)  send.disabled = false;
+    document.getElementById('win-feedback-form')?.classList.remove('hidden');
+    document.getElementById('win-feedback-thanks')?.classList.add('hidden');
+}
+
+document.getElementById('win-feedback-send')?.addEventListener('click', () => {
+    const input = document.getElementById('win-feedback-input');
+    const text  = (input?.value || '').trim();
+    if (!text) { input?.focus(); return; }
+    track('feedback_submitted', {
+        text,
+        length: text.length,
+        mode:   fillerAI ? 'AI (waiting)' : currentMode(),
+    });
+    playSound('Select');
+    document.getElementById('win-feedback-form')?.classList.add('hidden');
+    document.getElementById('win-feedback-thanks')?.classList.remove('hidden');
+});
+
 document.getElementById('win-card-close').addEventListener('click', () => {
     playSound('Close');
     document.getElementById('win-overlay').classList.add('hidden');
@@ -2603,6 +2629,7 @@ document.getElementById('htp-next').addEventListener('click', () => {
 document.querySelectorAll('.htp-dot').forEach(d => d.addEventListener('click', () => { playSound('Select'); _htpGoto(+d.dataset.idx); }));
 document.getElementById('htp-btn').addEventListener('click', () => { playSound('Select'); showHTP('in_game'); });
 document.getElementById('htp-lobby-btn').addEventListener('click', () => { playSound('Select'); showHTP('lobby'); });
+document.getElementById('htp-discord-btn').addEventListener('click', () => { playSound('Select'); showHTP('lobby'); });
 
 // Swipe-to-navigate on the HTP card
 {

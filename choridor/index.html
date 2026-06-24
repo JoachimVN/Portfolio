@@ -116,6 +116,7 @@
                 <p class="lobby-subtitle">Invite a friend to play</p>
                 <button type="button" class="lobby-ai-link" id="btn-discord-ai">Play AI while you wait</button>
                 <p class="lobby-error hidden" id="discord-error"></p>
+                <button type="button" id="htp-discord-btn" class="lobby-htp-link">How to Play</button>
             </div>
 
             <div class="lobby-footer">
@@ -205,6 +206,14 @@
                     </svg>
                     <span>Step aside</span>
                 </button>
+            </div>
+
+            <div class="win-feedback" id="win-feedback">
+                <div class="win-feedback-form" id="win-feedback-form">
+                    <textarea id="win-feedback-input" class="win-feedback-input" rows="2" maxlength="500" placeholder="Got an idea or a bug? Tell me" aria-label="Your suggestion"></textarea>
+                    <button id="win-feedback-send" class="win-feedback-send" type="button">Send</button>
+                </div>
+                <div class="win-feedback-thanks hidden" id="win-feedback-thanks">Thanks, I will read it soon</div>
             </div>
         </div>
     </div>

@@ -704,6 +704,69 @@ button:active {
 #btn-rematch.incoming { animation: rematch-pulse 1.4s ease-in-out infinite; }
 #btn-rematch.waiting  { opacity: 0.45; }
 
+/* Win-screen feedback — low-friction suggestion box */
+.win-feedback {
+    width: 100%;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    animation: win-item-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.38s both;
+}
+
+.win-feedback-form {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.win-feedback-input {
+    flex: 1;
+    min-width: 0;
+    resize: none;
+    background: rgba(10, 12, 22, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: #C8CCDC;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.35;
+    transition: border-color 0.16s ease;
+}
+
+.win-feedback-input::placeholder { color: #454A68; }
+
+.win-feedback-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.win-feedback-send {
+    flex-shrink: 0;
+    align-self: flex-end;
+    padding: 10px 16px;
+    background: #1A1D2A;
+    border: none;
+    border-radius: 10px;
+    color: #C8CCDC;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease, opacity 0.16s ease;
+}
+
+.win-feedback-send:hover { background: #242838; }
+.win-feedback-send:disabled { opacity: 0.4; cursor: default; }
+
+.win-feedback-thanks {
+    text-align: center;
+    color: #5A6080;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 0;
+}
+
 /* Icon-top action buttons (lobby + future use) */
 .win-action-btn {
     display: flex;
@@ -1290,6 +1353,47 @@ button:active {
 
     .discord-activity .app {
         padding-top: 0;
+    }
+
+    /* In-game chrome: at pip size the top/bottom bars otherwise eat most of the
+       height and the controls crowd the bar. Strip them down so the board keeps
+       the room and nothing overflows. */
+    .top-bar {
+        height: 32px;
+        padding: 0 10px;
+        gap: 8px;
+    }
+
+    .logo-wrap { display: none; }
+
+    .player-name { font-size: 11px; }
+
+    .player-avatar {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        min-height: 16px;
+    }
+
+    .wall-box { height: 12px; }
+
+    .bottom-bar {
+        padding: 4px 10px;
+        gap: 8px;
+    }
+
+    .status-label { font-size: 12px; }
+
+    .controls { gap: 6px; }
+
+    .controls button {
+        padding: 6px;
+        min-width: 0;
+    }
+
+    .controls button svg {
+        width: 14px;
+        height: 14px;
     }
 }
 
