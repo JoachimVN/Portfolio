@@ -99,7 +99,8 @@ function currentMode() {
 let clientGameStartedAt = 0;
 function trackGameStarted(mode) {
     clientGameStartedAt = Date.now();
-    track('game_started', { mode });
+    // Online games carry the match id so both players' events join on one match.
+    track('game_started', onlineMode && currentMatchId ? { mode, match_id: currentMatchId } : { mode });
 }
 function trackGameCompleted(winnerRole, reason) {
     // Spectating is not a played game. Filler ("play AI while you wait") games
@@ -127,7 +128,10 @@ function trackGameCompleted(winnerRole, reason) {
         moves_p2:    movesP2,
         total_moves: movesP1 + movesP2,
         walls_used:  gameState.walls.size,
+        walls_p1:    WALLS_PER_PLAYER - gameState.wallCounts.p1,
+        walls_p2:    WALLS_PER_PLAYER - gameState.wallCounts.p2,
         duration_ms: clientGameStartedAt ? Date.now() - clientGameStartedAt : null,
+        match_id:    onlineMode && currentMatchId ? currentMatchId : null,
     });
 }
 
@@ -137,7 +141,7 @@ function trackGameCompleted(winnerRole, reason) {
 if (navigator.audioSession) navigator.audioSession.type = 'ambient';
 
 const sounds = {};
-['Move', 'Jump', 'Wall', 'Win', 'Loss', 'Select', 'Close'].forEach(name => {
+['Move', 'Jump', 'Wall', 'Win', 'Loss', 'Select', 'Click', 'Close'].forEach(name => {
     const a = new Audio(`audio/sfx/${name}.wav`);
     a.preload = 'auto';
     sounds[name] = a;
@@ -241,6 +245,7 @@ let discordSdk        = null;
 let discordRejoinPending = false; // true while a Discord boot rejoin is awaiting its result
 let matchStartTime    = 0;
 let matchRoomCode     = '';
+let currentMatchId    = ''; // server's per-match token; stamped on online game events so both players' events join on one match
 let _presenceTimer    = null;
 // Discord (notably on mobile) hands the activity iframe a layout viewport that
 // can be far larger than the on-screen box, so 100dvh/vh lay the app out too
@@ -645,7 +650,7 @@ function handleTapWall(row, col, orientation) {
     if (!wallKeepsPathsOpen(wallKey)) return;
     tapMovePreview = null;
     tapPreview = { row, col, orientation, t0: performance.now() };
-    playSound('Select');
+    playSound('Click');
     if (animEnabled) ensureAnimLoop(); else render();
     updateTapHint();
 }
@@ -657,7 +662,7 @@ function handleTapMove(row, col) {
     }
     tapPreview = null;
     tapMovePreview = { row, col };
-    playSound('Select');
+    playSound('Click');
     updateTapHint();
     render();
 }
@@ -1367,7 +1372,7 @@ function startFillerAI() {
     vsAI = true;
     aiPlayer = 'p2';
     fillerAI = true;
-    clientGameStartedAt = Date.now(); // for game_completed duration; filler skips trackGameStarted
+    trackGameStarted('AI (waiting)'); // stamps the duration clock and logs the start
     clearPlayerAvatars();
     setFillerWaitingLabel();
     document.getElementById('filler-waiting-bar').classList.remove('hidden');
@@ -1491,7 +1496,7 @@ function initSocket(errorElId, callback) {
         if (token && role && code) storeSession({ code, role, token });
     });
 
-    socket.on('rejoin-success', ({ role, snapshot, p1Name, p2Name, p1Avatar, p2Avatar, code } = {}) => {
+    socket.on('rejoin-success', ({ role, snapshot, p1Name, p2Name, p1Avatar, p2Avatar, code, matchId, startedAt } = {}) => {
         discordRejoinPending = false;
         spectatorMode        = false;
         onlineRole           = role;
@@ -1501,7 +1506,11 @@ function initSocket(errorElId, callback) {
         opponentName   = role === 'p1' ? (p2Name   || '') : (p1Name   || '');
         opponentAvatar = role === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
         matchRoomCode  = code || matchRoomCode;
-        if (!matchStartTime) matchStartTime = Math.floor(Date.now() / 1000);
+        currentMatchId = matchId || currentMatchId;
+        // Rejoin fires no game_started, so stamp the server's match start time here;
+        // otherwise game_completed reports a null or stale (previous-game) duration.
+        if (startedAt) clientGameStartedAt = startedAt;
+        if (!matchStartTime) matchStartTime = startedAt ? Math.floor(startedAt / 1000) : Math.floor(Date.now() / 1000);
         gameState.flipped = role === 'p2';
         applyPlayerNames();
         hideLobby();
@@ -1564,7 +1573,7 @@ function initSocket(errorElId, callback) {
 
     socket.on('room-joined', () => { onlineRole = 'p2'; });
 
-    socket.on('game-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, role, code } = {}) => {
+    socket.on('game-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, role, code, matchId } = {}) => {
         if (fillerAI) { playSound('Select'); showToast('Opponent found!'); }
         fillerAI = false;
         document.getElementById('filler-waiting-bar').classList.add('hidden');
@@ -1575,6 +1584,7 @@ function initSocket(errorElId, callback) {
         opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
         matchStartTime = Math.floor(Date.now() / 1000);
         matchRoomCode  = code || '';
+        currentMatchId = matchId || '';
         onlineMode = true;
         hideLobby();
         applyPlayerNames();
@@ -1595,7 +1605,7 @@ function initSocket(errorElId, callback) {
     });
     socket.on('rematch-cancelled', () => updateRematchBtn('idle'));
 
-    socket.on('rematch-start', ({ p1Name, p2Name, p1Avatar, p2Avatar } = {}) => {
+    socket.on('rematch-start', ({ p1Name, p2Name, p1Avatar, p2Avatar, matchId } = {}) => {
         if (spectatorMode) {
             clearReconnectState();
             document.getElementById('p1-name').textContent = p1Name || 'Player 1';
@@ -1611,6 +1621,7 @@ function initSocket(errorElId, callback) {
         opponentName   = onlineRole === 'p1' ? (p2Name   || '') : (p1Name   || '');
         opponentAvatar = onlineRole === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
         matchStartTime = Math.floor(Date.now() / 1000);
+        currentMatchId = matchId || '';
         if (softLobby) {
             softLobby = false; softLobbyRestoreWin = false;
             hideLobby();
@@ -1666,6 +1677,9 @@ function initSocket(errorElId, callback) {
         opponentName   = role === 'p1' ? (p2Name || '') : (p1Name || '');
         opponentAvatar = role === 'p1' ? (p2Avatar || '') : (p1Avatar || '');
         matchStartTime = Math.floor(Date.now() / 1000);
+        // Promotion resets the board, so the promoted player's game begins now;
+        // stamp the start clock or game_completed would report a stale duration.
+        clientGameStartedAt = Date.now();
         if (code != null) matchRoomCode = code;
         document.getElementById('p1-name').textContent = p1Name || 'Player 1';
         document.getElementById('p2-name').textContent = p2Name || 'Player 2';
@@ -2277,7 +2291,7 @@ document.addEventListener('keydown', e => {
 
 document.getElementById('play-again-btn').addEventListener('click', () => {
     playSound('Select');
-    track('play_again_clicked', { mode: currentMode() });
+    track('play_again_clicked', { mode: fillerAI ? 'AI (waiting)' : currentMode() });
     if (onlineMode) {
         // In online mode, go back to lobby for a new game (a fresh game_started
         // fires later via the 'game-start' socket event once re-matched).
@@ -2291,11 +2305,10 @@ document.getElementById('play-again-btn').addEventListener('click', () => {
         aiPlayer = aiPlayer === 'p1' ? 'p2' : 'p1';
         resetGame();
         triggerAI(); // fires only if AI now goes first (aiPlayer === 'p1')
-        // Filler games are not real AI matches: don't fire game_started (it would
-        // log a phantom 'AI' start with no completion), just restamp the clock so
-        // the filler game_completed reports a correct duration.
-        if (fillerAI) clientGameStartedAt = Date.now();
-        else trackGameStarted('AI');
+        // Filler ("play AI while you wait") rematches log under their own mode so
+        // each started game is counted, with start and completion labels matching.
+        // Expect starts to outnumber completions: a found match abandons the game.
+        trackGameStarted(fillerAI ? 'AI (waiting)' : 'AI');
     } else {
         resetGame();
         trackGameStarted('Local');
