@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Billboard Hot 100 — Era-Normalized Index</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #0f0f0f; color: #e8e8e8; padding: 2rem; }
+    h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 2px solid #333;
+          color: #aaa; font-weight: 600; cursor: pointer; user-select: none; white-space: nowrap; }
+    th:hover { color: #fff; }
+    td { padding: 0.5rem 0.8rem; border-bottom: 1px solid #1e1e1e; }
+    tr:hover td { background: #1a1a1a; }
+    .rank { color: #555; width: 3rem; }
+    .title { font-weight: 600; color: #fff; max-width: 300px; }
+    .artist { color: #bbb; max-width: 220px; }
+    .year { color: #666; width: 4rem; }
+    .score { font-weight: 700; color: #1db954; }
+    th.sorted-asc::after { content: " ▲"; }
+    th.sorted-desc::after { content: " ▼"; }
+  </style>
+</head>
+<body>
+  <h1>Billboard Hot 100 — Era-Normalized</h1>
+  <p class="subtitle">Top 200 · Peak &amp; longevity percentile-ranked within a ±5-year window · 60% peak position, 40% chart weeks</p>
+  <table id="table">
+    <thead>
+      <tr>
+        <th onclick="sortBy(0)">#</th>
+        <th onclick="sortBy(1)">Title</th>
+        <th onclick="sortBy(2)">Artist</th>
+        <th onclick="sortBy(3)">Year</th>
+        <th onclick="sortBy(4)">Score</th>
+        <th onclick="sortBy(5)">Peak</th>
+        <th onclick="sortBy(6)">Chart Weeks</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td class="title">A Bar Song (Tipsy)</td>
+          <td class="artist">Shaboozey</td>
+          <td class="year">2024</td>
+          <td class="score">99.3</td>
+          <td>#1</td>
+          <td>77w</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td class="title">Blinding Lights</td>
+          <td class="artist">The Weeknd</td>
+          <td class="year">2019</td>
+          <td class="score">99.3</td>
+          <td>#1</td>
+          <td>90w</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td class="title">Heat Waves</td>
+          <td class="artist">Glass Animals</td>
+          <td class="year">2021</td>
+          <td class="score">99.3</td>
+          <td>#1</td>
+          <td>91w</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td class="title">Lose Control</td>
+          <td class="artist">Teddy Swims</td>
+          <td class="year">2023</td>
+          <td class="score">99.3</td>
+          <td>#1</td>
+          <td>112w</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td class="title">Ordinary</td>
+          <td class="artist">Alex Warren</td>
+          <td class="year">2025</td>
+          <td class="score">99.2</td>
+          <td>#1</td>
+          <td>65w</td>
+        </tr>
+        <tr>
+          <td class="rank">6</td>
+          <td class="title">Circles</td>
+          <td class="artist">Post Malone</td>
+          <td class="year">2019</td>
+          <td class="score">99.2</td>
+          <td>#1</td>
+          <td>61w</td>
+        </tr>
+        <tr>
+          <td class="rank">7</td>
+          <td class="title">Save Your Tears</td>
+          <td class="artist">The Weeknd & Ariana Grande</td>
+          <td class="year">2020</td>
+          <td class="score">99.2</td>
+          <td>#1</td>
+          <td>69w</td>
+        </tr>
+        <tr>
+          <td class="rank">8</td>
+          <td class="title">Stay</td>
+          <td class="artist">The Kid Laroi & Justin Bieber</td>
+          <td class="year">2021</td>
+          <td class="score">99.2</td>
+          <td>#1</td>
+          <td>63w</td>
+        </tr>
+        <tr>
+          <td class="rank">9</td>
+          <td class="title">As It Was</td>
+          <td class="artist">Harry Styles</td>
+          <td class="year">2022</td>
+          <td class="score">99.2</td>
+          <td>#1</td>
+          <td>61w</td>
+        </tr>
+        <tr>
+          <td class="rank">10</td>
+          <td class="title">I Had Some Help</td>
+          <td class="artist">Post Malone Featuring Morgan Wallen</td>
+          <td class="year">2024</td>
+          <td class="score">99.2</td>
+          <td>#1</td>
+          <td>67w</td>
+        </tr>
+        <tr>
+          <td class="rank">11</td>
+          <td class="title">Shape Of You</td>
+          <td class="artist">Ed Sheeran</td>
+          <td class="year">2017</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>58w</td>
+        </tr>
+        <tr>
+          <td class="rank">12</td>
+          <td class="title">Cruel Summer</td>
+          <td class="artist">Taylor Swift</td>
+          <td class="year">2019</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>54w</td>
+        </tr>
+        <tr>
+          <td class="rank">13</td>
+          <td class="title">Perfect</td>
+          <td class="artist">Ed Sheeran</td>
+          <td class="year">2017</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>56w</td>
+        </tr>
+        <tr>
+          <td class="rank">14</td>
+          <td class="title">All Of Me</td>
+          <td class="artist">John Legend</td>
+          <td class="year">2013</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>59w</td>
+        </tr>
+        <tr>
+          <td class="rank">15</td>
+          <td class="title">Rockin' Around The Christmas Tree</td>
+          <td class="artist">Brenda Lee</td>
+          <td class="year">1960</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>71w</td>
+        </tr>
+        <tr>
+          <td class="rank">16</td>
+          <td class="title">Dark Horse</td>
+          <td class="artist">Katy Perry Featuring Juicy J</td>
+          <td class="year">2013</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>57w</td>
+        </tr>
+        <tr>
+          <td class="rank">17</td>
+          <td class="title">Anti-Hero</td>
+          <td class="artist">Taylor Swift</td>
+          <td class="year">2022</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>53w</td>
+        </tr>
+        <tr>
+          <td class="rank">18</td>
+          <td class="title">Last Night</td>
+          <td class="artist">Morgan Wallen</td>
+          <td class="year">2023</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>60w</td>
+        </tr>
+        <tr>
+          <td class="rank">19</td>
+          <td class="title">Die With A Smile</td>
+          <td class="artist">Lady Gaga & Bruno Mars</td>
+          <td class="year">2024</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>60w</td>
+        </tr>
+        <tr>
+          <td class="rank">20</td>
+          <td class="title">Someone You Loved</td>
+          <td class="artist">Lewis Capaldi</td>
+          <td class="year">2019</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>54w</td>
+        </tr>
+        <tr>
+          <td class="rank">21</td>
+          <td class="title">Flowers</td>
+          <td class="artist">Miley Cyrus</td>
+          <td class="year">2023</td>
+          <td class="score">99.1</td>
+          <td>#1</td>
+          <td>55w</td>
+        </tr>
+        <tr>
+          <td class="rank">22</td>
+          <td class="title">Uptown Funk!</td>
+          <td class="artist">Mark Ronson Featuring Bruno Mars</td>
+          <td class="year">2014</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>56w</td>
+        </tr>
+        <tr>
+          <td class="rank">23</td>
+          <td class="title">Somebody That I Used To Know</td>
+          <td class="artist">Gotye Featuring Kimbra</td>
+          <td class="year">2012</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>58w</td>
+        </tr>
+        <tr>
+          <td class="rank">24</td>
+          <td class="title">The Twist</td>
+          <td class="artist">Chubby Checker</td>
+          <td class="year">1960</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>40w</td>
+        </tr>
+        <tr>
+          <td class="rank">25</td>
+          <td class="title">Monster Mash</td>
+          <td class="artist">Bobby "Boris" Pickett And The Crypt-Kickers</td>
+          <td class="year">1962</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">26</td>
+          <td class="title">Venus</td>
+          <td class="artist">Frankie Avalon</td>
+          <td class="year">1959</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">27</td>
+          <td class="title">The Lion Sleeps Tonight</td>
+          <td class="artist">The Tokens</td>
+          <td class="year">1961</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>29w</td>
+        </tr>
+        <tr>
+          <td class="rank">28</td>
+          <td class="title">Not Like Us</td>
+          <td class="artist">Kendrick Lamar</td>
+          <td class="year">2024</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>53w</td>
+        </tr>
+        <tr>
+          <td class="rank">29</td>
+          <td class="title">Rolling In The Deep</td>
+          <td class="artist">Adele</td>
+          <td class="year">2010</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>64w</td>
+        </tr>
+        <tr>
+          <td class="rank">30</td>
+          <td class="title">Party Rock Anthem</td>
+          <td class="artist">LMFAO Featuring Lauren Bennett & GoonRock</td>
+          <td class="year">2011</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>67w</td>
+        </tr>
+        <tr>
+          <td class="rank">31</td>
+          <td class="title">Light My Fire</td>
+          <td class="artist">The Doors</td>
+          <td class="year">1967</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>23w</td>
+        </tr>
+        <tr>
+          <td class="rank">32</td>
+          <td class="title">Sunflower (Spider-Man: Into The Spider-Verse)</td>
+          <td class="artist">Post Malone & Swae Lee</td>
+          <td class="year">2018</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>53w</td>
+        </tr>
+        <tr>
+          <td class="rank">33</td>
+          <td class="title">Breaking Up Is Hard To Do</td>
+          <td class="artist">Neil Sedaka</td>
+          <td class="year">1962</td>
+          <td class="score">99.0</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">34</td>
+          <td class="title">Without Me</td>
+          <td class="artist">Halsey</td>
+          <td class="year">2018</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">35</td>
+          <td class="title">Mood</td>
+          <td class="artist">24kGoldn Featuring iann dior</td>
+          <td class="year">2020</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">36</td>
+          <td class="title">Girls Like You</td>
+          <td class="artist">Maroon 5 Featuring Cardi B</td>
+          <td class="year">2018</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">37</td>
+          <td class="title">Closer</td>
+          <td class="artist">The Chainsmokers Featuring Halsey</td>
+          <td class="year">2016</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">38</td>
+          <td class="title">Die For You</td>
+          <td class="artist">The Weeknd & Ariana Grande</td>
+          <td class="year">2016</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">39</td>
+          <td class="title">Smooth</td>
+          <td class="artist">Santana Featuring Rob Thomas</td>
+          <td class="year">1999</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>58w</td>
+        </tr>
+        <tr>
+          <td class="rank">40</td>
+          <td class="title">Running Bear</td>
+          <td class="artist">Johnny Preston</td>
+          <td class="year">1959</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>27w</td>
+        </tr>
+        <tr>
+          <td class="rank">41</td>
+          <td class="title">All I Want For Christmas Is You</td>
+          <td class="artist">Mariah Carey</td>
+          <td class="year">2000</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>78w</td>
+        </tr>
+        <tr>
+          <td class="rank">42</td>
+          <td class="title">Sicko Mode</td>
+          <td class="artist">Travis Scott</td>
+          <td class="year">2018</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">43</td>
+          <td class="title">Cheap Thrills</td>
+          <td class="artist">Sia Featuring Sean Paul</td>
+          <td class="year">2016</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">44</td>
+          <td class="title">Too Sweet</td>
+          <td class="artist">Hozier</td>
+          <td class="year">2024</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">45</td>
+          <td class="title">I Remember Everything</td>
+          <td class="artist">Zach Bryan Featuring Kacey Musgraves</td>
+          <td class="year">2023</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">46</td>
+          <td class="title">Mack The Knife</td>
+          <td class="artist">Bobby Darin</td>
+          <td class="year">1959</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>26w</td>
+        </tr>
+        <tr>
+          <td class="rank">47</td>
+          <td class="title">"Hello, Dolly!"</td>
+          <td class="artist">Louis Armstrong And The All Stars</td>
+          <td class="year">1964</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>22w</td>
+        </tr>
+        <tr>
+          <td class="rank">48</td>
+          <td class="title">Kill Bill</td>
+          <td class="artist">SZA</td>
+          <td class="year">2022</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">49</td>
+          <td class="title">Please Mr. Postman</td>
+          <td class="artist">The Marvelettes</td>
+          <td class="year">1961</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>24w</td>
+        </tr>
+        <tr>
+          <td class="rank">50</td>
+          <td class="title">Can't Stop The Feeling!</td>
+          <td class="artist">Justin Timberlake</td>
+          <td class="year">2016</td>
+          <td class="score">98.9</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">51</td>
+          <td class="title">Ode To Billie Joe</td>
+          <td class="artist">Bobbie Gentry</td>
+          <td class="year">1967</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>20w</td>
+        </tr>
+        <tr>
+          <td class="rank">52</td>
+          <td class="title">Good 4 U</td>
+          <td class="artist">Olivia Rodrigo</td>
+          <td class="year">2021</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>51w</td>
+        </tr>
+        <tr>
+          <td class="rank">53</td>
+          <td class="title">See You Again</td>
+          <td class="artist">Wiz Khalifa Featuring Charlie Puth</td>
+          <td class="year">2015</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">54</td>
+          <td class="title">Golden</td>
+          <td class="artist">"HUNTR/X: EJAE, Audrey Nuna & REI AMI"</td>
+          <td class="year">2025</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>47w</td>
+        </tr>
+        <tr>
+          <td class="rank">55</td>
+          <td class="title">Shake It Off</td>
+          <td class="artist">Taylor Swift</td>
+          <td class="year">2014</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">56</td>
+          <td class="title">I Gotta Feeling</td>
+          <td class="artist">The Black Eyed Peas</td>
+          <td class="year">2009</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>56w</td>
+        </tr>
+        <tr>
+          <td class="rank">57</td>
+          <td class="title">I'm Sorry</td>
+          <td class="artist">Brenda Lee</td>
+          <td class="year">1960</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>23w</td>
+        </tr>
+        <tr>
+          <td class="rank">58</td>
+          <td class="title">Tossin' And Turnin'</td>
+          <td class="artist">Bobby Lewis</td>
+          <td class="year">1961</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>23w</td>
+        </tr>
+        <tr>
+          <td class="rank">59</td>
+          <td class="title">Amazed</td>
+          <td class="artist">Lonestar</td>
+          <td class="year">1999</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>55w</td>
+        </tr>
+        <tr>
+          <td class="rank">60</td>
+          <td class="title">Truly Madly Deeply</td>
+          <td class="artist">Savage Garden</td>
+          <td class="year">1997</td>
+          <td class="score">98.8</td>
+          <td>#1</td>
+          <td>52w</td>
+        </tr>
+        <tr>
+          <td class="rank">61</td>
+          <td class="title">El Paso</td>
+          <td class="artist">Marty Robbins</td>
+          <td class="year">1959</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>22w</td>
+        </tr>
+        <tr>
+          <td class="rank">62</td>
+          <td class="title">Stranger On The Shore</td>
+          <td class="artist">Mr. Acker Bilk</td>
+          <td class="year">1962</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>21w</td>
+        </tr>
+        <tr>
+          <td class="rank">63</td>
+          <td class="title">It's All In The Game</td>
+          <td class="artist">Tommy Edwards</td>
+          <td class="year">1958</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>22w</td>
+        </tr>
+        <tr>
+          <td class="rank">64</td>
+          <td class="title">Macarena (Bayside Boys Mix)</td>
+          <td class="artist">Los del Rio</td>
+          <td class="year">1995</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>60w</td>
+        </tr>
+        <tr>
+          <td class="rank">65</td>
+          <td class="title">"Sugar, Sugar"</td>
+          <td class="artist">The Archies</td>
+          <td class="year">1969</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>22w</td>
+        </tr>
+        <tr>
+          <td class="rank">66</td>
+          <td class="title">Viva La Vida</td>
+          <td class="artist">Coldplay</td>
+          <td class="year">2008</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>51w</td>
+        </tr>
+        <tr>
+          <td class="rank">67</td>
+          <td class="title">That's What I Like</td>
+          <td class="artist">Bruno Mars</td>
+          <td class="year">2016</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>51w</td>
+        </tr>
+        <tr>
+          <td class="rank">68</td>
+          <td class="title">Despacito</td>
+          <td class="artist">Luis Fonsi & Daddy Yankee Featuring Justin Bieber</td>
+          <td class="year">2017</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>51w</td>
+        </tr>
+        <tr>
+          <td class="rank">69</td>
+          <td class="title">Luther</td>
+          <td class="artist">Kendrick Lamar & SZA</td>
+          <td class="year">2024</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>46w</td>
+        </tr>
+        <tr>
+          <td class="rank">70</td>
+          <td class="title">I Like It</td>
+          <td class="artist">"Cardi B, Bad Bunny & J Balvin"</td>
+          <td class="year">2018</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>51w</td>
+        </tr>
+        <tr>
+          <td class="rank">71</td>
+          <td class="title">"To Know Him, Is To Love Him"</td>
+          <td class="artist">The Teddy Bears</td>
+          <td class="year">1958</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>23w</td>
+        </tr>
+        <tr>
+          <td class="rank">72</td>
+          <td class="title">Raindrops Keep Fallin' On My Head</td>
+          <td class="artist">B.J. Thomas</td>
+          <td class="year">1969</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>22w</td>
+        </tr>
+        <tr>
+          <td class="rank">73</td>
+          <td class="title">Too Close</td>
+          <td class="artist">Next</td>
+          <td class="year">1998</td>
+          <td class="score">98.7</td>
+          <td>#1</td>
+          <td>53w</td>
+        </tr>
+        <tr>
+          <td class="rank">74</td>
+          <td class="title">Bad Guy</td>
+          <td class="artist">Billie Eilish</td>
+          <td class="year">2019</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>49w</td>
+        </tr>
+        <tr>
+          <td class="rank">75</td>
+          <td class="title">The Theme From "A Summer Place"</td>
+          <td class="artist">Percy Faith And His Orchestra</td>
+          <td class="year">1960</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>21w</td>
+        </tr>
+        <tr>
+          <td class="rank">76</td>
+          <td class="title">Sucker</td>
+          <td class="artist">Jonas Brothers</td>
+          <td class="year">2019</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>47w</td>
+        </tr>
+        <tr>
+          <td class="rank">77</td>
+          <td class="title">The Battle Of New Orleans</td>
+          <td class="artist">Johnny Horton</td>
+          <td class="year">1959</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>21w</td>
+        </tr>
+        <tr>
+          <td class="rank">78</td>
+          <td class="title">How You Remind Me</td>
+          <td class="artist">Nickelback</td>
+          <td class="year">2001</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>49w</td>
+        </tr>
+        <tr>
+          <td class="rank">79</td>
+          <td class="title">"December, 1963 (Oh, What a Night)"</td>
+          <td class="artist">The 4 Seasons</td>
+          <td class="year">1975</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>54w</td>
+        </tr>
+        <tr>
+          <td class="rank">80</td>
+          <td class="title">I Honestly Love You</td>
+          <td class="artist">Olivia Newton-John</td>
+          <td class="year">1974</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>36w</td>
+        </tr>
+        <tr>
+          <td class="rank">81</td>
+          <td class="title">Big Girls Don't Cry</td>
+          <td class="artist">Fergie</td>
+          <td class="year">2007</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>48w</td>
+        </tr>
+        <tr>
+          <td class="rank">82</td>
+          <td class="title">Blurred Lines</td>
+          <td class="artist">Robin Thicke Featuring T.I. + Pharrell</td>
+          <td class="year">2013</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>48w</td>
+        </tr>
+        <tr>
+          <td class="rank">83</td>
+          <td class="title">With Arms Wide Open</td>
+          <td class="artist">Creed</td>
+          <td class="year">2000</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>47w</td>
+        </tr>
+        <tr>
+          <td class="rank">84</td>
+          <td class="title">The Hills</td>
+          <td class="artist">The Weeknd</td>
+          <td class="year">2015</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>48w</td>
+        </tr>
+        <tr>
+          <td class="rank">85</td>
+          <td class="title">Thrift Shop</td>
+          <td class="artist">Macklemore & Ryan Lewis Featuring Wanz</td>
+          <td class="year">2012</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>49w</td>
+        </tr>
+        <tr>
+          <td class="rank">86</td>
+          <td class="title">Call Me Maybe</td>
+          <td class="artist">Carly Rae Jepsen</td>
+          <td class="year">2012</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>50w</td>
+        </tr>
+        <tr>
+          <td class="rank">87</td>
+          <td class="title">Just The Way You Are</td>
+          <td class="artist">Bruno Mars</td>
+          <td class="year">2010</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>48w</td>
+        </tr>
+        <tr>
+          <td class="rank">88</td>
+          <td class="title">Together Again</td>
+          <td class="artist">Janet</td>
+          <td class="year">1997</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>46w</td>
+        </tr>
+        <tr>
+          <td class="rank">89</td>
+          <td class="title">Love Somebody</td>
+          <td class="artist">Morgan Wallen</td>
+          <td class="year">2024</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>45w</td>
+        </tr>
+        <tr>
+          <td class="rank">90</td>
+          <td class="title">Just Dance</td>
+          <td class="artist">Lady Gaga Featuring Colby O'Donis</td>
+          <td class="year">2008</td>
+          <td class="score">98.6</td>
+          <td>#1</td>
+          <td>49w</td>
+        </tr>
+        <tr>
+          <td class="rank">91</td>
+          <td class="title">Everyday People</td>
+          <td class="artist">Sly & The Family Stone</td>
+          <td class="year">1968</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>19w</td>
+        </tr>
+        <tr>
+          <td class="rank">92</td>
+          <td class="title">Moves Like Jagger</td>
+          <td class="artist">Maroon 5 Featuring Christina Aguilera</td>
+          <td class="year">2011</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>48w</td>
+        </tr>
+        <tr>
+          <td class="rank">93</td>
+          <td class="title">It's Only Make Believe</td>
+          <td class="artist">Conway Twitty</td>
+          <td class="year">1958</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>21w</td>
+        </tr>
+        <tr>
+          <td class="rank">94</td>
+          <td class="title">Tom Dooley</td>
+          <td class="artist">The Kingston Trio</td>
+          <td class="year">1958</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>21w</td>
+        </tr>
+        <tr>
+          <td class="rank">95</td>
+          <td class="title">Old Town Road</td>
+          <td class="artist">Lil Nas X Featuring Billy Ray Cyrus</td>
+          <td class="year">2019</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>45w</td>
+        </tr>
+        <tr>
+          <td class="rank">96</td>
+          <td class="title">Stagger Lee</td>
+          <td class="artist">Lloyd Price</td>
+          <td class="year">1958</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>21w</td>
+        </tr>
+        <tr>
+          <td class="rank">97</td>
+          <td class="title">Yeah!</td>
+          <td class="artist">Usher Featuring Lil Jon & Ludacris</td>
+          <td class="year">2004</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>47w</td>
+        </tr>
+        <tr>
+          <td class="rank">98</td>
+          <td class="title">Hey Jude</td>
+          <td class="artist">The Beatles</td>
+          <td class="year">1968</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>19w</td>
+        </tr>
+        <tr>
+          <td class="rank">99</td>
+          <td class="title">Shallow</td>
+          <td class="artist">Lady Gaga & Bradley Cooper</td>
+          <td class="year">2018</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>45w</td>
+        </tr>
+        <tr>
+          <td class="rank">100</td>
+          <td class="title">Happy</td>
+          <td class="artist">Pharrell Williams</td>
+          <td class="year">2014</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>47w</td>
+        </tr>
+        <tr>
+          <td class="rank">101</td>
+          <td class="title">All About That Bass</td>
+          <td class="artist">Meghan Trainor</td>
+          <td class="year">2014</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>47w</td>
+        </tr>
+        <tr>
+          <td class="rank">102</td>
+          <td class="title">It's Now Or Never</td>
+          <td class="artist">Elvis Presley With The Jordanaires</td>
+          <td class="year">1960</td>
+          <td class="score">98.5</td>
+          <td>#1</td>
+          <td>20w</td>
+        </tr>
+        <tr>
+          <td class="rank">103</td>
+          <td class="title">Heartaches By The Number</td>
+          <td class="artist">Guy Mitchell</td>
+          <td class="year">1959</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>20w</td>
+        </tr>
+        <tr>
+          <td class="rank">104</td>
+          <td class="title">"Baby, Come To Me"</td>
+          <td class="artist">Patti Austin A Duet With James Ingram</td>
+          <td class="year">1982</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>32w</td>
+        </tr>
+        <tr>
+          <td class="rank">105</td>
+          <td class="title">Love Machine (Part 1)</td>
+          <td class="artist">The Miracles</td>
+          <td class="year">1975</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">106</td>
+          <td class="title">Mr. Blue</td>
+          <td class="artist">The Fleetwoods</td>
+          <td class="year">1959</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>20w</td>
+        </tr>
+        <tr>
+          <td class="rank">107</td>
+          <td class="title">I Just Want To Be Your Everything</td>
+          <td class="artist">Andy Gibb</td>
+          <td class="year">1977</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>31w</td>
+        </tr>
+        <tr>
+          <td class="rank">108</td>
+          <td class="title">Candle In The Wind 1997/Something About The Way You Look Tonight</td>
+          <td class="artist">Elton John</td>
+          <td class="year">1997</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">109</td>
+          <td class="title">Upside Down</td>
+          <td class="artist">Diana Ross</td>
+          <td class="year">1980</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>29w</td>
+        </tr>
+        <tr>
+          <td class="rank">110</td>
+          <td class="title">Celebration</td>
+          <td class="artist">Kool & The Gang</td>
+          <td class="year">1980</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>30w</td>
+        </tr>
+        <tr>
+          <td class="rank">111</td>
+          <td class="title">Billie Jean</td>
+          <td class="artist">Michael Jackson</td>
+          <td class="year">1983</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>32w</td>
+        </tr>
+        <tr>
+          <td class="rank">112</td>
+          <td class="title">Indian Reservation (The Lament Of The Cherokee Reservation Indian)</td>
+          <td class="artist">The Raiders</td>
+          <td class="year">1971</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>22w</td>
+        </tr>
+        <tr>
+          <td class="rank">113</td>
+          <td class="title">Industry Baby</td>
+          <td class="artist">Lil Nas X & Jack Harlow</td>
+          <td class="year">2021</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">114</td>
+          <td class="title">Give Me Everything</td>
+          <td class="artist">"Pitbull Featuring Ne-Yo, Afrojack & Nayer"</td>
+          <td class="year">2011</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>45w</td>
+        </tr>
+        <tr>
+          <td class="rank">115</td>
+          <td class="title">We Belong Together</td>
+          <td class="artist">Mariah Carey</td>
+          <td class="year">2005</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>43w</td>
+        </tr>
+        <tr>
+          <td class="rank">116</td>
+          <td class="title">Baby Come Back</td>
+          <td class="artist">Player</td>
+          <td class="year">1977</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>32w</td>
+        </tr>
+        <tr>
+          <td class="rank">117</td>
+          <td class="title">Peppermint Twist - Part I</td>
+          <td class="artist">Joey Dee & the Starliters</td>
+          <td class="year">1961</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>19w</td>
+        </tr>
+        <tr>
+          <td class="rank">118</td>
+          <td class="title">About Damn Time</td>
+          <td class="artist">Lizzo</td>
+          <td class="year">2022</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">119</td>
+          <td class="title">Hot Child In The City</td>
+          <td class="artist">Nick Gilder</td>
+          <td class="year">1978</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>31w</td>
+        </tr>
+        <tr>
+          <td class="rank">120</td>
+          <td class="title">How Deep Is Your Love</td>
+          <td class="artist">Bee Gees</td>
+          <td class="year">1977</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>33w</td>
+        </tr>
+        <tr>
+          <td class="rank">121</td>
+          <td class="title">Royals</td>
+          <td class="artist">Lorde</td>
+          <td class="year">2013</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>44w</td>
+        </tr>
+        <tr>
+          <td class="rank">122</td>
+          <td class="title">Another One Bites The Dust</td>
+          <td class="artist">Queen</td>
+          <td class="year">1980</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>31w</td>
+        </tr>
+        <tr>
+          <td class="rank">123</td>
+          <td class="title">Jessie's Girl</td>
+          <td class="artist">Rick Springfield</td>
+          <td class="year">1981</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>31w</td>
+        </tr>
+        <tr>
+          <td class="rank">124</td>
+          <td class="title">Havana</td>
+          <td class="artist">Camila Cabello Featuring Young Thug</td>
+          <td class="year">2017</td>
+          <td class="score">98.4</td>
+          <td>#1</td>
+          <td>45w</td>
+        </tr>
+        <tr>
+          <td class="rank">125</td>
+          <td class="title">To Sir With Love</td>
+          <td class="artist">Lulu</td>
+          <td class="year">1967</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>17w</td>
+        </tr>
+        <tr>
+          <td class="rank">126</td>
+          <td class="title">Rockstar</td>
+          <td class="artist">DaBaby Featuring Roddy Ricch</td>
+          <td class="year">2020</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">127</td>
+          <td class="title">Will You Love Me Tomorrow</td>
+          <td class="artist">The Shirelles</td>
+          <td class="year">1960</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>19w</td>
+        </tr>
+        <tr>
+          <td class="rank">128</td>
+          <td class="title">(Love Is) Thicker Than Water</td>
+          <td class="artist">Andy Gibb</td>
+          <td class="year">1977</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>29w</td>
+        </tr>
+        <tr>
+          <td class="rank">129</td>
+          <td class="title">Snooze</td>
+          <td class="artist">SZA</td>
+          <td class="year">2022</td>
+          <td class="score">98.3</td>
+          <td>#2</td>
+          <td>70w</td>
+        </tr>
+        <tr>
+          <td class="rank">130</td>
+          <td class="title">Un-Break My Heart</td>
+          <td class="artist">Toni Braxton</td>
+          <td class="year">1996</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">131</td>
+          <td class="title">Red Red Wine</td>
+          <td class="artist">UB40</td>
+          <td class="year">1984</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>40w</td>
+        </tr>
+        <tr>
+          <td class="rank">132</td>
+          <td class="title">Wait For U</td>
+          <td class="artist">Future Featuring Drake & Tems</td>
+          <td class="year">2022</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">133</td>
+          <td class="title">Truth Hurts</td>
+          <td class="artist">Lizzo</td>
+          <td class="year">2019</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">134</td>
+          <td class="title">A Fifth Of Beethoven</td>
+          <td class="artist">Walter Murphy & The Big Apple Band</td>
+          <td class="year">1976</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">135</td>
+          <td class="title">Love Is Blue (L'amour Est Bleu)</td>
+          <td class="artist">Paul Mauriat And His Orchestra</td>
+          <td class="year">1968</td>
+          <td class="score">98.3</td>
+          <td>#1</td>
+          <td>18w</td>
+        </tr>
+        <tr>
+          <td class="rank">136</td>
+          <td class="title">I Can't Stop Loving You</td>
+          <td class="artist">Ray Charles</td>
+          <td class="year">1962</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>18w</td>
+        </tr>
+        <tr>
+          <td class="rank">137</td>
+          <td class="title">The Sign</td>
+          <td class="artist">Ace of Base</td>
+          <td class="year">1993</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">138</td>
+          <td class="title">Chariots Of Fire - Titles</td>
+          <td class="artist">Vangelis</td>
+          <td class="year">1981</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">139</td>
+          <td class="title">We Found Love</td>
+          <td class="artist">Rihanna Featuring Calvin Harris</td>
+          <td class="year">2011</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">140</td>
+          <td class="title">Sexy And I Know It</td>
+          <td class="artist">LMFAO</td>
+          <td class="year">2011</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">141</td>
+          <td class="title">Maggie May/Reason To Believe</td>
+          <td class="artist">Rod Stewart</td>
+          <td class="year">1971</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>21w</td>
+        </tr>
+        <tr>
+          <td class="rank">142</td>
+          <td class="title">Set Fire To The Rain</td>
+          <td class="artist">Adele</td>
+          <td class="year">2011</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">143</td>
+          <td class="title">He's A Rebel</td>
+          <td class="artist">The Crystals</td>
+          <td class="year">1962</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>18w</td>
+        </tr>
+        <tr>
+          <td class="rank">144</td>
+          <td class="title">One More Night</td>
+          <td class="artist">Maroon 5</td>
+          <td class="year">2012</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">145</td>
+          <td class="title">Sorry</td>
+          <td class="artist">Justin Bieber</td>
+          <td class="year">2015</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>42w</td>
+        </tr>
+        <tr>
+          <td class="rank">146</td>
+          <td class="title">Keep On Loving You</td>
+          <td class="artist">REO Speedwagon</td>
+          <td class="year">1980</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">147</td>
+          <td class="title">Please Please Please</td>
+          <td class="artist">Sabrina Carpenter</td>
+          <td class="year">2024</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>38w</td>
+        </tr>
+        <tr>
+          <td class="rank">148</td>
+          <td class="title">Total Eclipse Of The Heart</td>
+          <td class="artist">Bonnie Tyler</td>
+          <td class="year">1983</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>29w</td>
+        </tr>
+        <tr>
+          <td class="rank">149</td>
+          <td class="title">Leave The Door Open</td>
+          <td class="artist">Silk Sonic (Bruno Mars & Anderson .Paak)</td>
+          <td class="year">2021</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>39w</td>
+        </tr>
+        <tr>
+          <td class="rank">150</td>
+          <td class="title">We Are Young</td>
+          <td class="artist">fun. Featuring Janelle Monae</td>
+          <td class="year">2011</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">151</td>
+          <td class="title">You're Makin' Me High/Let It Flow</td>
+          <td class="artist">Toni Braxton</td>
+          <td class="year">1996</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">152</td>
+          <td class="title">I Want You Back</td>
+          <td class="artist">Jackson 5</td>
+          <td class="year">1969</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>19w</td>
+        </tr>
+        <tr>
+          <td class="rank">153</td>
+          <td class="title">Levitating</td>
+          <td class="artist">Dua Lipa</td>
+          <td class="year">2020</td>
+          <td class="score">98.2</td>
+          <td>#2</td>
+          <td>77w</td>
+        </tr>
+        <tr>
+          <td class="rank">154</td>
+          <td class="title">Low</td>
+          <td class="artist">Flo Rida Featuring T-Pain</td>
+          <td class="year">2007</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>40w</td>
+        </tr>
+        <tr>
+          <td class="rank">155</td>
+          <td class="title">I Love A Rainy Night</td>
+          <td class="artist">Eddie Rabbitt</td>
+          <td class="year">1980</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">156</td>
+          <td class="title">Beautiful Things</td>
+          <td class="artist">Benson Boone</td>
+          <td class="year">2024</td>
+          <td class="score">98.2</td>
+          <td>#2</td>
+          <td>89w</td>
+        </tr>
+        <tr>
+          <td class="rank">157</td>
+          <td class="title">Everything You Want</td>
+          <td class="artist">Vertical Horizon</td>
+          <td class="year">2000</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">158</td>
+          <td class="title">Lovin On Me</td>
+          <td class="artist">Jack Harlow</td>
+          <td class="year">2023</td>
+          <td class="score">98.2</td>
+          <td>#1</td>
+          <td>38w</td>
+        </tr>
+        <tr>
+          <td class="rank">159</td>
+          <td class="title">Birds Of A Feather</td>
+          <td class="artist">Billie Eilish</td>
+          <td class="year">2024</td>
+          <td class="score">98.2</td>
+          <td>#2</td>
+          <td>67w</td>
+        </tr>
+        <tr>
+          <td class="rank">160</td>
+          <td class="title">Bad Habits</td>
+          <td class="artist">Ed Sheeran</td>
+          <td class="year">2021</td>
+          <td class="score">98.1</td>
+          <td>#2</td>
+          <td>56w</td>
+        </tr>
+        <tr>
+          <td class="rank">161</td>
+          <td class="title">Don't You Want Me</td>
+          <td class="artist">The Human League</td>
+          <td class="year">1982</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">162</td>
+          <td class="title">Stayin' Alive</td>
+          <td class="artist">Bee Gees</td>
+          <td class="year">1977</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>27w</td>
+        </tr>
+        <tr>
+          <td class="rank">163</td>
+          <td class="title">Blank Space</td>
+          <td class="artist">Taylor Swift</td>
+          <td class="year">2014</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">164</td>
+          <td class="title">When I'm With You</td>
+          <td class="artist">Sheriff</td>
+          <td class="year">1983</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">165</td>
+          <td class="title">Family Affair</td>
+          <td class="artist">Mary J. Blige</td>
+          <td class="year">2001</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">166</td>
+          <td class="title">Tie A Yellow Ribbon Round The Ole Oak Tree</td>
+          <td class="artist">Dawn Featuring Tony Orlando</td>
+          <td class="year">1973</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>23w</td>
+        </tr>
+        <tr>
+          <td class="rank">167</td>
+          <td class="title">Love Yourself</td>
+          <td class="artist">Justin Bieber</td>
+          <td class="year">2015</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">168</td>
+          <td class="title">Paint The Town Red</td>
+          <td class="artist">Doja Cat</td>
+          <td class="year">2023</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>37w</td>
+        </tr>
+        <tr>
+          <td class="rank">169</td>
+          <td class="title">Can't Feel My Face</td>
+          <td class="artist">The Weeknd</td>
+          <td class="year">2015</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">170</td>
+          <td class="title">The Way We Were</td>
+          <td class="artist">Barbra Streisand</td>
+          <td class="year">1973</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>23w</td>
+        </tr>
+        <tr>
+          <td class="rank">171</td>
+          <td class="title">No One</td>
+          <td class="artist">Alicia Keys</td>
+          <td class="year">2007</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>39w</td>
+        </tr>
+        <tr>
+          <td class="rank">172</td>
+          <td class="title">Fast Car</td>
+          <td class="artist">Luke Combs</td>
+          <td class="year">2023</td>
+          <td class="score">98.1</td>
+          <td>#2</td>
+          <td>56w</td>
+        </tr>
+        <tr>
+          <td class="rank">173</td>
+          <td class="title">Rude</td>
+          <td class="artist">MAGIC!</td>
+          <td class="year">2014</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>41w</td>
+        </tr>
+        <tr>
+          <td class="rank">174</td>
+          <td class="title">Down</td>
+          <td class="artist">Jay Sean Featuring Lil Wayne</td>
+          <td class="year">2009</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>40w</td>
+        </tr>
+        <tr>
+          <td class="rank">175</td>
+          <td class="title">You Don't Have To Be A Star (To Be In My Show)</td>
+          <td class="artist">Marilyn McCoo & Billy Davis Jr.</td>
+          <td class="year">1976</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>26w</td>
+        </tr>
+        <tr>
+          <td class="rank">176</td>
+          <td class="title">Poker Face</td>
+          <td class="artist">Lady Gaga</td>
+          <td class="year">2008</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>40w</td>
+        </tr>
+        <tr>
+          <td class="rank">177</td>
+          <td class="title">Beat It</td>
+          <td class="artist">Michael Jackson</td>
+          <td class="year">1983</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">178</td>
+          <td class="title">Kiss And Say Goodbye</td>
+          <td class="artist">The Manhattans</td>
+          <td class="year">1976</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>26w</td>
+        </tr>
+        <tr>
+          <td class="rank">179</td>
+          <td class="title">Smoke Gets In Your Eyes</td>
+          <td class="artist">The Platters</td>
+          <td class="year">1958</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>19w</td>
+        </tr>
+        <tr>
+          <td class="rank">180</td>
+          <td class="title">I Am Woman</td>
+          <td class="artist">Helen Reddy</td>
+          <td class="year">1972</td>
+          <td class="score">98.1</td>
+          <td>#1</td>
+          <td>22w</td>
+        </tr>
+        <tr>
+          <td class="rank">181</td>
+          <td class="title">Everybody's Somebody's Fool</td>
+          <td class="artist">Connie Francis</td>
+          <td class="year">1960</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>18w</td>
+        </tr>
+        <tr>
+          <td class="rank">182</td>
+          <td class="title">Watermelon Sugar</td>
+          <td class="artist">Harry Styles</td>
+          <td class="year">2019</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>39w</td>
+        </tr>
+        <tr>
+          <td class="rank">183</td>
+          <td class="title">Stay</td>
+          <td class="artist">Maurice Williams & The Zodiacs</td>
+          <td class="year">1960</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>18w</td>
+        </tr>
+        <tr>
+          <td class="rank">184</td>
+          <td class="title">Save The Last Dance For Me</td>
+          <td class="artist">The Drifters</td>
+          <td class="year">1960</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>18w</td>
+        </tr>
+        <tr>
+          <td class="rank">185</td>
+          <td class="title">Counting Stars</td>
+          <td class="artist">OneRepublic</td>
+          <td class="year">2013</td>
+          <td class="score">98.0</td>
+          <td>#2</td>
+          <td>68w</td>
+        </tr>
+        <tr>
+          <td class="rank">186</td>
+          <td class="title">Do That To Me One More Time</td>
+          <td class="artist">Captain & Tennille</td>
+          <td class="year">1979</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>27w</td>
+        </tr>
+        <tr>
+          <td class="rank">187</td>
+          <td class="title">Gangsta's Paradise (From "Dangerous Minds")</td>
+          <td class="artist">Coolio Featuring L.V.</td>
+          <td class="year">1995</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>38w</td>
+        </tr>
+        <tr>
+          <td class="rank">188</td>
+          <td class="title">Rockstar</td>
+          <td class="artist">Post Malone Featuring 21 Savage</td>
+          <td class="year">2017</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>40w</td>
+        </tr>
+        <tr>
+          <td class="rank">189</td>
+          <td class="title">Say So</td>
+          <td class="artist">Doja Cat Featuring Nicki Minaj</td>
+          <td class="year">2020</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>38w</td>
+        </tr>
+        <tr>
+          <td class="rank">190</td>
+          <td class="title">Gold Digger</td>
+          <td class="artist">Kanye West Featuring Jamie Foxx</td>
+          <td class="year">2005</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>39w</td>
+        </tr>
+        <tr>
+          <td class="rank">191</td>
+          <td class="title">Psycho</td>
+          <td class="artist">Post Malone Featuring Ty Dolla $ign</td>
+          <td class="year">2018</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>39w</td>
+        </tr>
+        <tr>
+          <td class="rank">192</td>
+          <td class="title">Sad Eyes</td>
+          <td class="artist">Robert John</td>
+          <td class="year">1979</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>27w</td>
+        </tr>
+        <tr>
+          <td class="rank">193</td>
+          <td class="title">Panda</td>
+          <td class="artist">Desiigner</td>
+          <td class="year">2016</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>40w</td>
+        </tr>
+        <tr>
+          <td class="rank">194</td>
+          <td class="title">I Will Survive</td>
+          <td class="artist">Gloria Gaynor</td>
+          <td class="year">1978</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>27w</td>
+        </tr>
+        <tr>
+          <td class="rank">195</td>
+          <td class="title">Bleeding Love</td>
+          <td class="artist">Leona Lewis</td>
+          <td class="year">2008</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>39w</td>
+        </tr>
+        <tr>
+          <td class="rank">196</td>
+          <td class="title">What's Love Got To Do With It</td>
+          <td class="artist">Tina Turner</td>
+          <td class="year">1984</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>28w</td>
+        </tr>
+        <tr>
+          <td class="rank">197</td>
+          <td class="title">Choosin' Texas</td>
+          <td class="artist">Ella Langley</td>
+          <td class="year">2025</td>
+          <td class="score">98.0</td>
+          <td>#1</td>
+          <td>34w</td>
+        </tr>
+        <tr>
+          <td class="rank">198</td>
+          <td class="title">The Way You Move</td>
+          <td class="artist">OutKast Featuring Sleepy Brown</td>
+          <td class="year">2003</td>
+          <td class="score">97.9</td>
+          <td>#1</td>
+          <td>39w</td>
+        </tr>
+        <tr>
+          <td class="rank">199</td>
+          <td class="title">You Needed Me</td>
+          <td class="artist">Anne Murray</td>
+          <td class="year">1978</td>
+          <td class="score">97.9</td>
+          <td>#1</td>
+          <td>26w</td>
+        </tr>
+        <tr>
+          <td class="rank">200</td>
+          <td class="title">The Tide Is High</td>
+          <td class="artist">Blondie</td>
+          <td class="year">1980</td>
+          <td class="score">97.9</td>
+          <td>#1</td>
+          <td>26w</td>
+        </tr>
+    </tbody>
+  </table>
+  <script>
+    let sortCol = 0, sortDir = 1;
+    function sortBy(col) {
+      const table = document.getElementById("table");
+      const tbody = table.tBodies[0];
+      const rows = Array.from(tbody.rows);
+      if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+      rows.sort((a, b) => {
+        const av = a.cells[col].textContent.replace(/[^0-9.-]/g, "") || a.cells[col].textContent;
+        const bv = b.cells[col].textContent.replace(/[^0-9.-]/g, "") || b.cells[col].textContent;
+        const an = parseFloat(av), bn = parseFloat(bv);
+        if (!isNaN(an) && !isNaN(bn)) return (an - bn) * sortDir;
+        return av.localeCompare(bv) * sortDir;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+      document.querySelectorAll("th").forEach((th, i) => {
+        th.className = i === col ? (sortDir === 1 ? "sorted-asc" : "sorted-desc") : "";
+      });
+    }
+  </script>
+</body>
+</html>
