@@ -15,9 +15,11 @@
     .wip-banner strong { color: #ffd75e; }
     .updated { color: #555; font-size: 0.78rem; margin-bottom: 2rem; margin-top: -1.5rem; }
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 2px solid #333;
-          color: #aaa; font-weight: 600; cursor: pointer; user-select: none; white-space: nowrap; }
-    th:hover { color: #fff; }
+    th { text-align: left; border-bottom: 2px solid #333; white-space: nowrap; padding: 0; }
+    .sort-btn { width: 100%; background: none; border: none; color: #aaa; font: inherit;
+                 font-weight: 600; text-align: left; padding: 0.6rem 0.8rem;
+                 cursor: pointer; user-select: none; }
+    .sort-btn:hover { color: #fff; }
     td { padding: 0.5rem 0.8rem; border-bottom: 1px solid #1e1e1e; }
     tr:hover td { background: #1a1a1a; }
     .rank { color: #555; width: 3rem; }
@@ -27,8 +29,8 @@
     .artist { color: #bbb; max-width: 200px; }
     .year { color: #666; width: 4rem; }
     .score { font-weight: 700; color: #1db954; }
-    th.sorted-asc::after { content: " ▲"; }
-    th.sorted-desc::after { content: " ▼"; }
+    .sort-btn.sorted-asc::after { content: " ▲"; }
+    .sort-btn.sorted-desc::after { content: " ▼"; }
     .group-header { font-size: 0.75rem; color: #555; text-transform: uppercase;
                      letter-spacing: 0.05em; padding: 0.4rem 0.8rem; }
   </style>
@@ -36,19 +38,19 @@
 <body>
   <h1>Music Popularity Index</h1>
   <p class="subtitle">Top 500 songs · Billboard Hot 100 (1958–present) · Spotify all-time streams · Era-normalized within a ±5-year window</p>
-  <div class="wip-banner"><strong>🚧 Work in progress</strong> — the scoring model is still being tuned, so these rankings will change.</div>
+  <div class="wip-banner"><strong>Work in progress</strong>, the scoring model is still being tuned, so these rankings will change.</div>
   <p class="updated">Last updated 27 Jun 2026 UTC</p>
   <table id="table">
     <thead>
       <tr>
-        <th onclick="sortBy(0)">#</th>
-        <th onclick="sortBy(1)">Title</th>
-        <th onclick="sortBy(2)">Artist</th>
-        <th onclick="sortBy(3)">Year</th>
-        <th onclick="sortBy(4)">Score</th>
-        <th onclick="sortBy(5)">BB Peak</th>
-        <th onclick="sortBy(6)">BB Weeks</th>
-        <th onclick="sortBy(7)">Spotify Streams</th>
+        <th><button type="button" class="sort-btn">#</button></th>
+        <th><button type="button" class="sort-btn">Title</button></th>
+        <th><button type="button" class="sort-btn">Artist</button></th>
+        <th><button type="button" class="sort-btn">Year</button></th>
+        <th><button type="button" class="sort-btn">Score</button></th>
+        <th><button type="button" class="sort-btn">BB Peak</button></th>
+        <th><button type="button" class="sort-btn">BB Weeks</button></th>
+        <th><button type="button" class="sort-btn">Spotify Streams</button></th>
       </tr>
     </thead>
     <tbody>
@@ -5070,10 +5072,15 @@
         return av.localeCompare(bv) * sortDir;
       });
       rows.forEach(r => tbody.appendChild(r));
-      document.querySelectorAll("th").forEach((th, i) => {
-        th.className = i === col ? (sortDir === 1 ? "sorted-asc" : "sorted-desc") : "";
+      document.querySelectorAll("#table thead .sort-btn").forEach((btn, i) => {
+        btn.className = "sort-btn" + (i === col ? (sortDir === 1 ? " sorted-asc" : " sorted-desc") : "");
       });
     }
+
+    // Native <button> headers handle Enter/Space activation for free.
+    document.querySelectorAll("#table thead .sort-btn").forEach((btn, i) => {
+      btn.addEventListener("click", () => sortBy(i));
+    });
   </script>
 </body>
 </html>
