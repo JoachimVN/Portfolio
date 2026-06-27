@@ -5067,13 +5067,15 @@
       rows.sort((a, b) => {
         const av = a.cells[col].textContent.replace(/[^0-9.-]/g, "") || a.cells[col].textContent;
         const bv = b.cells[col].textContent.replace(/[^0-9.-]/g, "") || b.cells[col].textContent;
-        const an = parseFloat(av), bn = parseFloat(bv);
-        if (!isNaN(an) && !isNaN(bn)) return (an - bn) * sortDir;
+        const an = Number.parseFloat(av), bn = Number.parseFloat(bv);
+        if (!Number.isNaN(an) && !Number.isNaN(bn)) return (an - bn) * sortDir;
         return av.localeCompare(bv) * sortDir;
       });
       rows.forEach(r => tbody.appendChild(r));
       document.querySelectorAll("#table thead .sort-btn").forEach((btn, i) => {
-        btn.className = "sort-btn" + (i === col ? (sortDir === 1 ? " sorted-asc" : " sorted-desc") : "");
+        let cls = "sort-btn";
+        if (i === col) cls += sortDir === 1 ? " sorted-asc" : " sorted-desc";
+        btn.className = cls;
       });
     }
 

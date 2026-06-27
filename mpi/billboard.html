@@ -10,9 +10,11 @@
     h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
     .subtitle { color: #888; font-size: 0.85rem; margin-bottom: 2rem; }
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    th { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 2px solid #333;
-          color: #aaa; font-weight: 600; cursor: pointer; user-select: none; white-space: nowrap; }
-    th:hover { color: #fff; }
+    th { text-align: left; border-bottom: 2px solid #333; white-space: nowrap; padding: 0; }
+    .sort-btn { width: 100%; background: none; border: none; color: #aaa; font: inherit;
+                 font-weight: 600; text-align: left; padding: 0.6rem 0.8rem;
+                 cursor: pointer; user-select: none; }
+    .sort-btn:hover { color: #fff; }
     td { padding: 0.5rem 0.8rem; border-bottom: 1px solid #1e1e1e; }
     tr:hover td { background: #1a1a1a; }
     .rank { color: #555; width: 3rem; }
@@ -20,8 +22,8 @@
     .artist { color: #bbb; max-width: 220px; }
     .year { color: #666; width: 4rem; }
     .score { font-weight: 700; color: #1db954; }
-    th.sorted-asc::after { content: " ▲"; }
-    th.sorted-desc::after { content: " ▼"; }
+    .sort-btn.sorted-asc::after { content: " ▲"; }
+    .sort-btn.sorted-desc::after { content: " ▼"; }
   </style>
 </head>
 <body>
@@ -30,13 +32,13 @@
   <table id="table">
     <thead>
       <tr>
-        <th onclick="sortBy(0)">#</th>
-        <th onclick="sortBy(1)">Title</th>
-        <th onclick="sortBy(2)">Artist</th>
-        <th onclick="sortBy(3)">Year</th>
-        <th onclick="sortBy(4)">Score</th>
-        <th onclick="sortBy(5)">Peak</th>
-        <th onclick="sortBy(6)">Chart Weeks</th>
+        <th><button type="button" class="sort-btn">#</button></th>
+        <th><button type="button" class="sort-btn">Title</button></th>
+        <th><button type="button" class="sort-btn">Artist</button></th>
+        <th><button type="button" class="sort-btn">Year</button></th>
+        <th><button type="button" class="sort-btn">Score</button></th>
+        <th><button type="button" class="sort-btn">Peak</button></th>
+        <th><button type="button" class="sort-btn">Chart Weeks</button></th>
       </tr>
     </thead>
     <tbody>
@@ -1852,15 +1854,22 @@
       rows.sort((a, b) => {
         const av = a.cells[col].textContent.replace(/[^0-9.-]/g, "") || a.cells[col].textContent;
         const bv = b.cells[col].textContent.replace(/[^0-9.-]/g, "") || b.cells[col].textContent;
-        const an = parseFloat(av), bn = parseFloat(bv);
-        if (!isNaN(an) && !isNaN(bn)) return (an - bn) * sortDir;
+        const an = Number.parseFloat(av), bn = Number.parseFloat(bv);
+        if (!Number.isNaN(an) && !Number.isNaN(bn)) return (an - bn) * sortDir;
         return av.localeCompare(bv) * sortDir;
       });
       rows.forEach(r => tbody.appendChild(r));
-      document.querySelectorAll("th").forEach((th, i) => {
-        th.className = i === col ? (sortDir === 1 ? "sorted-asc" : "sorted-desc") : "";
+      document.querySelectorAll("#table thead .sort-btn").forEach((btn, i) => {
+        let cls = "sort-btn";
+        if (i === col) cls += sortDir === 1 ? " sorted-asc" : " sorted-desc";
+        btn.className = cls;
       });
     }
+
+    // Native <button> headers handle Enter/Space activation for free.
+    document.querySelectorAll("#table thead .sort-btn").forEach((btn, i) => {
+      btn.addEventListener("click", () => sortBy(i));
+    });
   </script>
 </body>
 </html>
