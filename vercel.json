@@ -1,6 +1,10 @@
 {
     "cleanUrls": true,
     "trailingSlash": true,
+    "redirects": [
+        { "source": "/Versed", "destination": "/versed/" },
+        { "source": "/Versed/(.*)", "destination": "/versed/$1" }
+    ],
     "rewrites": [
         { "source": "/versed/(.*)", "destination": "/versed/" }
     ]
