@@ -7,6 +7,14 @@ const PROJECTS = [
     brandColor:     '#E7AB14',
   },
   {
+    github:         'JoachimVN/Versed',
+    screenshotsDir: 'docs/screenshots',
+    positions:      ['center', 'center', 'center'],
+    logo:           'versed/logo.svg',
+    playUrl:        '/versed/',
+    brandColor:     '#9333ea',
+  },
+  {
     isVariant:  true,
     logo:       'resources/images/logos/CHORIDOR_Logo_Square.png',
     logoLarge:  true,
