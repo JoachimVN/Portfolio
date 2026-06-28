@@ -1,4 +1,7 @@
 {
     "cleanUrls": true,
-    "trailingSlash": true
+    "trailingSlash": true,
+    "rewrites": [
+        { "source": "/versed/:path*", "destination": "/versed/index.html" }
+    ]
 }
