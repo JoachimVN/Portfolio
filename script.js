@@ -10,15 +10,16 @@ const PROJECTS = [
     github:         'JoachimVN/Versed',
     screenshotsDir: 'docs/screenshots',
     positions:      ['center', 'center', 'center'],
-    logo:           'versed/logo.svg',
     playUrl:        '/versed/',
-    brandColor:     '#9333ea',
+    logo:           'resources/images/logos/Versed_Logo.png',
+    logoReveal:     true,
+    brandColor:     { gradient: ['#00807e', '#9611c1'] },
   },
   {
     isVariant:  true,
     logo:       'resources/images/logos/CHORIDOR_Logo_Square.png',
     logoLarge:  true,
-    brandColor: '#3e67a7',
+    brandColor: { duo: ['#3e67a7', '#9d493f'] },
     variants: [
       {
         label:          'Web',
@@ -85,6 +86,49 @@ function hexToRgb(hex) {
   return `${Number.parseInt(hex.slice(1, 3), 16)},${Number.parseInt(hex.slice(3, 5), 16)},${Number.parseInt(hex.slice(5, 7), 16)}`;
 }
 
+// brandColor accepts a solid hex, a { gradient: [c1, c2] } blend, or a
+// { duo: [c1, c2] } pair of flat accents. Whatever the shape, --brand-color
+// always resolves to a single solid color so existing solid-only CSS
+// (border-color, toggle pill, etc.) keeps working unchanged.
+function brandColorVars(brandColor) {
+  if (!brandColor) return '--brand-color:var(--accent);--brand-color-rgb:201,149,42;';
+  if (typeof brandColor === 'string') {
+    return `--brand-color:${brandColor};--brand-color-rgb:${hexToRgb(brandColor)};`;
+  }
+  const [c1, c2] = brandColor.gradient || brandColor.duo;
+  const base = `--brand-color:${c1};--brand-color-rgb:${hexToRgb(c1)};--brand-color-2:${c2};--brand-color-2-rgb:${hexToRgb(c2)};`;
+  if (!brandColor.gradient) return base;
+  // -x variants run strictly left-to-right (vs. the 135deg diagonal used for
+  // the play button/ring) so the carousel dot strip reads as one continuous band.
+  const grad = `${base}--brand-gradient:linear-gradient(135deg, ${c1}, ${c2});--brand-gradient-x:linear-gradient(90deg, ${c1}, ${c2});`;
+  return `${grad}--brand-gradient-x-soft:linear-gradient(90deg, rgba(${hexToRgb(c1)},0.35), rgba(${hexToRgb(c2)},0.35));`;
+}
+
+// logoReveal logos render as a white silhouette at rest, then crossfade to
+// the actual full-color artwork on hover (source image doubles as its own mask).
+function renderLogo(logo, logoClass, alt, reveal) {
+  if (reveal) {
+    return `<span class="${logoClass} card-logo--crossfade" role="img" aria-label="${alt}">
+      <span class="card-logo-layer card-logo-layer--white" style="-webkit-mask-image:url('${logo}');mask-image:url('${logo}')"></span>
+      <img class="card-logo-layer card-logo-layer--color" src="${logo}" alt="">
+    </span>`;
+  }
+  return `<img class="${logoClass}" src="${logo}" alt="${alt}">`;
+}
+
+// --dot-i / --dot-n let a gradient brand color paint as one continuous strip
+// across all dots (each dot reveals its own slice) instead of repeating in each pill.
+function dotButtonsHtml(screenshots) {
+  return screenshots
+    .map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}" style="--dot-i:${i}"></button>`)
+    .join('');
+}
+
+function renderDots(screenshots) {
+  if (screenshots.length <= 1) return '';
+  return `<div class="card-dots" style="--dot-n:${screenshots.length}">${dotButtonsHtml(screenshots)}</div>`;
+}
+
 function starSVG() {
   return `<svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
     <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
@@ -94,12 +138,7 @@ function starSVG() {
 function renderVariantCard({ variants, logo, logoLarge, brandColor }, index = 0) {
   const v = variants[0];
   const color    = LANG_COLORS[v.language] || '#888';
-  const multiShot = (v.screenshots?.length ?? 0) > 1;
-
-  const dotButtons = multiShot
-    ? v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')
-    : '';
-  const dots = dotButtons ? `<div class="card-dots">${dotButtons}</div>` : '';
+  const dots     = renderDots(v.screenshots ?? []);
   const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
 
   const toggle = `<div class="card-toggle">
@@ -117,6 +156,7 @@ function renderVariantCard({ variants, logo, logoLarge, brandColor }, index = 0)
     <div class="card-bg" style="background-image:url('${v.screenshots[0]}');background-position:${v.positions?.[0] || 'center'}"></div>
     <div class="card-overlay"></div>
     <div class="card-shine"></div>
+    <div class="card-ring"></div>
     ${dots}
     ${toggle}
     ${logo ? `<img class="${logoClass}" src="${logo}" alt="CHORIDOR">` : ''}
@@ -132,26 +172,18 @@ function renderVariantCard({ variants, logo, logoLarge, brandColor }, index = 0)
     </div>
   `;
 
-  const brand    = brandColor || 'var(--accent)';
-  const brandRgb = brandColor ? hexToRgb(brandColor) : '201,149,42';
-  const delay    = `animation-delay:${index * 0.12 + 0.08}s;--brand-color:${brand};--brand-color-rgb:${brandRgb}`;
+  const delay    = `animation-delay:${index * 0.12 + 0.08}s;${brandColorVars(brandColor)}`;
   const data     = `data-screenshots='${JSON.stringify(v.screenshots)}' data-positions='${JSON.stringify(v.positions || [])}' data-variants='${JSON.stringify(variants)}' data-active-variant="0"`;
 
   return `<div class="card" style="${delay}" ${data}>${inner}</div>`;
 }
 
-function renderCard({ name, description, language, stars, url, pageUrl, playUrl, screenshots = [], positions, logo, logoLarge, isProduct, brandColor, isVariant, variants }, index = 0) {
+function renderCard({ name, description, language, stars, url, pageUrl, playUrl, screenshots = [], positions, logo, logoLarge, logoReveal, isProduct, brandColor, isVariant, variants }, index = 0) {
   if (isVariant) return renderVariantCard({ variants, logo, logoLarge, brandColor }, index);
   const color    = LANG_COLORS[language] || '#888';
   const mainShot = screenshots[0];
   const mainPos  = positions?.[0] || 'center';
-  const multiShot = screenshots.length > 1;
-
-  const dotButtons = multiShot
-    ? screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('')
-    : '';
-  const dots = dotButtons ? `<div class="card-dots">${dotButtons}</div>` : '';
-
+  const dots     = renderDots(screenshots);
 
   const logoClass = `card-logo${logoLarge ? ' card-logo--lg' : ''}`;
 
@@ -169,8 +201,9 @@ function renderCard({ name, description, language, stars, url, pageUrl, playUrl,
     <div class="card-bg" style="background-image:url('${mainShot}');background-position:${mainPos}"></div>
     <div class="card-overlay"></div>
     <div class="card-shine"></div>
+    <div class="card-ring"></div>
     ${dots}
-    ${logo ? `<img class="${logoClass}" src="${logo}" alt="${name}">` : ''}
+    ${logo ? renderLogo(logo, logoClass, name, logoReveal) : ''}
     <div class="card-content">
       <h3 class="card-title">${name}</h3>
       <p class="card-desc">${description || 'No description available.'}</p>
@@ -184,9 +217,7 @@ function renderCard({ name, description, language, stars, url, pageUrl, playUrl,
   `;
 
   const classes   = `card${isProduct ? ' card--product' : ''}`;
-  const brand     = brandColor || 'var(--accent)';
-  const brandRgb  = brandColor ? hexToRgb(brandColor) : '201,149,42';
-  const delay     = `animation-delay:${index * 0.12 + 0.08}s;--brand-color:${brand};--brand-color-rgb:${brandRgb}`;
+  const delay     = `animation-delay:${index * 0.12 + 0.08}s;${brandColorVars(brandColor)}`;
   const data      = `data-screenshots='${JSON.stringify(screenshots)}' data-positions='${JSON.stringify(positions || [])}'`;
 
   if (url) {
@@ -545,14 +576,13 @@ function swapVariantContent(card, v) {
   // Dots
   let dotsContainer = card.querySelector('.card-dots');
   if (v.screenshots.length > 1) {
-    const html = v.screenshots.map((_, i) => `<button class="dot${i === 0 ? ' active' : ''}" data-index="${i}"></button>`).join('');
-    if (dotsContainer) { dotsContainer.innerHTML = html; }
-    else {
+    if (!dotsContainer) {
       dotsContainer = document.createElement('div');
       dotsContainer.className = 'card-dots';
-      dotsContainer.innerHTML = html;
       card.querySelector('.card-content').before(dotsContainer);
     }
+    dotsContainer.style.setProperty('--dot-n', v.screenshots.length);
+    dotsContainer.innerHTML = dotButtonsHtml(v.screenshots);
   } else {
     dotsContainer?.remove();
   }
@@ -800,7 +830,13 @@ function initCardTilt() {
   document.querySelectorAll('.card').forEach(card => {
     const shine = card.querySelector('.card-shine');
 
-    const rgb = getComputedStyle(card).getPropertyValue('--brand-color-rgb').trim() || '201,149,42';
+    const style   = getComputedStyle(card);
+    const rgb     = style.getPropertyValue('--brand-color-rgb').trim() || '201,149,42';
+    const rgb2    = style.getPropertyValue('--brand-color-2-rgb').trim();
+    const hasGrad = style.getPropertyValue('--brand-gradient').trim() !== '';
+    // Only blend in the second color for gradient brands (e.g. Versed) — duo
+    // brands (e.g. CHORIDOR) keep a single-color glow/border on purpose.
+    const glow2   = hasGrad && rgb2 ? `, 0 8px 30px rgba(${rgb2},0.08)` : '';
 
     card.addEventListener('mouseenter', () => {
       card.style.transition = 'transform 0.1s ease-out, box-shadow 0.3s ease';
@@ -811,7 +847,7 @@ function initCardTilt() {
       const x = (e.clientX - r.left) / r.width - 0.5;
       const y = (e.clientY - r.top) / r.height - 0.5;
       card.style.transform  = `perspective(900px) rotateY(${x * 12}deg) rotateX(${-y * 8}deg) scale(1.02)`;
-      card.style.boxShadow  = `0 0 0 1px rgba(${rgb},0.25), 0 8px 24px rgba(${rgb},0.08)`;
+      card.style.boxShadow  = `0 0 0 1px rgba(${rgb},0.25), 0 8px 24px rgba(${rgb},0.08)${glow2}`;
       if (shine) {
         const px = (e.clientX - r.left) / r.width * 100;
         const py = (e.clientY - r.top) / r.height * 100;

@@ -386,6 +386,25 @@ a { text-decoration: none; }
 
 .card:hover .card-bg { transform: scale(1.05); }
 
+/* crisp gradient outline for gradient-brand cards (e.g. Versed); transparent
+   and invisible for solid/duo brands since --brand-gradient is unset there */
+.card-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--brand-gradient, transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.card:hover .card-ring { opacity: 1; }
+
 /* gradient overlay — dark at bottom, lighter at top */
 .card-overlay {
   position: absolute;
@@ -416,6 +435,44 @@ a { text-decoration: none; }
   opacity: 1;
   filter: brightness(1) invert(0);
 }
+
+/* logos flagged logoReveal show a white silhouette at rest, then crossfade
+   into their own full-color artwork on hover */
+.card-logo--crossfade {
+  aspect-ratio: 1920 / 750;
+  filter: none;
+  opacity: 1;
+}
+
+.card:hover .card-logo--crossfade {
+  filter: none;
+  opacity: 1;
+}
+
+.card-logo-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.4s ease;
+}
+
+.card-logo-layer--white {
+  background: #fff;
+  opacity: 0.8;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.card-logo-layer--color { opacity: 0; }
+
+.card:hover .card-logo-layer--white { opacity: 0; }
+.card:hover .card-logo-layer--color { opacity: 1; }
 
 /* text content pinned to bottom */
 .card-content {
@@ -496,33 +553,63 @@ a { text-decoration: none; }
   overflow: hidden;
   padding: 4px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(var(--brand-color-rgb, 62,104,168), 0.4);
+  border: 1px solid transparent;
   color: rgba(var(--brand-color-rgb, 62,104,168), 0.75);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   cursor: pointer;
   user-select: none;
-  transition: color 0.3s, border-color 0.3s;
+  transition: color 0.3s;
 }
 
 .card-play-btn::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--brand-color, #3e67a7);
+  background: var(--brand-gradient, var(--brand-color, #3e67a7));
   transform: translateX(-105%);
   transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-play-btn:hover {
-  color: #fff;
-  border-color: var(--brand-color, #3e67a7);
+/* ring stands in for border-color so gradient brands (Versed) get a true
+   gradient outline instead of a flat solid — border-color can't take a gradient */
+.card-play-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--brand-gradient, var(--brand-color, #3e67a7));
+  opacity: 0.4;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
 
-.card-play-btn:hover::before { transform: translateX(0); }
+.card-play-btn:hover { color: #fff; }
 
-.card-play-btn span { position: relative; z-index: 1; }
+.card-play-btn:hover::before { transform: translateX(0); }
+.card-play-btn:hover::after  { opacity: 1; }
+
+.card-play-btn span {
+  position: relative;
+  z-index: 1;
+  background: var(--brand-gradient, var(--brand-color, currentColor));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0.75;
+  transition: opacity 0.3s;
+}
+
+.card-play-btn:hover span {
+  opacity: 1;
+  background: none;
+  -webkit-text-fill-color: #fff;
+}
 
 
 .card--product .card-bg {
@@ -626,6 +713,9 @@ a { text-decoration: none; }
   display: flex;
   gap: 0.3rem;
   z-index: 3;
+  /* matches .dot's width + this gap, so a gradient sized across --dot-n
+     strides reads as one continuous band rather than repeating per dot */
+  --dot-stride: calc(18px + 0.3rem);
 }
 
 .dot {
@@ -664,11 +754,19 @@ a { text-decoration: none; }
 .dot:hover { opacity: 0.75; }
 
 .card:hover .dot {
-  background: rgba(var(--brand-color-rgb, 201, 149, 42), 0.35);
+  background-color: rgba(var(--brand-color-rgb, 201, 149, 42), 0.35);
+  background-image: var(--brand-gradient-x-soft, none);
+  background-repeat: no-repeat;
+  background-size: calc(var(--dot-n, 1) * var(--dot-stride)) 100%;
+  background-position-x: calc(var(--dot-i, 0) * var(--dot-stride) * -1);
 }
 
 .card:hover .dot::after {
-  background: var(--brand-color, var(--accent));
+  background-color: var(--brand-color, var(--accent));
+  background-image: var(--brand-gradient-x, none);
+  background-repeat: no-repeat;
+  background-size: calc(var(--dot-n, 1) * var(--dot-stride)) 100%;
+  background-position-x: calc(var(--dot-i, 0) * var(--dot-stride) * -1);
 }
 
 .card-toggle {
@@ -692,7 +790,7 @@ a { text-decoration: none; }
   height: calc(100% - 4px);
   width: var(--toggle-pill-w, 0px);
   border-radius: 99px;
-  background: var(--brand-color, #3e67a7);
+  background: var(--brand-color-2, var(--brand-color, #3e67a7));
   transform: translateX(var(--toggle-pill-x, 0px));
   transition: transform 0.38s cubic-bezier(0.34, 1.3, 0.64, 1),
               width    0.38s cubic-bezier(0.34, 1.3, 0.64, 1);
@@ -731,7 +829,7 @@ a { text-decoration: none; }
 .card-bg--edge {
   position: absolute;
   inset: 0;
-  background: var(--brand-color, #3e67a7);
+  background: var(--brand-color-2, var(--brand-color, #3e67a7));
   opacity: 0.7;
   filter: blur(6px) saturate(1.25);
   pointer-events: none;
