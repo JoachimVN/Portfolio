@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="100%" height="100%" style="background-color: #05050c;">
+  <defs>
+    <linearGradient id="versedTealBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#005b6e" />
+      <stop offset="50%" stop-color="#0a2f5c" />
+      <stop offset="100%" stop-color="#201c54" />
+    </linearGradient>
+
+    <linearGradient id="versedIndigoPurple" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1c1642" />
+      <stop offset="60%" stop-color="#40176e" />
+      <stop offset="100%" stop-color="#5a1682" />
+    </linearGradient>
+
+    <linearGradient id="versedBrightPurple" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8a1ca6" />
+      <stop offset="50%" stop-color="#5c1380" />
+      <stop offset="100%" stop-color="#2a124d" />
+    </linearGradient>
+
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="10" dy="20" stdDeviation="25" flood-color="#000000" flood-opacity="0.65"/>
+    </filter>
+  </defs>
+
+  <path d="M-100,500 Q 300,100 700,500 T 1500,200" fill="none" stroke="url(#versedTealBlue)" stroke-width="180" stroke-linecap="round" opacity="0.4" />
+  
+  <path d="M 200,950 C 100,600 200,200 500,300 C 800,400 600,800 900,700 C 1100,600 1200,300 1500,400" 
+        fill="none" stroke="url(#versedTealBlue)" stroke-width="140" stroke-linecap="round" filter="url(#shadow)" />
+
+  <path d="M 1300,950 C 1200,650 950,450 850,200 C 750,-50 400,100 450,450 C 500,750 150,800 -50,650" 
+        fill="none" stroke="url(#versedIndigoPurple)" stroke-width="130" stroke-linecap="round" filter="url(#shadow)" />
+
+  <path d="M 600,-100 C 900,100 1300,100 1250,450 C 1200,750 900,850 750,600 C 600,350 900,200 1100,150" 
+        fill="none" stroke="url(#versedBrightPurple)" stroke-width="120" stroke-linecap="round" filter="url(#shadow)" />
+</svg>

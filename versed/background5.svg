@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 435" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f232e" />
+      <stop offset="50%" stop-color="#18132b" />
+      <stop offset="100%" stop-color="#090514" />
+    </linearGradient>
+
+    <radialGradient id="rightPurple" cx="85%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#8017b8" stop-opacity="0.9" />
+      <stop offset="40%" stop-color="#4c127a" stop-opacity="0.95" />
+      <stop offset="80%" stop-color="#1c113a" stop-opacity="1" />
+      <stop offset="100%" stop-color="#090514" stop-opacity="1" />
+    </radialGradient>
+
+    <linearGradient id="centerWarm" x1="30%" y1="0%" x2="70%" y2="100%">
+      <stop offset="0%" stop-color="#b65eff" />
+      <stop offset="35%" stop-color="#6b119c" />
+      <stop offset="75%" stop-color="#3b095c" />
+      <stop offset="100%" stop-color="#17022b" />
+    </linearGradient>
+
+    <radialGradient id="leftTeal" cx="25%" cy="25%" r="75%">
+      <stop offset="0%" stop-color="#003d47" stop-opacity="0.95" />
+      <stop offset="45%" stop-color="#006c7d" stop-opacity="0.85" />
+      <stop offset="75%" stop-color="#00b4cc" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#00f0ff" stop-opacity="0" />
+    </radialGradient>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="18" result="blur" />
+    </filter>
+    
+    <filter id="edgeShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="-12" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.75"/>
+    </filter>
+
+    <linearGradient id="edgeHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.75" />
+      <stop offset="30%" stop-color="#a3e5ff" stop-opacity="0.4" />
+      <stop offset="70%" stop-color="#e8bfff" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="435" fill="url(#bgGrad)" />
+
+  <path d="M480,-10 C680,90 820,180 1010,280 L1010,445 L320,445 C520,410 680,280 480,-10 Z" fill="url(#rightPurple)" />
+  
+  <path d="M320,-10 C480,-10 720,230 880,445 L310,445 C370,290 270,90 320,-10 Z" fill="#6b119c" opacity="0.25" filter="url(#softGlow)" />
+
+  <g filter="url(#edgeShadow)">
+    <path d="M390,-10 C460,40 660,210 890,445 L310,445 C370,270 220,140 390,-10 Z" fill="url(#centerWarm)" />
+  </g>
+
+  <path d="M390,-10 C460,40 660,210 890,445" fill="none" stroke="url(#edgeHighlight)" stroke-width="3.5" filter="url(#softGlow)" opacity="0.5" />
+
+  <g filter="url(#edgeShadow)">
+    <path d="M-50,-50 L430,-50 C530,140 280,340 130,390 C30,415 -30,425 -110,425 Z" fill="#091b24" />
+    <path d="M-50,-50 L430,-50 C530,140 280,340 130,390 C30,415 -30,425 -110,425 Z" fill="url(#leftTeal)" style="mix-blend-mode: screen;" />
+  </g>
+
+  <path d="M430,-50 C530,140 280,340 130,390" fill="none" stroke="#7efff7" stroke-width="2.5" filter="url(#softGlow)" opacity="0.45" />
+</svg>

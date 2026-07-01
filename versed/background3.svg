@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1080" width="100%" height="100%" style="background-color: #000000;">
+  <defs>
+    <filter id="liquidShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="-15" dy="30" stdDeviation="50" flood-color="#000000" flood-opacity="0.95"/>
+    </filter>
+
+    <linearGradient id="satinTeal" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#01111c" />
+      <stop offset="35%" stop-color="#0a4359" />
+      <stop offset="55%" stop-color="#166682" />
+      <stop offset="75%" stop-color="#0a2c42" />
+      <stop offset="100%" stop-color="#000000" />
+    </linearGradient>
+
+    <linearGradient id="satinPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#000000" />
+      <stop offset="25%" stop-color="#3c0b54" />
+      <stop offset="50%" stop-color="#761fa3" />
+      <stop offset="70%" stop-color="#a43be3" />
+      <stop offset="90%" stop-color="#240436" />
+      <stop offset="100%" stop-color="#05000a" />
+    </linearGradient>
+
+    <linearGradient id="specularHighlight" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.0" />
+      <stop offset="30%" stop-color="#b478ff" stop-opacity="0.6" />
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0.8" />
+      <stop offset="85%" stop-color="#7bf0ff" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.0" />
+    </linearGradient>
+  </defs>
+
+  <path d="M 300,1080 C 700,900 1100,700 1440,200 L 1440,1080 Z" 
+        fill="url(#satinTeal)" />
+
+  <path d="M -100,1000 C 100,750 400,550 750,300 C 1100,50 1300,0 1440,0 L -100,0 Z" 
+        fill="url(#satinPurple)" filter="url(#liquidShadow)" />
+
+  <path d="M -100,900 C 200,650 600,450 1100,250 C 1300,170 1400,50 1440,0 C 1300,200 1000,500 500,800 C 200,980 -100,1050 -100,1000 Z" 
+        fill="url(#satinTeal)" opacity="0.9" />
+
+  <path d="M -100,1000 C 100,750 400,550 750,300 C 1100,50 1300,0 1440,0" 
+        fill="none" stroke="url(#specularHighlight)" stroke-width="2.5" />
+        
+  <path d="M 500,800 C 1000,500 1300,200 1440,0" 
+        fill="none" stroke="#6df3ff" stroke-width="1" opacity="0.3" />
+</svg>

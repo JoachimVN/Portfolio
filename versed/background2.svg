@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1080" width="100%" height="100%" style="background-color: #0b071a;">
+  <defs>
+    <filter id="softShadow" x="-20%" y="-20%" width="150%" height="150%">
+      <feDropShadow dx="-10" dy="25" stdDeviation="40" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+
+    <linearGradient id="foldTeal" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0c5e6e" />
+      <stop offset="40%" stop-color="#073d4d" />
+      <stop offset="100%" stop-color="#0d233a" />
+    </linearGradient>
+
+    <linearGradient id="foldIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#30205c" />
+      <stop offset="60%" stop-color="#1b1238" />
+      <stop offset="100%" stop-color="#0f0921" />
+    </linearGradient>
+
+    <linearGradient id="foldPurple" x1="30%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#731a99" />
+      <stop offset="50%" stop-color="#43105c" />
+      <stop offset="100%" stop-color="#1a0426" />
+    </linearGradient>
+  </defs>
+
+  <path d="M 600,1080 C 800,800 1050,500 1440,350 L 1440,1080 Z" 
+        fill="url(#foldPurple)" />
+  
+  <path d="M 600,1080 C 800,800 1050,500 1440,350" 
+        fill="none" stroke="#ba68e8" stroke-width="1.5" opacity="0.4" />
+
+  <path d="M 250,1080 C 450,700 800,450 1440,200 L 1440,450 C 1050,600 800,850 600,1080 Z" 
+        fill="url(#foldIndigo)" filter="url(#softShadow)" />
+  
+  <path d="M 250,1080 C 450,700 800,450 1440,200" 
+        fill="none" stroke="#725cb3" stroke-width="1.5" opacity="0.5" />
+
+  <path d="M -100,650 C 150,500 450,250 450,0 L -100,0 Z" 
+        fill="url(#foldTeal)" />
+        
+  <path d="M -100,650 C 150,500 450,250 450,0" 
+        fill="none" stroke="#5cd3e6" stroke-width="2" opacity="0.4" />
+
+  <path d="M -100,850 C 300,650 650,300 1100,0 L 450,0 C 450,250 150,500 -100,650 Z" 
+        fill="url(#foldTeal)" filter="url(#softShadow)" />
+        
+  <path d="M -100,850 C 300,650 650,300 1100,0" 
+        fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.4" />
+</svg>
